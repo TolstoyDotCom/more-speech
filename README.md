@@ -42,13 +42,13 @@ on Linux. For now, the requirements are:
 * An older version of Firefox
 
 1. If you don't already have Java 8 installed, you can get it
-[here http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html].
+[here](http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html).
 
 2. Download Firefox 44.0b9 from [here https://ftp.mozilla.org/pub/firefox/releases/44.0b9/]. (Other versions around the
 same date should also work). You don't have to uninstall Firefox if you have a later version, you can have multiple versions.
 
 3. Extract the Firefox download and create a profile just for this application. That's described
-[here https://support.mozilla.org/en-US/kb/profile-manager-create-and-remove-firefox-profiles].
+[here](https://support.mozilla.org/en-US/kb/profile-manager-create-and-remove-firefox-profiles).
 
 4. In the new profile's Preferences, set it to ignore software updates. That's important otherwise Firefox will update itself
 and the application will stop working. It's also highly recommended to set that profile to clear all data when Firefox closes.
@@ -78,7 +78,7 @@ Javascript to be enabled).
 
 How to build it
 ------
-If you don't have it already, install Maven from [here https://maven.apache.org/install.html]. Then, open a command line
+If you don't have it already, install Maven from [here](https://maven.apache.org/install.html). Then, open a command line
 window, change to the directory with the source code (where the pom.xml file is) and type `mvn compile package`,
 `mvn compile exec:java`, or similar. Only two tests have been provided; others will be uploaded later.
 
