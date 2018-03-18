@@ -33,9 +33,21 @@ as other users would.
 You can optionally upload the results to our server for further research and choose to make the result data public
 (you can also publish the HTML report on your own site if you wish).
 
-How to use it
+Installation (Windows)
 ------
-The first version requires some setup, but future versions will make the process easier. This has also only been tested
+1. Download the latest Windows version from the Releases link above and unzip it to a location on your harddrive.
+That's it! The Windows release is large but it contains everything you need.
+
+2. Start the application by double clicking *morespeech.exe* (if Windows doesn't show file extensions, that's the small
+file not the large file). That should create a few new directories inside the application directory.
+
+3. Click the *Preferences* button and put in the handle you want to check.
+
+4. Skip to the *Using the app* section below for more information on running the app.
+
+Installation (Linux, Mac, or manual on Windows)
+------
+The first version requires some setup, but future versions will make the process easier. This version has also only been tested
 on Linux. For now, the requirements are:
 
 * Java version 8
@@ -44,7 +56,7 @@ on Linux. For now, the requirements are:
 1. If you don't already have Java 8 installed, you can get it
 [here](http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html).
 
-2. Download Firefox 44.0b9 from [here https://ftp.mozilla.org/pub/firefox/releases/44.0b9/]. (Other versions around the
+2. Download Firefox 44.0b9 from [here](https://ftp.mozilla.org/pub/firefox/releases/44.0b9/). (Other versions around the
 same date should also work). You don't have to uninstall Firefox if you have a later version, you can have multiple versions.
 
 3. Extract the Firefox download and create a profile just for this application. That's described
@@ -65,16 +77,28 @@ a few new directories inside the application directory.
 
 9. Click the *Preferences* button and put in the handle you want to check and the two file paths from #7.
 
-10. (Optional) You can create a throwaway Twitter account just for use by this application. Use a new email address and
-fill out the Twitter account's name, bio, etc. Follow a few people (preferably not the ones Twitter suggests) and tweet
-once or twice. You can leave Settings:Notifications screen with the defaults, or change those settings to see what
-happens. **Only use a throwaway Twitter account, not one you want to keep. Nothing bad should happen but you never know.**
+Using the app
+------
+1. (Optional) You can create a throwaway Twitter account just for use by this application. If provided, the app will first
+login to Twitter using that account. This is the better way to check since most people viewing Twitter replies are
+probably logged in. As discussed above, the tweets that you see when logged out might be different from those you see
+when logged in.
 
-11. Click the *Run checker* button. Firefox should open and navigate to the timeline for the handle you entered. It should
+**Only use a throwaway Twitter account, not one you want to keep. Nothing bad should happen but you never know.**
+
+To set up the throwaway account, use a new email address and fill out the Twitter account's name, bio, etc.
+Follow a few people (preferably not the ones Twitter suggests) and tweet once or twice.
+You can leave Twitter's Settings:Notifications screen with the defaults, or change those settings to see what happens.
+
+2. Click the *Run checker* button. Firefox should open and navigate to the timeline for the handle you entered. It should
 be located just off the screen. Try not to interact with that window since doing so will interfere with what the application
 is doing. Currently it will take a long time to load the pages but future versions will increase the speed. You might
 be able to speed things up by installing a flash blocker plugin (don't install NoScript since the application requires
 Javascript to be enabled).
+
+3. When the app finishes, the Firefox window should close and the app will indicate the name of the report that it
+produced. The reports are stored in the `reports` directory and are self-contained HTML files that can be opened
+with any browser. They also contain debug data showing the raw tweets and computations that were performed.
 
 How to build it
 ------
@@ -84,6 +108,21 @@ window, change to the directory with the source code (where the pom.xml file is)
 
 **NOTE:** If you use the `exec:java` version, the database and reports will be stored in the `target` directory. If you want
 to save the database and the reports, don't do a `mvn clean`.
+
+Options
+------
+* If you launch the app from the command line or your own script, you can override the locations of the Firefox profile and/or
+binary as follows:
+`java -Dprefs.firefox_path_profile="/path/to/profile/directory" -Dprefs.firefox_path_app="/path/to/a/firefox/executable" -jar morespeech.jar`
+
+* The app looks for a firefox profile directory in these locations: `firefox/ffprof` and `firefox/Data/profile`. If it
+finds a directory there, that is used as the Firefox profile. The `firefox` directory should be next to the app
+(on the same level as `reports`). The `ffprof` or `profile` directory should contain the standard profile files like
+`prefs.js`.
+
+* The app looks for a Firefox executable in the following locations: `firefox/ffbin/firefox.exe`, `firefox/ffbin/firefox.bat`,
+`firefox/ffbin/firefox.sh`, `firefox/ffbin/firefox`, and `firefox/FirefoxPortable.exe`. As above, he `firefox` directory should
+be next to the app.
 
 Troubleshooting
 ------
@@ -103,12 +142,22 @@ We don't upload any data from your computer other than the raw results. We could
 application using the same handle at the same time, so the only "new" information is the handle you searched. If you
 don't want to reveal you searched a specific handle, then don't choose to upload the data.
 
+The app writes a log file in the `logs` directory. If filing a bug report, please provide the relevant parts of the log
+file and sanitize it beforehand such as by replacing paths, the testing account handle/password, etc.
+
 Licensing
 ------
 The source code is licensed under the The Apache Software License, Version 2.0, see LICENSE. The application includes
 many components from others and those are covered under their licenses (see the licenses directory in the application
 download). The Java Native Access library is dual licensed and is used in this application under The Apache Software
 License, Version 2.0.
+
+The Windows version bundles the JRE from Oracle Corp and is redistributed under the Oracle Binary Code License Agreement
+for the Java SE Platform Products and JavaFX (see [this](http://www.oracle.com/technetwork/java/javase/terms/license/index.html) ).
+No JavaFX components are included.
+
+The Windows version bundles a version of Firefox from PortableApps. That was installed and run once to create a profile
+and change some settings. No other modifications were made.
 
 Can they do that?
 ------
