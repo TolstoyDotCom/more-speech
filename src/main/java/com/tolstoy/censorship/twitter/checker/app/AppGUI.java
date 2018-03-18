@@ -68,7 +68,7 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, Windo
 
 		@Override
 		public void clearMessages() {
-			publish( null );
+			publish( (StatusMessage) null );
 		}
 
 		@Override
@@ -112,19 +112,23 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, Windo
 				ISearchRunReplies searchRunReplies = get();
 				//logger.info( searchRunReplies );
 
-				for ( ISearchRunRepliesProcessor processor : searchRunProcessors ) {
-					try {
-						processor.process( searchRunReplies, this );
-					}
-					catch ( Exception e ) {
-						String s = bundle.getString( "exc_srp", processor.getDescription(), e.getMessage() );
-						logger.error( s, e );
-						gui.addMessage( new StatusMessage( s, StatusMessageSeverity.ERROR ) );
+				if ( searchRunReplies != null ) {
+					for ( ISearchRunRepliesProcessor processor : searchRunProcessors ) {
+						try {
+							processor.process( searchRunReplies, this );
+						}
+						catch ( Exception e ) {
+							String s = bundle.getString( "exc_srp", processor.getDescription(), e.getMessage() );
+							logger.error( s, e );
+							gui.addMessage( new StatusMessage( s, StatusMessageSeverity.ERROR ) );
+						}
 					}
 				}
 			}
 			catch ( Exception e ) {
-				logger.error( "cannot get results", e );
+				String s = bundle.getString( "exc_getresults", e.getMessage() );
+				logger.error( s, e );
+				gui.addMessage( new StatusMessage( s, StatusMessageSeverity.ERROR ) );
 			}
 
 			gui.enableRunFunction( true );
