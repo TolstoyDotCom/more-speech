@@ -60,6 +60,8 @@ public final class Start {
 
 	private static final String[] TABLE_NAMES = { "searchrun", "preferences" };
 
+	private static final String[] PREFERENCES_OVERRIDEABLE_BY_SYSTEM_PROPERTIES = { "prefs.firefox_path_app", "prefs.firefox_path_profile" };
+
 	private static final boolean DEBUG_MODE = true;
 
 	private IResourceBundleWithFormatting bundle = null;
@@ -127,6 +129,24 @@ public final class Start {
 		try {
 			prefsFactory = new PreferencesFactory( storage, defaultAppPrefs );
 			prefs = prefsFactory.getAppPreferences();
+
+			IOverridePreferences[] overrides = {
+				new OverridePreferencesFromSystemProperties( PREFERENCES_OVERRIDEABLE_BY_SYSTEM_PROPERTIES ),
+				new OverridePreferencesFromEmbedPathsLinux( appDirectories ),
+				new OverridePreferencesFromEmbedPathsWindows( appDirectories )
+			};
+
+			boolean bNeedToSave = false;
+
+			for ( int i = 0; i < overrides.length; i++ ) {
+				if ( overrides[ i ].override( prefs, bundle ) ) {
+					bNeedToSave = true;
+				}
+			}
+
+			if ( bNeedToSave ) {
+				prefs.save();
+			}
 
 			//logger.info( "prefs=" + Utils.sanitizeMap( prefs.getValues() ) );
 		}
