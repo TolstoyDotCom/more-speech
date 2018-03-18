@@ -36,7 +36,7 @@ public class OverridePreferencesFromEmbedPathsWindows implements IOverridePrefer
 	public boolean override( IPreferences prefs, IResourceBundleWithFormatting bundle ) {
 		boolean bChanged = false;
 
-		File firefoxDir = appDirectories.getSubirectory( prefs.getValue( "embed.firefox.containing_dir" ) );
+		File firefoxDir = appDirectories.getSubdirectory( prefs.getValue( "embed.firefox.containing_dir" ) );
 		if ( firefoxDir == null || !firefoxDir.exists() && firefoxDir.isDirectory() ) {
 			return false;
 		}
