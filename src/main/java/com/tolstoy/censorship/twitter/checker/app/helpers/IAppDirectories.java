@@ -20,4 +20,5 @@ public interface IAppDirectories {
 	File getDatabaseParentDirectory();
 	File getDatabaseDirectory();
 	File getReportsDirectory();
+	File getSubdirectory( String name );
 }

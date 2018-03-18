@@ -24,6 +24,7 @@ public class AppDirectories implements IAppDirectories {
 
 	private File installDirectory, databaseParentDirectory, databaseDirectory, reportsDirectory;
 	private String databaseParentDirectoryName, databaseDirectoryName, reportsDirectoryName;
+	private int levelsUp;
 
 	public File getInstallDirectory() {
 		return installDirectory;
@@ -41,7 +42,25 @@ public class AppDirectories implements IAppDirectories {
 		return reportsDirectory;
 	}
 
+	public File getSubdirectory( String name ) {
+		if ( installDirectory == null ) {
+			return null;
+		}
+
+		File container;
+
+		if ( levelsUp == 1 ) {
+			container = installDirectory.getParentFile();
+		}
+		else {
+			container = installDirectory.getParentFile().getParentFile();
+		}
+
+		return new File( container, name );
+	}
+
 	public AppDirectories( int levelsUp, String databaseParentDirectoryName, String databaseDirectoryName, String reportsDirectoryName ) {
+		this.levelsUp = levelsUp;
 		this.databaseParentDirectoryName = databaseParentDirectoryName;
 		this.databaseDirectoryName = databaseDirectoryName;
 		this.reportsDirectoryName = reportsDirectoryName;
@@ -55,9 +74,9 @@ public class AppDirectories implements IAppDirectories {
 			return;
 		}
 
-		this.databaseParentDirectory = getOrMakeDirectory( this.installDirectory, this.databaseParentDirectoryName, levelsUp );
+		this.databaseParentDirectory = getOrMakeDirectory( this.installDirectory, this.databaseParentDirectoryName );
 		if ( this.databaseParentDirectory != null ) {
-			this.reportsDirectory = getOrMakeDirectory( this.installDirectory, this.reportsDirectoryName, levelsUp );
+			this.reportsDirectory = getOrMakeDirectory( this.installDirectory, this.reportsDirectoryName );
 		}
 
 		if ( this.databaseParentDirectory != null ) {
@@ -65,7 +84,7 @@ public class AppDirectories implements IAppDirectories {
 		}
 	}
 
-	protected File getOrMakeDirectory( File start, String name, int levelsUp ) {
+	protected File getOrMakeDirectory( File start, String name ) {
 		File container, par;
 
 		if ( levelsUp == 1 ) {
