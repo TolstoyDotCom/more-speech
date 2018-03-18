@@ -372,6 +372,7 @@ public class WebDriverFactory implements IWebDriverFactory {
 		if ( !prefs.isEmpty( "prefs.firefox_path_app" ) && !prefs.isEmpty( "prefs.firefox_path_profile" ) ) {
 			ffBin = new FirefoxBinary( new File( prefs.getValue( "prefs.firefox_path_app" ) ) );
 			ffProfile = new FirefoxProfile( new File( prefs.getValue( "prefs.firefox_path_profile" ) ) );
+			setFirefoxProfilePreferences( ffProfile );
 
 			logger.info( "making WebDriver from bin and profile" );
 
@@ -379,6 +380,7 @@ public class WebDriverFactory implements IWebDriverFactory {
 		}
 		else if ( !prefs.isEmpty( "prefs.firefox_path_profile" ) ) {
 			ffProfile = new FirefoxProfile( new File( prefs.getValue( "prefs.firefox_path_profile" ) ) );
+			setFirefoxProfilePreferences( ffProfile );
 
 			logger.info( "making WebDriver from profile" );
 
@@ -389,6 +391,12 @@ public class WebDriverFactory implements IWebDriverFactory {
 
 			return new FirefoxDriver();
 		}
+	}
+
+	protected void setFirefoxProfilePreferences( FirefoxProfile ffProfile ) {
+		ffProfile.setPreference( "app.update.auto", false );
+		ffProfile.setPreference( "app.update.enabled", false );
+		ffProfile.setPreference( "browser.shell.checkDefaultBrowser", false );
 	}
 
 	protected ITweetUser makeTweetUser( String handle, String displayName, String userIDString, String verifiedText, String avatarURL ) {
