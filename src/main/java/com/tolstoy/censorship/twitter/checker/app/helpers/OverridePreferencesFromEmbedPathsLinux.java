@@ -42,7 +42,6 @@ public class OverridePreferencesFromEmbedPathsLinux implements IOverridePreferen
 		}
 
 		File firefoxProfilesDir = new File( firefoxDir, prefs.getValue( "embed.firefox.linux.profile_dir" ) );
-		System.out.println( "firefoxProfilesDir " + firefoxProfilesDir );
 		if ( firefoxProfilesDir.exists() && firefoxProfilesDir.isDirectory() ) {
 			prefs.setValue( PREF_PATH_PROFILE, firefoxProfilesDir.toString() );
 			bChanged = true;
