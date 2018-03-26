@@ -44,7 +44,7 @@ import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunFactory;
 import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunRepliesProcessor;
 import com.tolstoy.censorship.twitter.checker.api.analyzer.*;
 import com.tolstoy.censorship.twitter.checker.app.preferences.PreferencesFactory;
-import com.tolstoy.censorship.twitter.checker.app.webdriver.WebDriverFactory;
+import com.tolstoy.censorship.twitter.checker.app.webdriver.WebDriverFactoryJS;
 import com.tolstoy.censorship.twitter.checker.app.snapshot.SnapshotFactory;
 import com.tolstoy.censorship.twitter.checker.app.analyzer.AnalysisReportFactory;
 import com.tolstoy.censorship.twitter.checker.app.searchrun.*;
@@ -178,7 +178,7 @@ public final class Start {
 		}
 
 		try {
-			webDriverFactory = new WebDriverFactory( snapshotFactory, tweetFactory, prefs, bundle );
+			webDriverFactory = new WebDriverFactoryJS( snapshotFactory, tweetFactory, prefs, bundle );
 		}
 		catch ( Exception e ) {
 			handleError( false, bundle.getString( "exc_webdriver_init" ), e );
