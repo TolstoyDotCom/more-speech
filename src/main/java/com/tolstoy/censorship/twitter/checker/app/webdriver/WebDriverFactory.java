@@ -36,11 +36,11 @@ public class WebDriverFactory implements IWebDriverFactory {
 
 	private static final String TWEETUSER_HANDLE_UNKNOWN = "unknownuser";
 	private static final int DELAY_PRE_TWEETS = 10000;
+	private static final int DELAY_POST_CLICK_LOWQUALITY_BUTTON = 5000;
 	private static final int IMPLICITWAIT_PRE_ERRORPAGE = 5;
 	private static final int IMPLICITWAIT_PRE_SCROLLING = 20;
 	private static final int IMPLICITWAIT_PRE_TWEETS = 20;
 	private static final int IMPLICITWAIT_POST_TWEETS = 0;
-	private static final int DELAY_POST_CLICK_LOWQUALITY_BUTTON = 5;
 
 	private ITweetFactory tweetFactory;
 	private ISnapshotFactory snapshotFactory;
@@ -48,7 +48,7 @@ public class WebDriverFactory implements IWebDriverFactory {
 	private IResourceBundleWithFormatting bundle;
 
 	public WebDriverFactory( ISnapshotFactory snapshotFactory, ITweetFactory tweetFactory,
-									IPreferences prefs, IResourceBundleWithFormatting bundle ) {
+									IPreferences prefs, IResourceBundleWithFormatting bundle ) throws Exception {
 		this.tweetFactory = tweetFactory;
 		this.snapshotFactory = snapshotFactory;
 		this.prefs = prefs;
@@ -155,8 +155,6 @@ public class WebDriverFactory implements IWebDriverFactory {
 														String url,
 														int numberOfPagesToCheck,
 														int maxTweets ) throws Exception {
-		WebElement tempElem;
-
 		Utils.delay( DELAY_PRE_TWEETS );
 
 		driver.manage().timeouts().implicitlyWait( IMPLICITWAIT_PRE_ERRORPAGE, TimeUnit.SECONDS );
@@ -193,134 +191,26 @@ public class WebDriverFactory implements IWebDriverFactory {
 
 		int tweetCount = 0;
 		for ( WebElement tweetElem : tweetElems ) {
+			if ( Utils.isEmpty( tweetElem.getAttribute( "data-tweet-id" ) ) ||
+					Utils.isEmpty( tweetElem.getAttribute( "data-name" ) ) ) {
+				logger.info( "skipping empty tweet, classes:" + tweetElem.getAttribute( "class" ) );
+				continue;
+			}
+
 			ITweet tweet = tweetFactory.makeTweet();
 
-			tweet.setAttribute( "tweetid", tweetElem.getAttribute( "data-tweet-id" ) );
-			tweet.setAttribute( "youblock", tweetElem.getAttribute( "data-you-block" ) );
-			tweet.setAttribute( "followsyou", tweetElem.getAttribute( "data-follows-you" ) );
-			tweet.setAttribute( "youfollow", tweetElem.getAttribute( "data-you-follow" ) );
-			tweet.setAttribute( "tweetnonce", tweetElem.getAttribute( "data-tweet-nonce" ) );
-			tweet.setAttribute( "conversationid", tweetElem.getAttribute( "data-conversation-id" ) );
-			tweet.setAttribute( "permalinkpath", tweetElem.getAttribute( "data-permalink-path" ) );
-			tweet.setAttribute( "itemid", tweetElem.getAttribute( "data-item-id" ) );
-			tweet.setAttribute( "tweetstatinitialized", tweetElem.getAttribute( "data-tweet-stat-initialized" ) );
-			tweet.setAttribute( "disclosuretype", tweetElem.getAttribute( "data-disclosure-type" ) );
-			tweet.setAttribute( "hascards", tweetElem.getAttribute( "data-has-cards" ) );
-			tweet.setAttribute( "replytousersjson", tweetElem.getAttribute( "data-reply-to-users-json" ) );
-			tweet.setAttribute( "hasparenttweet", tweetElem.getAttribute( "data-has-parent-tweet" ) );
-			tweet.setAttribute( "isreplyto", tweetElem.getAttribute( "data-is-reply-to" ) );
-			tweet.setAttribute( "retweetid", tweetElem.getAttribute( "data-retweet-id" ) );
-			tweet.setAttribute( "quality", tweetElem.getAttribute( "data-conversation-section-quality" ) );
-			tweet.setAttribute( "componentcontext", tweetElem.getAttribute( "data-component-context" ) );
-
-			tweet.setAttribute( "userid", tweetElem.getAttribute( "data-user-id" ) );
-			tweet.setAttribute( "name", tweetElem.getAttribute( "data-name" ) );
-			tweet.setAttribute( "screenname", tweetElem.getAttribute( "data-screen-name" ) );
-
-			tempElem = driverutils.safeFindByClass( tweetElem, "avatar" );
-			if ( tempElem != null ) {
-				tweet.setAttribute( "avatarURL", tempElem.getAttribute( "src" ) );
-			}
-
-			tempElem = driverutils.safeFindByClass( tweetElem, "fullname" );
-			tweet.setAttribute( "fullname", driverutils.getWebElementText( tempElem ) );
-
-			tempElem = driverutils.safeFindByClass( tweetElem, "UserBadges" );
-			tweet.setAttribute( "verifiedText", driverutils.getWebElementText( tempElem ) );
-
-			tempElem = driverutils.safeFindByClass( tweetElem, "username" );
-			tweet.setAttribute( "username", driverutils.getWebElementText( tempElem ) );
-
-			tempElem = driverutils.safeFindByClass( tweetElem, "js-relative-timestamp" );
-			if ( tempElem != null ) {
-				tweet.setAttribute( "time", tempElem.getAttribute( "data-time" ) );
-			}
-			else {
-				tempElem = driverutils.safeFindByClass( tweetElem, "js-short-timestamp" );
-				if ( tempElem != null ) {
-					tweet.setAttribute( "time", tempElem.getAttribute( "data-time" ) );
-				}
-				else {
-					tempElem = driverutils.safeFindByClass( tweetElem, "_timestamp" );
-					if ( tempElem != null ) {
-						tweet.setAttribute( "time", tempElem.getAttribute( "data-time" ) );
-					}
-				}
-			}
-
-			tempElem = driverutils.safeFindByClass( tweetElem, "tweet-text" );
-			tweet.setAttribute( "tweettext", driverutils.getWebElementText( tempElem ) );
-			if ( tempElem != null ) {
-				tweet.setAttribute( "tweethtml", tempElem.getAttribute( "innerHTML" ) );
-				tweet.setAttribute( "tweetlanguage", tempElem.getAttribute( "lang" ) );
-			}
-			if ( Utils.isEmpty( tweet.getAttribute( "tweethtml" ) ) ) {
-				tweet.setAttribute( "tweethtml", "" );
-			}
-			if ( Utils.isEmpty( tweet.getAttribute( "tweetlanguage" ) ) ) {
-				tweet.setAttribute( "tweetlanguage", "en" );
-			}
-
-			tempElem = driverutils.safeFindByClass( tweetElem, "ReplyingToContextBelowAuthor", "a" );
-			if ( tempElem != null ) {
-				tweet.setAttribute( "repliedtohandle", Utils.extractHandle( tempElem.getAttribute( "href" ) ) );
-				tweet.setAttribute( "repliedtouserid", tempElem.getAttribute( "data-user-id" ) );
-			}
-
-				//	inside AdaptiveMedia-container
-			tempElem = driverutils.safeFindByClass( tweetElem, "AdaptiveMedia-photoContainer", "img" );
-			if ( tempElem != null ) {
-				tweet.setAttribute( "photourl", tempElem.getAttribute( "src" ) );
-			}
-
-				//	inside AdaptiveMedia-container
-			tempElem = driverutils.safeFindByClass( tweetElem, "PlayableMedia-player" );
-			if ( tempElem != null ) {
-				tweet.setAttribute( "videothumburl", Utils.extractFirstLink( tempElem.getAttribute( "style" ) ) );
-			}
-
-			tempElem = driverutils.safeFindByClass( tweetElem, "ProfileTweet-action--reply", "span" );
-			if ( tempElem != null ) {
-				tweet.setAttribute( "replycount", tempElem.getAttribute( "data-tweet-stat-count" ) );
-			}
-
-			tempElem = driverutils.safeFindByClass( tweetElem, "ProfileTweet-action--retweet", "span" );
-			if ( tempElem != null ) {
-				tweet.setAttribute( "retweetcount", tempElem.getAttribute( "data-tweet-stat-count" ) );
-			}
-			else {
-				tempElem = driverutils.safeFindByClass( tweetElem, "request-retweeted-popup" );
-				if ( tempElem != null ) {
-					tweet.setAttribute( "retweetcount", tempElem.getAttribute( "data-tweet-stat-count" ) );
-				}
-			}
-
-			tempElem = driverutils.safeFindByClass( tweetElem, "ProfileTweet-action--favorite", "span" );
-			if ( tempElem != null ) {
-				tweet.setAttribute( "favoritecount", tempElem.getAttribute( "data-tweet-stat-count" ) );
-			}
-			else {
-				tempElem = driverutils.safeFindByClass( tweetElem, "request-favorited-popup" );
-				if ( tempElem != null ) {
-					tweet.setAttribute( "favoritecount", tempElem.getAttribute( "data-tweet-stat-count" ) );
-				}
-			}
-
-			tempElem = driverutils.safeFindByClass( tweetElem, "QuoteTweet-link" );
-			if ( tempElem != null ) {
-				tweet.setAttribute( "innertweetid", tempElem.getAttribute( "data-conversation-id" ) );
-				tweet.setAttribute( "innertweetrawhref", tempElem.getAttribute( "href" ) );
-			}
-
-			tempElem = driverutils.safeFindByClass( tweetElem, "js-stream-item", "span" );
-			if ( tempElem != null ) {
-				tweet.setAttribute( "suggestionjson", tempElem.getAttribute( "data-suggestion-json" ) );
-			}
+			loadTweetAttributes( driver, driverutils, tweet, tweetElem );
 
 			tweet.setClasses( new StringList( tweetElem.getAttribute( "class" ) ) );
 			tweet.setMentions( new StringList( tweetElem.getAttribute( "data-mentions" ) ) );
 
-			tweet.setID( Long.parseLong( tweet.getAttribute( "tweetid" ) ) );
+			try {
+				tweet.setID( Long.parseLong( tweet.getAttribute( "tweetid" ) ) );
+			}
+			catch ( Exception e ) {
+				logger.info( "can't parse tweetid attribute, tweet is " + tweet );
+				throw e;
+			}
 
 			tweet.setUser( makeTweetUser( tweet.getAttribute( "screenname" ),
 											tweet.getAttribute( "name" ),
@@ -399,6 +289,132 @@ public class WebDriverFactory implements IWebDriverFactory {
 		ffProfile.setPreference( "browser.shell.checkDefaultBrowser", false );
 	}
 
+	protected void loadTweetAttributes( WebDriver driver, IWebDriverUtils driverutils, ITweet tweet, WebElement tweetElem ) {
+		WebElement tempElem;
+
+		tweet.setAttribute( "tweetid", tweetElem.getAttribute( "data-tweet-id" ) );
+		tweet.setAttribute( "youblock", tweetElem.getAttribute( "data-you-block" ) );
+		tweet.setAttribute( "followsyou", tweetElem.getAttribute( "data-follows-you" ) );
+		tweet.setAttribute( "youfollow", tweetElem.getAttribute( "data-you-follow" ) );
+		tweet.setAttribute( "tweetnonce", tweetElem.getAttribute( "data-tweet-nonce" ) );
+		tweet.setAttribute( "conversationid", tweetElem.getAttribute( "data-conversation-id" ) );
+		tweet.setAttribute( "permalinkpath", tweetElem.getAttribute( "data-permalink-path" ) );
+		tweet.setAttribute( "itemid", tweetElem.getAttribute( "data-item-id" ) );
+		tweet.setAttribute( "tweetstatinitialized", tweetElem.getAttribute( "data-tweet-stat-initialized" ) );
+		tweet.setAttribute( "disclosuretype", tweetElem.getAttribute( "data-disclosure-type" ) );
+		tweet.setAttribute( "hascards", tweetElem.getAttribute( "data-has-cards" ) );
+		tweet.setAttribute( "replytousersjson", tweetElem.getAttribute( "data-reply-to-users-json" ) );
+		tweet.setAttribute( "hasparenttweet", tweetElem.getAttribute( "data-has-parent-tweet" ) );
+		tweet.setAttribute( "isreplyto", tweetElem.getAttribute( "data-is-reply-to" ) );
+		tweet.setAttribute( "retweetid", tweetElem.getAttribute( "data-retweet-id" ) );
+		tweet.setAttribute( "quality", tweetElem.getAttribute( "data-conversation-section-quality" ) );
+		tweet.setAttribute( "componentcontext", tweetElem.getAttribute( "data-component-context" ) );
+
+		tweet.setAttribute( "userid", tweetElem.getAttribute( "data-user-id" ) );
+		tweet.setAttribute( "name", tweetElem.getAttribute( "data-name" ) );
+		tweet.setAttribute( "screenname", tweetElem.getAttribute( "data-screen-name" ) );
+
+		tempElem = driverutils.safeFindByClass( tweetElem, "avatar" );
+		if ( tempElem != null ) {
+			tweet.setAttribute( "avatarURL", tempElem.getAttribute( "src" ) );
+		}
+
+		tempElem = driverutils.safeFindByClass( tweetElem, "fullname" );
+		tweet.setAttribute( "fullname", driverutils.getWebElementText( tempElem ) );
+
+		tempElem = driverutils.safeFindByClass( tweetElem, "UserBadges" );
+		tweet.setAttribute( "verifiedText", driverutils.getWebElementText( tempElem ) );
+
+		tempElem = driverutils.safeFindByClass( tweetElem, "username" );
+		tweet.setAttribute( "username", driverutils.getWebElementText( tempElem ) );
+
+		tempElem = driverutils.safeFindByClass( tweetElem, "js-relative-timestamp" );
+		if ( tempElem != null ) {
+			tweet.setAttribute( "time", tempElem.getAttribute( "data-time" ) );
+		}
+		else {
+			tempElem = driverutils.safeFindByClass( tweetElem, "js-short-timestamp" );
+			if ( tempElem != null ) {
+				tweet.setAttribute( "time", tempElem.getAttribute( "data-time" ) );
+			}
+			else {
+				tempElem = driverutils.safeFindByClass( tweetElem, "_timestamp" );
+				if ( tempElem != null ) {
+					tweet.setAttribute( "time", tempElem.getAttribute( "data-time" ) );
+				}
+			}
+		}
+
+		tempElem = driverutils.safeFindByClass( tweetElem, "tweet-text" );
+		tweet.setAttribute( "tweettext", driverutils.getWebElementText( tempElem ) );
+		if ( tempElem != null ) {
+			tweet.setAttribute( "tweethtml", tempElem.getAttribute( "innerHTML" ) );
+			tweet.setAttribute( "tweetlanguage", tempElem.getAttribute( "lang" ) );
+		}
+		if ( Utils.isEmpty( tweet.getAttribute( "tweethtml" ) ) ) {
+			tweet.setAttribute( "tweethtml", "" );
+		}
+		if ( Utils.isEmpty( tweet.getAttribute( "tweetlanguage" ) ) ) {
+			tweet.setAttribute( "tweetlanguage", "en" );
+		}
+
+		tempElem = driverutils.safeFindByClass( tweetElem, "ReplyingToContextBelowAuthor", "a" );
+		if ( tempElem != null ) {
+			tweet.setAttribute( "repliedtohandle", Utils.extractHandle( tempElem.getAttribute( "href" ) ) );
+			tweet.setAttribute( "repliedtouserid", tempElem.getAttribute( "data-user-id" ) );
+		}
+
+			//	inside AdaptiveMedia-container
+		tempElem = driverutils.safeFindByClass( tweetElem, "AdaptiveMedia-photoContainer", "img" );
+		if ( tempElem != null ) {
+			tweet.setAttribute( "photourl", tempElem.getAttribute( "src" ) );
+		}
+
+			//	inside AdaptiveMedia-container
+		tempElem = driverutils.safeFindByClass( tweetElem, "PlayableMedia-player" );
+		if ( tempElem != null ) {
+			tweet.setAttribute( "videothumburl", Utils.extractFirstLink( tempElem.getAttribute( "style" ) ) );
+		}
+
+		tempElem = driverutils.safeFindByClass( tweetElem, "ProfileTweet-action--reply", "span" );
+		if ( tempElem != null ) {
+			tweet.setAttribute( "replycount", tempElem.getAttribute( "data-tweet-stat-count" ) );
+		}
+
+		tempElem = driverutils.safeFindByClass( tweetElem, "ProfileTweet-action--retweet", "span" );
+		if ( tempElem != null ) {
+			tweet.setAttribute( "retweetcount", tempElem.getAttribute( "data-tweet-stat-count" ) );
+		}
+		else {
+			tempElem = driverutils.safeFindByClass( tweetElem, "request-retweeted-popup" );
+			if ( tempElem != null ) {
+				tweet.setAttribute( "retweetcount", tempElem.getAttribute( "data-tweet-stat-count" ) );
+			}
+		}
+
+		tempElem = driverutils.safeFindByClass( tweetElem, "ProfileTweet-action--favorite", "span" );
+		if ( tempElem != null ) {
+			tweet.setAttribute( "favoritecount", tempElem.getAttribute( "data-tweet-stat-count" ) );
+		}
+		else {
+			tempElem = driverutils.safeFindByClass( tweetElem, "request-favorited-popup" );
+			if ( tempElem != null ) {
+				tweet.setAttribute( "favoritecount", tempElem.getAttribute( "data-tweet-stat-count" ) );
+			}
+		}
+
+		tempElem = driverutils.safeFindByClass( tweetElem, "QuoteTweet-link" );
+		if ( tempElem != null ) {
+			tweet.setAttribute( "innertweetid", tempElem.getAttribute( "data-conversation-id" ) );
+			tweet.setAttribute( "innertweetrawhref", tempElem.getAttribute( "href" ) );
+		}
+
+		tempElem = driverutils.safeFindByClass( tweetElem, "js-stream-item", "span" );
+		if ( tempElem != null ) {
+			tweet.setAttribute( "suggestionjson", tempElem.getAttribute( "data-suggestion-json" ) );
+		}
+	}
+
 	protected ITweetUser makeTweetUser( String handle, String displayName, String userIDString, String verifiedText, String avatarURL ) {
 		if ( Utils.isEmpty( handle ) ) {
 			return tweetFactory.makeTweetUser( TWEETUSER_HANDLE_UNKNOWN );
@@ -409,11 +425,13 @@ public class WebDriverFactory implements IWebDriverFactory {
 			userID = Long.parseLong( userIDString );
 		}
 		catch ( Exception e ) {
+			logger.info( "can't parse userIDString: " + userIDString + ", handle=" + handle + ", displayName=" + displayName );
+			throw e;
 		}
 
-		TweetUserVerifiedStatus verifiedStatus = TweetUserVerifiedStatus.NOTVERIFIED;
+		TweetUserVerifiedStatus verifiedStatus = TweetUserVerifiedStatus.UNKNOWN;
 		if ( Utils.isEmpty( verifiedText ) ) {
-			verifiedStatus = TweetUserVerifiedStatus.UNKNOWN;
+			verifiedStatus = TweetUserVerifiedStatus.NOTVERIFIED;
 		}
 		else if ( verifiedText.toLowerCase().indexOf( "verified" ) > -1 ) {
 			verifiedStatus = TweetUserVerifiedStatus.VERIFIED;
