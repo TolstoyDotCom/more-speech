@@ -180,10 +180,17 @@ public final class Utils {
 	}
 
 	public static String extractFirstLink( String s ) {
+		if ( s == null ) {
+			return "";
+		}
+
 		LinkExtractor linkExtractor = LinkExtractor.builder()
 			.linkTypes( EnumSet.of( LinkType.URL, LinkType.WWW ) )
 			.build();
 		Iterable<LinkSpan> links = linkExtractor.extractLinks( s );
+		if ( !links.iterator().hasNext() ) {
+			return "";
+		}
 		LinkSpan link = links.iterator().next();
 		if ( link != null ) {
 			return s.substring( link.getBeginIndex(), link.getEndIndex() );
