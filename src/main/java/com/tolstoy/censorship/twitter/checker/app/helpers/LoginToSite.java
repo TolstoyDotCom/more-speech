@@ -24,19 +24,19 @@ import com.tolstoy.censorship.twitter.checker.api.webdriver.*;
 import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
 import com.tolstoy.basic.app.utils.Utils;
 
-class LoginToSite {
+public class LoginToSite {
 	private static final Logger logger = LogManager.getLogger( LoginToSite.class );
 
 	private IPreferences prefs;
 	private String username, password;
 
-	LoginToSite( String username, String password, IPreferences prefs ) {
+	public LoginToSite( String username, String password, IPreferences prefs ) {
 		this.username = username;
 		this.password = password;
 		this.prefs = prefs;
 	}
 
-	void perform( WebDriver webDriver, IWebDriverUtils webDriverUtils ) {
+	public void perform( WebDriver webDriver, IWebDriverUtils webDriverUtils ) {
 		WebElement temp;
 		Actions actions;
 
