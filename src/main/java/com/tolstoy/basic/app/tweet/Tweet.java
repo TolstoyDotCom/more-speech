@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Objects;
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.text.StringEscapeUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -116,7 +117,7 @@ class Tweet implements ITweet {
 		sb.append( ")" );
 
 		sb.append( " " );
-		sb.append( Utils.removeNewlines( Utils.trimDefault( Utils.removeAllEmojis( getAttribute( "tweettext" ) ) ) ) );
+		sb.append( Utils.removeNewlines( Utils.trimDefault( StringEscapeUtils.escapeHtml4( Utils.removeAllEmojis( getAttribute( "tweettext" ) ) ) ) ) );
 
 		sb.append( "]" );
 
