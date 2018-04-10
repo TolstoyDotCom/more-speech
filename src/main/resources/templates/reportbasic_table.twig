@@ -13,13 +13,23 @@ the License.
 #}
 
 <table class="tweettable">
+	{% if ( urtweet ) %}
+	<tr class="tweetrow">
+		<td colspan="4">{{ urtweet }}</td>
+	</tr>
+	{% endif %}
+
+	{% if ( replytweet ) %}
 	<tr class="tweetrow">
 		<td colspan="4">{{ replytweet }}</td>
 	</tr>
+	{% endif %}
 
+	{% if ( sourcetweet ) %}
 	<tr class="tweetrow">
-		<td colspan="4">{{ originaltweet }}</td>
+		<td colspan="4">{{ sourcetweet }}</td>
 	</tr>
+	{% endif %}
 
 	<tr class="infoheader">
 		<th>Status</th>
@@ -29,7 +39,7 @@ the License.
 	</tr>
 
 	<tr class="inforow">
-		<td>{{ status }}</td>
+		{{ status }}
 		<td>{{ rank }}</td>
 		<td>{{ rank_by_interaction }}</td>
 		<td>{{ rank_by_date }}</td>

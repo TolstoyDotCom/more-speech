@@ -18,7 +18,21 @@ the License.
 	<title>{{ reporttitle }}</title>
 
 	<style>
+		body {
+			background-color:#DDD;
+			font-family: Arial, Helvetica, sans-serif;
+		}
+		.title {
+			width:90%;
+			margin-left:auto;
+			margin-right:auto;
+			margin-bottom:2rem;
+			text-align:center;
+			font-size:1.25rem;
+			font-weight:400;
+		}
 		.tweettable {
+			background-color:#F8F8F8;
 			margin: 0 2rem 2rem 2rem;
 			border: 1px solid black;
 			border-collapse: collapse;
@@ -36,11 +50,26 @@ the License.
 		.inforow {
 			font-weight:700;
 			font-size:1.25rem;
+			text-align:center;
+		}
+		.statuscell {
+			color:white;
+		}
+		footer {
+			width:90%;
+			margin-left:auto;
+			margin-right:auto;
+			margin-top:2rem;
+			text-align:center;
+			font-weight:400;
+			font-size:.85rem;
 		}
 	</style>
 </head>
 
 <body>
+	<h1 class="title">{{ reporttitle }} {% if ( loggedin ) %} (logged in) {% else %} (not logged in) {% endif %}</h1>
+
 	{{ content }}
 
 	<footer>
