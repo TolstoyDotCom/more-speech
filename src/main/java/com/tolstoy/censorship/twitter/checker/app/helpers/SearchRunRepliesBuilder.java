@@ -32,8 +32,30 @@ import com.tolstoy.basic.app.utils.Utils;
 import com.tolstoy.censorship.twitter.checker.app.gui.*;
 import com.tolstoy.basic.api.statusmessage.*;
 
-public class SearchRunBuilder {
-	private static final Logger logger = LogManager.getLogger( SearchRunBuilder.class );
+/**
+ * Utility that uses WebDriver to build an ISearchRunReplies object.
+ *
+ * First, read the tweets on the given user's timeline. Then for each
+ * of those, if it's a reply, look on the replied-to page to see
+ * where the tweet appears (if it does).
+ *
+ * This is complicated because of Twitter's conversations setup. Whether
+ * intentionally or not, some tweets in the timeline don't have the actual
+ * ID of the tweet that was replied to. Instead, they have a conversation
+ * ID that's could be the ID of the tweet that was replied to, or it could
+ * be the ID of the initial tweet in a series. If someone else replies to
+ * their own tweet and you reply to their reply, the HTML of your timeline
+ * will have the initial tweet's ID.
+ *
+ * What that means is that in some cases this class has to load an additional
+ * page to find the right tweet listing. First the individual tweet page
+ * with the reply is loaded to get the ID of the tweet that was replied to.
+ * Then the individual tweet page is loaded per usual to get the correct
+ * tweet listing. There may be cases where even that doesn't work, or the
+ * logic used to select the actual replied-to tweet doesn't work.
+ */
+public class SearchRunRepliesBuilder {
+	private static final Logger logger = LogManager.getLogger( SearchRunRepliesBuilder.class );
 
 	private IResourceBundleWithFormatting bundle;
 	private IStorage storage;
@@ -46,7 +68,7 @@ public class SearchRunBuilder {
 	private IStatusMessageReceiver statusMessageReceiver;
 	private String handleToCheck;
 
-	public SearchRunBuilder( IResourceBundleWithFormatting bundle,
+	public SearchRunRepliesBuilder( IResourceBundleWithFormatting bundle,
 						IStorage storage,
 						IPreferencesFactory prefsFactory,
 						IPreferences prefs,
@@ -152,11 +174,11 @@ public class SearchRunBuilder {
 			throw new RuntimeException( "timeline does not have a user" );
 		}
 
-		Map<Long,ISnapshotUserPageIndividualTweet> replies;
+		Map<Long,IReplyThread> replies;
 		ITweetCollection tweetCollection = timeline.getTweetCollection();
 		if ( tweetCollection == null || tweetCollection.getTweets() == null || tweetCollection.getTweets().size() < 1 ) {
 			logWarn( bundle.getString( "srb_bad_timeline", url ) );
-			replies = new HashMap<Long,ISnapshotUserPageIndividualTweet>();
+			replies = new HashMap<Long,IReplyThread>();
 		}
 		else {
 			logInfo( bundle.getString( "srb_loaded_timeline", tweetCollection.getTweets().size() ) );
@@ -169,28 +191,25 @@ public class SearchRunBuilder {
 		return ret;
 	}
 
-	protected Map<Long,ISnapshotUserPageIndividualTweet> getReplyPages( WebDriver webDriver, IWebDriverUtils webDriverUtils,
+	protected Map<Long,IReplyThread> getReplyPages( WebDriver webDriver, IWebDriverUtils webDriverUtils,
 																		List<ITweet> tweets, ITweetUser user,
 																		int numberOfReplyPagesToCheck, int maxReplies )
 																		throws Exception {
-		ISnapshotUserPageIndividualTweet tweetPage;
-		Map<Long,ISnapshotUserPageIndividualTweet> replies = new HashMap<Long,ISnapshotUserPageIndividualTweet>();
+		Map<Long,IReplyThread> replies = new HashMap<Long,IReplyThread>();
 
 		String handle = user.getHandle();
 
 		for ( ITweet tweet : tweets ) {
 				//	if it's a reply and not a self-reply
 			if ( tweet.getRepliedToTweetID() != 0 && !handle.equals( Utils.trimDefault( tweet.getRepliedToHandle() ).toLowerCase() ) ) {
-				try {
-					tweetPage = getReplyPage( webDriver, webDriverUtils, tweet, user, numberOfReplyPagesToCheck );
-					replies.put( tweet.getID(), tweetPage );
+				IReplyThread thread = getReplyThread( webDriver, webDriverUtils, tweet, user, numberOfReplyPagesToCheck );
 
-					if ( replies.size() >= maxReplies ) {
-						break;
-					}
+				if ( thread != null ) {
+					replies.put( tweet.getID(), thread );
 				}
-				catch ( Exception e ) {
-					//	continue to the next page
+
+				if ( replies.size() >= maxReplies ) {
+					break;
 				}
 			}
 		}
@@ -198,20 +217,68 @@ public class SearchRunBuilder {
 		return replies;
 	}
 
+	protected IReplyThread getReplyThread( WebDriver webDriver, IWebDriverUtils webDriverUtils, ITweet sourceTweet,
+											ITweetUser user, int numberOfReplyPagesToCheck )
+											throws Exception {
+		if ( sourceTweet.getRepliedToTweetID() == 0 ) {
+			return null;
+		}
+
+		try {
+			ISnapshotUserPageIndividualTweet replyPage = getReplyPage( webDriver, webDriverUtils, sourceTweet.getRepliedToTweetID(),
+																		sourceTweet.getRepliedToHandle(), user, numberOfReplyPagesToCheck );
+
+			IReplyThread defaultReplyThread = snapshotFactory.makeReplyThread( ReplyThreadType.DIRECT,
+																				sourceTweet,
+																				replyPage.getIndividualTweet(),
+																				replyPage,
+																				null );
+
+				//	don't bother loading another page to look for the user's reply if:
+				//		we found the user's reply, or
+				//		we didn't get all the tweets.
+				//	in the second case it might be further down or it might not be; the user
+				//	will have to increase numberOfReplyPagesToCheck to find out.
+			if ( replyPage.getTweetCollection().getTweetByID( sourceTweet.getID() ) != null || !replyPage.getComplete() ) {
+				return defaultReplyThread;
+			}
+
+			//	the conversation id given in the source tweet wasn't the actual tweet
+			//	that the user replied to. So, we have to in effect click the time ago
+			//	link on their timeline and look for the actual tweet they replied to
+			//	there. Then, we need to load the individual page for that actual tweet.
+
+			logInfo( bundle.getString( "srb_tweetnotfound_so_userreplypage", sourceTweet.getID(), sourceTweet.getRepliedToTweetID() ) );
+
+			try {
+				return getConversationReplyThread( webDriver, webDriverUtils, sourceTweet, user, numberOfReplyPagesToCheck );
+			}
+			catch ( Exception e ) {
+			}
+
+			//	something went wrong building the conversation reply thread, just return the default
+
+			return defaultReplyThread;
+		}
+		catch ( Exception e ) {
+			logWarn( bundle.getString( "srb_bad_userreplypage", sourceTweet.getRepliedToTweetID() ), e );
+			return null;
+		}
+	}
+
 	protected ISnapshotUserPageIndividualTweet getReplyPage( WebDriver webDriver, IWebDriverUtils webDriverUtils,
-																ITweet tweet, ITweetUser user, int numberOfReplyPagesToCheck )
+																long tweetID, String userInURL, ITweetUser user, int numberOfReplyPagesToCheck )
 																throws Exception {
-		ISnapshotUserPageIndividualTweet tweetPage;
+		ISnapshotUserPageIndividualTweet replyPage;
 		IInfiniteScrollingActivator scroller;
 
-		String userInURL = tweet.getRepliedToHandle();
 		if ( Utils.isEmpty( userInURL ) ) {
 				//	if we use the wrong user in the URL,
 				//	it will be redirected to the correct user's page
 			userInURL = user.getHandle();
 		}
 
-		String url = String.format( prefs.getValue( "targetsite.pattern.individual" ), userInURL, tweet.getRepliedToTweetID() );
+		String url = String.format( prefs.getValue( "targetsite.pattern.individual" ), userInURL, tweetID );
 
 		logInfo( bundle.getString( "srb_loading_replypage", url ) );
 
@@ -222,20 +289,86 @@ public class SearchRunBuilder {
 																	InfiniteScrollingActivatorType.INDIVIDUAL );
 
 		try {
-			tweetPage = webDriverFactory.makeSnapshotUserPageIndividualTweetFromURL( webDriver,
+			replyPage = webDriverFactory.makeSnapshotUserPageIndividualTweetFromURL( webDriver,
 																						webDriverUtils,
 																						scroller,
 																						url,
 																						numberOfReplyPagesToCheck,
 																						0 );
-			logInfo( bundle.getString( "srb_loaded_replypage", tweetPage.getTweetCollection().getTweets().size(), url ) );
+			logInfo( bundle.getString( "srb_loaded_replypage", replyPage.getTweetCollection().getTweets().size(), url ) );
 		}
 		catch ( Exception e ) {
 			logWarn( bundle.getString( "srb_bad_replypage", url ), e );
 			throw e;
 		}
 
-		return tweetPage;
+		return replyPage;
+	}
+
+	protected IReplyThread getConversationReplyThread( WebDriver webDriver, IWebDriverUtils webDriverUtils,
+														ITweet sourceTweet, ITweetUser user, int numberOfReplyPagesToCheck )
+														throws Exception {
+		ITweetCollection userReplyTweetCollection;
+		IInfiniteScrollingActivator scroller;
+
+		String userInURL = sourceTweet.getRepliedToHandle();
+		if ( Utils.isEmpty( userInURL ) ) {
+				//	if we use the wrong user in the URL,
+				//	it will be redirected to the correct user's page
+			userInURL = user.getHandle();
+		}
+
+		String url = String.format( prefs.getValue( "targetsite.pattern.individual" ), user.getHandle(), sourceTweet.getID() );
+
+		logInfo( bundle.getString( "srb_loading_usertweetpage", url ) );
+
+		webDriver.get( url );
+
+		scroller = webDriverFactory.makeInfiniteScrollingActivator( webDriver,
+																	webDriverUtils,
+																	InfiniteScrollingActivatorType.INDIVIDUAL );
+
+		try {
+			userReplyTweetCollection = webDriverFactory.makeTweetCollectionFromURL( webDriver, webDriverUtils, scroller,
+																					url, numberOfReplyPagesToCheck, 0 );
+
+			logInfo( bundle.getString( "srb_loaded_usertweetpage", userReplyTweetCollection.getTweets().size(), url ) );
+
+			int numUserReplyTweets = userReplyTweetCollection.getTweets().size();
+			ITweet actualTweet = null, tempTweet;
+			for ( int i = 0; i < numUserReplyTweets; i++ ) {
+				tempTweet = userReplyTweetCollection.getTweets().get( i );
+				logger.info( "REPLYPAGETWEET=" + tempTweet.getSummary() );
+
+				//	for now, assume the tweet just before the user's sourceTweet is the actual tweet that was replied to
+				if ( tempTweet.getID() == sourceTweet.getID() ) {
+					if ( i < 1 ) {
+						throw new RuntimeException( bundle.getString( "srb_userreply_is_first" ) );
+					}
+					actualTweet = userReplyTweetCollection.getTweets().get( i - 1 );
+					break;
+				}
+			}
+
+			if ( actualTweet == null ) {
+				throw new RuntimeException( bundle.getString( "srb_userreply_reply_not_found" ) );
+			}
+
+			logger.info( bundle.getString( "srb_userreply_switched", sourceTweet.getSummary(), actualTweet.getSummary() ) );
+
+			ISnapshotUserPageIndividualTweet replyPage = getReplyPage( webDriver, webDriverUtils, actualTweet.getID(),
+																		actualTweet.getUser().getHandle(), user, numberOfReplyPagesToCheck );
+
+			return snapshotFactory.makeReplyThread( ReplyThreadType.INDIRECT,
+													sourceTweet,
+													actualTweet,
+													replyPage,
+													userReplyTweetCollection );
+		}
+		catch ( Exception e ) {
+			logWarn( bundle.getString( "srb_bad_usertweetpage", url ), e );
+			throw e;
+		}
 	}
 
 	private void logInfo( String s ) {
