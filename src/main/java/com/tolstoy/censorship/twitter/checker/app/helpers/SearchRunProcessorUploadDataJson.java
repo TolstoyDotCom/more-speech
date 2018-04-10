@@ -30,23 +30,23 @@ import org.apache.http.message.BasicNameValuePair;
 import com.tolstoy.basic.api.statusmessage.*;
 import com.tolstoy.basic.api.utils.IResourceBundleWithFormatting;
 import com.tolstoy.basic.app.utils.Utils;
-import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunReplies;
-import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunRepliesProcessor;
+import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRun;
+import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunProcessor;
 import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
 
-public class SearchRunRepliesProcessorUploadDataJson implements ISearchRunRepliesProcessor {
-	private static final Logger logger = LogManager.getLogger( SearchRunRepliesProcessorUploadDataJson.class );
+public class SearchRunProcessorUploadDataJson implements ISearchRunProcessor {
+	private static final Logger logger = LogManager.getLogger( SearchRunProcessorUploadDataJson.class );
 
 	private IResourceBundleWithFormatting bundle;
 	private IPreferences prefs;
 
-	public SearchRunRepliesProcessorUploadDataJson( IResourceBundleWithFormatting bundle, IPreferences prefs ) {
+	public SearchRunProcessorUploadDataJson( IResourceBundleWithFormatting bundle, IPreferences prefs ) {
 		this.bundle = bundle;
 		this.prefs = prefs;
 	}
 
 	@Override
-	public ISearchRunReplies process( ISearchRunReplies searchRun, IStatusMessageReceiver statusMessageReceiver ) throws Exception {
+	public ISearchRun process( ISearchRun searchRun, IStatusMessageReceiver statusMessageReceiver ) throws Exception {
 		if ( !Utils.isStringTrue( prefs.getValue( "prefs.upload_results" ) ) ) {
 			return searchRun;
 		}

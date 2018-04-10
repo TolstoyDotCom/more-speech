@@ -24,8 +24,8 @@ import com.tolstoy.censorship.twitter.checker.app.reportwriter.*;
 import com.tolstoy.censorship.twitter.checker.api.searchrun.*;
 import com.tolstoy.censorship.twitter.checker.api.analyzer.*;
 
-public class SearchRunRepliesProcessorWriteReport implements ISearchRunRepliesProcessor {
-	private static final Logger logger = LogManager.getLogger( SearchRunRepliesProcessorWriteReport.class );
+public class SearchRunProcessorWriteReport implements ISearchRunProcessor {
+	private static final Logger logger = LogManager.getLogger( SearchRunProcessorWriteReport.class );
 
 	private IResourceBundleWithFormatting bundle;
 	private IPreferences prefs;
@@ -33,8 +33,8 @@ public class SearchRunRepliesProcessorWriteReport implements ISearchRunRepliesPr
 	private IAnalysisReportFactory analysisReportFactory;
 	private boolean debugFlag;
 
-	public SearchRunRepliesProcessorWriteReport( IResourceBundleWithFormatting bundle, IPreferences prefs, IAppDirectories appDirectories,
-											IAnalysisReportFactory analysisReportFactory, boolean debugFlag ) {
+	public SearchRunProcessorWriteReport( IResourceBundleWithFormatting bundle, IPreferences prefs, IAppDirectories appDirectories,
+													IAnalysisReportFactory analysisReportFactory, boolean debugFlag ) {
 		this.bundle = bundle;
 		this.prefs = prefs;
 		this.appDirectories = appDirectories;
@@ -43,16 +43,18 @@ public class SearchRunRepliesProcessorWriteReport implements ISearchRunRepliesPr
 	}
 
 	@Override
-	public ISearchRunReplies process( ISearchRunReplies searchRun, IStatusMessageReceiver statusMessageReceiver ) throws Exception {
-		IAnalysisReportRepliesBasic basicReport = analysisReportFactory.createAnalysisReportRepliesBasic( searchRun );
+	public ISearchRun process( ISearchRun searchRun, IStatusMessageReceiver statusMessageReceiver ) throws Exception {
+		if ( searchRun instanceof ISearchRunReplies ) {
+			IAnalysisReportRepliesBasic basicRepliesReport = analysisReportFactory.createAnalysisReportRepliesBasic( (ISearchRunReplies) searchRun );
 
-		basicReport.run();
+			basicRepliesReport.run();
 
-		ReportWriterRepliesBasic reportWriter = new ReportWriterRepliesBasic( prefs, bundle, appDirectories, true );
+			ReportWriterRepliesBasic reportWriterReplies = new ReportWriterRepliesBasic( prefs, bundle, appDirectories, true );
 
-		reportWriter.writeReport( basicReport );
+			reportWriterReplies.writeReport( basicRepliesReport );
 
-		statusMessageReceiver.addMessage( new StatusMessage( "Wrote report to " + reportWriter.getFilename(), StatusMessageSeverity.INFO ) );
+			statusMessageReceiver.addMessage( new StatusMessage( "Wrote report to " + reportWriterReplies.getFilename(), StatusMessageSeverity.INFO ) );
+		}
 
 		return searchRun;
 	}

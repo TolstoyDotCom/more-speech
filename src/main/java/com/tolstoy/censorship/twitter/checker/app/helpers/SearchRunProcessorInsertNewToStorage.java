@@ -21,24 +21,25 @@ import com.tolstoy.basic.api.storage.*;
 import com.tolstoy.basic.app.utils.Utils;
 import com.tolstoy.basic.api.utils.IResourceBundleWithFormatting;
 import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
-import com.tolstoy.censorship.twitter.checker.api.searchrun.*;
+import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRun;
+import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunProcessor;
 import com.tolstoy.censorship.twitter.checker.app.storage.StorageTable;
 
-public class SearchRunRepliesProcessorInsertNewToStorage implements ISearchRunRepliesProcessor {
-	private static final Logger logger = LogManager.getLogger( SearchRunRepliesProcessorInsertNewToStorage.class );
+public class SearchRunProcessorInsertNewToStorage implements ISearchRunProcessor {
+	private static final Logger logger = LogManager.getLogger( SearchRunProcessorInsertNewToStorage.class );
 
 	private IResourceBundleWithFormatting bundle;
 	private IPreferences prefs;
 	private IStorage storage;
 
-	public SearchRunRepliesProcessorInsertNewToStorage( IResourceBundleWithFormatting bundle, IPreferences prefs, IStorage storage ) {
+	public SearchRunProcessorInsertNewToStorage( IResourceBundleWithFormatting bundle, IPreferences prefs, IStorage storage ) {
 		this.bundle = bundle;
 		this.prefs = prefs;
 		this.storage = storage;
 	}
 
 	@Override
-	public ISearchRunReplies process( ISearchRunReplies searchRun, IStatusMessageReceiver statusMessageReceiver ) throws Exception {
+	public ISearchRun process( ISearchRun searchRun, IStatusMessageReceiver statusMessageReceiver ) throws Exception {
 		storage.saveRecord( StorageTable.SEARCHRUN, (IStorable) searchRun );
 
 		statusMessageReceiver.addMessage( new StatusMessage( "Wrote search run to storage", StatusMessageSeverity.INFO ) );
