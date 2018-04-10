@@ -34,7 +34,7 @@ class SearchRunReplies extends SearchRun implements ISearchRunReplies {
 	private ISnapshotUserPageTimeline timeline;
 
 	@JsonProperty
-	private Map<Long,ISnapshotUserPageIndividualTweet> replies;
+	private Map<Long,IReplyThread> replies;
 
 	SearchRunReplies() {
 		super( 0, null );
@@ -44,26 +44,26 @@ class SearchRunReplies extends SearchRun implements ISearchRunReplies {
 		super( id, user );
 
 		this.timeline = null;
-		this.replies = new HashMap<Long,ISnapshotUserPageIndividualTweet>();
+		this.replies = new HashMap<Long,IReplyThread>();
 	}
 
 	SearchRunReplies( long id, ITweetUser user, Instant startTime, Instant endTime ) {
 		super( id, user, startTime, endTime );
 
 		this.timeline = null;
-		this.replies = new HashMap<Long,ISnapshotUserPageIndividualTweet>();
+		this.replies = new HashMap<Long,IReplyThread>();
 	}
 
 	SearchRunReplies( long id, ITweetUser user, Instant startTime, Instant endTime, Map<String,String> attributes ) {
 		super( id, user, startTime, endTime, attributes );
 
 		this.timeline = null;
-		this.replies = new HashMap<Long,ISnapshotUserPageIndividualTweet>();
+		this.replies = new HashMap<Long,IReplyThread>();
 	}
 
 	SearchRunReplies( long id, ITweetUser user, Instant startTime, Instant endTime,
 								ISnapshotUserPageTimeline timeline,
-								Map<Long,ISnapshotUserPageIndividualTweet> replies ) {
+								Map<Long,IReplyThread> replies ) {
 		super( id, user, startTime, endTime );
 
 		this.timeline = timeline;
@@ -72,7 +72,7 @@ class SearchRunReplies extends SearchRun implements ISearchRunReplies {
 
 	SearchRunReplies( long id, ITweetUser user, Instant startTime, Instant endTime,
 								ISnapshotUserPageTimeline timeline,
-								Map<Long,ISnapshotUserPageIndividualTweet> replies,
+								Map<Long,IReplyThread> replies,
 								Map<String,String> attributes ) {
 		super( id, user, startTime, endTime, attributes );
 
@@ -91,31 +91,31 @@ class SearchRunReplies extends SearchRun implements ISearchRunReplies {
 	}
 
 	@Override
-	public Map<Long,ISnapshotUserPageIndividualTweet> getReplies() {
+	public Map<Long,IReplyThread> getReplies() {
 		return replies;
 	}
 
 	@Override
-	public void setReplies( Map<Long,ISnapshotUserPageIndividualTweet> replies ) {
+	public void setReplies( Map<Long,IReplyThread> replies ) {
 		this.replies = replies;
 	}
 
 	@JsonIgnore
 	@Override
-	public void setReply( long originalTweetID, ISnapshotUserPageIndividualTweet replyPage ) {
-		replies.put( originalTweetID, replyPage );
+	public void setReply( long sourceTweetID, IReplyThread replyThread ) {
+		replies.put( sourceTweetID, replyThread );
 	}
 
 	@JsonIgnore
 	@Override
-	public Set<Long> getOriginalReplyIDs() {
+	public Set<Long> getSourceTweetIDs() {
 		return replies.keySet();
 	}
 
 	@JsonIgnore
 	@Override
-	public ISnapshotUserPageIndividualTweet getOriginalReplyByID( long originalTweetID ) {
-		return replies.get( originalTweetID );
+	public IReplyThread getReplyThreadBySourceTweetID( long sourceTweetID ) {
+		return replies.get( sourceTweetID );
 	}
 
 	@Override

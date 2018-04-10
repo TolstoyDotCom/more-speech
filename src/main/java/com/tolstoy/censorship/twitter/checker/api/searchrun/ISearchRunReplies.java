@@ -25,7 +25,7 @@ import com.tolstoy.censorship.twitter.checker.api.snapshot.*;
  * For instance, {@literal @}NASA's timeline might contain a reply to {@literal @}space_station.
  * The @NASA tweet will be in the ISnapshotUserPageTimeline object.
  * And, the {@literal @}space_station tweet {@literal @}NASA replied to
- * will be one of the ISnapshotUserPageIndividualTweet objects.
+ * will be one of the IReplyThread objects.
  * The latter object contains the tweet from {@literal @}space_station
  * and also the set of tweets representing the replies.
  */
@@ -43,36 +43,35 @@ public interface ISearchRunReplies extends ISearchRun {
 	/** Get the set of individual pages that should contain the user's replies.
 	 * @return the individual pages in a map. The map key is the tweet ID
 	 * of the replying user's original tweet. (The tweet ID of the tweet the
-	 * user replied to can be obtained from the ISnapshotUserPageIndividualTweet
+	 * user replied to can be obtained from the IReplyThread
 	 * object.)
 	 */
-	Map<Long,ISnapshotUserPageIndividualTweet> getReplies();
+	Map<Long,IReplyThread> getReplies();
 
 	/** Set the set of individual pages that should contain the user's replies.
 	 * @param replies the individual pages in a map. The map key is the tweet ID
 	 * of the replying user's original tweet. (The tweet ID of the tweet the
-	 * user replied to can be obtained from the ISnapshotUserPageIndividualTweet
+	 * user replied to can be obtained from the IReplyThread
 	 * object.)
 	 */
-	void setReplies( Map<Long,ISnapshotUserPageIndividualTweet> replies );
+	void setReplies( Map<Long,IReplyThread> replies );
 
-	/** Set an individual page that should contain a user's reply.
-	 * @param originalTweetID the tweet ID of the user's original tweet
-	 * @param replyPage an individual pages
+	/** Set a reply thread that should contain a user's reply.
+	 * @param sourceTweetID the tweet ID of the user's original tweet
+	 * @param replyThread a reply thread
 	 */
-	void setReply( long originalTweetID, ISnapshotUserPageIndividualTweet replyPage );
+	void setReply( long sourceTweetID, IReplyThread replyThread );
 
 	/** Get the set of tweet IDs for the user's replies. If five replies
 	 * from the timeline were saved, this will have the five IDs of those tweets.
 	 * @return a set of tweet IDs
 	 */
-	Set<Long> getOriginalReplyIDs();
+	Set<Long> getSourceTweetIDs();
 
 	/** Get the individual page based on the user's original tweet ID.
-	 * @param originalTweetID the individual page that should contain the user's reply
-	 * @return an individual page, or null if there is no such page.
-	 * @throws NumberIsTooLargeException if order is too large
+	 * @param sourceTweetID the ID of a tweet, such as from the user's timeline.
+	 * @return a reply thread, or null if there is no such page.
 	 */
-	ISnapshotUserPageIndividualTweet getOriginalReplyByID( long originalTweetID );
+	IReplyThread getReplyThreadBySourceTweetID( long sourceTweetID );
 }
 
