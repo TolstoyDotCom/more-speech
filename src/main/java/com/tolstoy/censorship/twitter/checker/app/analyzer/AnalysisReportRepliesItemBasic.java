@@ -24,24 +24,27 @@ import com.tolstoy.basic.api.tweet.ITweet;
 import com.tolstoy.censorship.twitter.checker.api.analyzer.IAnalysisReportRepliesItemBasic;
 import com.tolstoy.censorship.twitter.checker.api.analyzer.AnalysisReportItemBasicTweetStatus;
 import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageIndividualTweet;
+import com.tolstoy.censorship.twitter.checker.api.snapshot.IReplyThread;
 
 class AnalysisReportRepliesItemBasic implements IAnalysisReportRepliesItemBasic {
 	private static final Logger logger = LogManager.getLogger( AnalysisReportRepliesItemBasic.class );
 
 	private final ITweetFactory tweetFactory;
-	private final ITweet originalReply, repliedToTweet;
+	private final ITweet sourceTweet, repliedToTweet;
+	private final IReplyThread replyThread;
 	private ITweetCollection anomalousHigherTweets, anomalousLowerTweets, suppressedTweets;
 	private AnalysisReportItemBasicTweetStatus status;
 	private Map<String,String> attributes;
 	private int totalReplies, rank, expectedRankByInteraction, expectedRankByDate, expectedRankByOverallRanking;
 	private boolean isComplete;
 
-	AnalysisReportRepliesItemBasic( ITweetFactory tweetFactory, ITweet originalReply, ISnapshotUserPageIndividualTweet replyPage ) {
+	AnalysisReportRepliesItemBasic( ITweetFactory tweetFactory, ITweet sourceTweet, IReplyThread replyThread ) {
 		this.tweetFactory = tweetFactory;
-		this.originalReply = originalReply;
-		this.repliedToTweet = replyPage.getIndividualTweet();
-		this.totalReplies = replyPage.getNumReplies();
-		this.isComplete = replyPage.getComplete();
+		this.sourceTweet = sourceTweet;
+		this.replyThread = replyThread;
+		this.repliedToTweet = replyThread.getRepliedToTweet();
+		this.totalReplies = replyThread.getReplyPage().getNumReplies();
+		this.isComplete = replyThread.getReplyPage().getComplete();
 
 		this.status = AnalysisReportItemBasicTweetStatus.UNKNOWN;
 		this.rank = 0;
@@ -55,13 +58,18 @@ class AnalysisReportRepliesItemBasic implements IAnalysisReportRepliesItemBasic 
 	}
 
 	@Override
-	public ITweet getOriginalReply() {
-		return originalReply;
+	public ITweet getSourceTweet() {
+		return sourceTweet;
 	}
 
 	@Override
 	public ITweet getRepliedToTweet() {
 		return repliedToTweet;
+	}
+
+	@Override
+	public IReplyThread getReplyThread() {
+		return replyThread;
 	}
 
 	@Override
@@ -177,7 +185,7 @@ class AnalysisReportRepliesItemBasic implements IAnalysisReportRepliesItemBasic 
 	@Override
 	public String toString() {
 		return new ToStringBuilder( this )
-		.append( "originalReply", originalReply )
+		.append( "sourceTweet", sourceTweet )
 		.append( "repliedToTweet", repliedToTweet )
 		.append( "status", status )
 		.append( "totalReplies", totalReplies )

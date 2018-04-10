@@ -16,10 +16,13 @@ package com.tolstoy.censorship.twitter.checker.api.analyzer;
 import java.util.Map;
 import com.tolstoy.basic.api.tweet.ITweet;
 import com.tolstoy.basic.api.tweet.ITweetCollection;
+import com.tolstoy.censorship.twitter.checker.api.snapshot.IReplyThread;
 
 public interface IAnalysisReportRepliesItemBasic {
-	ITweet getOriginalReply();
+	ITweet getSourceTweet();
 	ITweet getRepliedToTweet();
+	IReplyThread getReplyThread();
+
 	int getTotalReplies();
 	boolean getListIsComplete();
 

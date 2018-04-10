@@ -20,6 +20,9 @@ import java.util.HashMap;
 import java.util.Set;
 import java.util.Collections;
 import java.time.Instant;
+import java.time.format.DateTimeFormatter;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -33,6 +36,8 @@ import com.tolstoy.censorship.twitter.checker.api.analyzer.IAnalysisReportReplie
 import com.tolstoy.censorship.twitter.checker.api.analyzer.AnalysisReportItemBasicTweetStatus;
 import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunReplies;
 import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageIndividualTweet;
+import com.tolstoy.censorship.twitter.checker.api.snapshot.IReplyThread;
+import com.tolstoy.censorship.twitter.checker.api.snapshot.ReplyThreadType;
 
 class AnalysisReportRepliesBasic implements IAnalysisReportRepliesBasic {
 	private static final Logger logger = LogManager.getLogger( AnalysisReportRepliesBasic.class );
@@ -48,6 +53,7 @@ class AnalysisReportRepliesBasic implements IAnalysisReportRepliesBasic {
 	private final IResourceBundleWithFormatting bundle;
 	private final List<IAnalysisReportRepliesItemBasic> reportItems;
 	private Map<String,String> attributes;
+	private DateTimeFormatter nameDateFormatter;
 
 	AnalysisReportRepliesBasic( ISearchRunReplies searchRun, ITweetFactory tweetFactory, IPreferences prefs, IResourceBundleWithFormatting bundle ) {
 		this.tweetFactory = tweetFactory;
@@ -56,42 +62,75 @@ class AnalysisReportRepliesBasic implements IAnalysisReportRepliesBasic {
 		this.bundle = bundle;
 		this.attributes = new HashMap<String,String>();
 		this.reportItems = new ArrayList<IAnalysisReportRepliesItemBasic>();
+		this.nameDateFormatter = DateTimeFormatter.ofPattern( bundle.getString( "rpt_name_dateformat" ) );
 	}
 
-	protected IAnalysisReportRepliesItemBasic createReportItem( ITweet originalTweet, ISnapshotUserPageIndividualTweet replyPage ) {
-		AnalysisReportRepliesItemBasic ret = new AnalysisReportRepliesItemBasic( tweetFactory, originalTweet, replyPage );
+	@Override
+	public void run() throws Exception {
+		reportItems.clear();
+
+		ITweetCollection tweetColTimeline = searchRun.getTimeline().getTweetCollection();
+
+		Set<Long> sourceTweetIDs = searchRun.getSourceTweetIDs();
+
+		for ( Long sourceTweetID : sourceTweetIDs ) {
+			ITweet sourceTweet = tweetColTimeline.getTweetByID( sourceTweetID );
+			IReplyThread replyThread = searchRun.getReplyThreadBySourceTweetID( sourceTweetID );
+
+			//logger.info( "sourceTweet=" + sourceTweet.getSummary() );
+			//logger.info( "replyThread=" + replyThread );
+
+			if ( sourceTweet != null && replyThread != null ) {
+				reportItems.add( createReportItem( sourceTweet, replyThread ) );
+			}
+		}
+	}
+
+	protected IAnalysisReportRepliesItemBasic createReportItem( ITweet sourceTweet, IReplyThread replyThread ) {
+		AnalysisReportRepliesItemBasic ret = new AnalysisReportRepliesItemBasic( tweetFactory, sourceTweet, replyThread );
+
+		ISnapshotUserPageIndividualTweet replyPage = replyThread.getReplyPage();
+
+		if ( replyThread.getReplyThreadType() == ReplyThreadType.INDIRECT &&
+				replyThread.getConversationTweetCollection() != null &&
+				replyThread.getConversationTweetCollection().getTweets().size() > 0 ) {
+			ret.setAttribute( "initial conversation", summarizeTweetList( replyThread.getConversationTweetCollection().getTweets() ) );
+			ret.setAttribute( "initial conversation id", "" + replyThread.getSourceTweet().getRepliedToTweetID() );
+		}
+
+		ret.setAttribute( "reply thread type", "" + replyThread.getReplyThreadType() );
 
 		ret.setAttribute( "total replies", "" + replyPage.getNumReplies() );
 
 		List<ITweet> tweets = replyPage.getTweetCollection().getTweets();
-		ret.setAttribute( "originaltweets", summarizeTweetList( tweets ) );
+		ret.setAttribute( "_sourcetweets", summarizeTweetList( tweets ) );
 
-		int numNewerTweets = countNewerTweets( originalTweet, tweets );
-		int percentNewerTweets = (int) Math.floor( ( 100.0 * (float) numNewerTweets ) / (float) replyPage.getNumReplies() );
-		int percentComplete = (int) Math.floor( ( 100.0 * (float) tweets.size() ) / (float) replyPage.getNumReplies() );
+		int numNewerTweets = countNewerTweets( sourceTweet, tweets );
+		int percentNewerTweets = Utils.makePercentInt( numNewerTweets, replyPage.getNumReplies() );
+		int percentComplete = Utils.makePercentInt( tweets.size(), replyPage.getNumReplies() );
 
 		ret.setAttribute( "numNewerTweets", "" + numNewerTweets );
 		ret.setAttribute( "percentNewerTweets", "" + percentNewerTweets );
 		ret.setAttribute( "percentComplete", "" + percentComplete );
 
-		ITweet foundOriginalTweet = replyPage.getTweetCollection().getTweetByID( originalTweet.getID() );
+		ITweet foundSourceTweet = replyPage.getTweetCollection().getTweetByID( sourceTweet.getID() );
 
-		ret.setAttribute( "foundOriginalTweet", ( foundOriginalTweet != null ? foundOriginalTweet.getSummary() : " IS NULL" ) );
+		ret.setAttribute( "foundSourceTweet", ( foundSourceTweet != null ? foundSourceTweet.getSummary() : " IS NULL" ) );
 
 			//	the reply isn't in the page. It might have been censored, or it just might be further
 			//	down the page if we don't have all the tweets from the page. Set the status accordingly.
-		if ( foundOriginalTweet == null ) {
-			ret.setTweetStatus( getTweetNotFoundStatus( originalTweet, percentNewerTweets, percentComplete, replyPage ) );
+		if ( foundSourceTweet == null ) {
+			ret.setTweetStatus( getTweetNotFoundStatus( sourceTweet, percentNewerTweets, percentComplete, replyPage ) );
 			ret.setAttribute( "TWEETNOTFOUND, status set to ", "" + ret.getTweetStatus() );
 			return ret;
 		}
 
-		int pageOrder = replyPage.getTweetCollection().getTweetOrderByID( originalTweet.getID() );
-		int interactionOrder = getTweetInteractionOrder( ret, tweets, originalTweet.getID() );
-		int dateOrder = getTweetDateOrder( ret, tweets, originalTweet.getID() );
+		int pageOrder = replyPage.getTweetCollection().getTweetOrderByID( sourceTweet.getID() );
+		int interactionOrder = getTweetInteractionOrder( ret, tweets, sourceTweet.getID() );
+		int dateOrder = getTweetDateOrder( ret, tweets, sourceTweet.getID() );
 
-		int percentComparedToInteractionOrder = (int) Math.floor( ( 100.0 * (float) ( interactionOrder - pageOrder ) ) / (float) replyPage.getNumReplies() );
-		int percentComparedToDateOrder = (int) Math.floor( ( 100.0 * (float) ( dateOrder - pageOrder ) ) / (float) replyPage.getNumReplies() );
+		int percentComparedToInteractionOrder = Utils.makePercentInt( interactionOrder - pageOrder, replyPage.getNumReplies() );
+		int percentComparedToDateOrder = Utils.makePercentInt( dateOrder - pageOrder, replyPage.getNumReplies() );
 
 		ret.setAttribute( "pageOrder", "" + pageOrder );
 		ret.setAttribute( "interactionOrder", "" + interactionOrder );
@@ -103,7 +142,7 @@ class AnalysisReportRepliesBasic implements IAnalysisReportRepliesBasic {
 		ret.setExpectedRankByInteraction( interactionOrder );
 		ret.setExpectedRankByDate( dateOrder );
 
-		String quality = Utils.trimDefault( foundOriginalTweet.getAttribute( "quality" ) ).toLowerCase();
+		String quality = Utils.trimDefault( foundSourceTweet.getAttribute( "quality" ) ).toLowerCase();
 		if ( quality.indexOf( LOW_QUALITY_TEST ) > -1 ) {
 				//	the reply is hidden behind the "Show more replies" button
 			ret.setTweetStatus( AnalysisReportItemBasicTweetStatus.CENSORED_HIDDEN );
@@ -134,7 +173,7 @@ class AnalysisReportRepliesBasic implements IAnalysisReportRepliesBasic {
 		return ret;
 	}
 
-	protected AnalysisReportItemBasicTweetStatus getTweetNotFoundStatus( ITweet originalTweet, int percentNewerTweets, int percentComplete,
+	protected AnalysisReportItemBasicTweetStatus getTweetNotFoundStatus( ITweet sourceTweet, int percentNewerTweets, int percentComplete,
 																			ISnapshotUserPageIndividualTweet replyPage ) {
 		if ( replyPage.getComplete() ) {
 				//	tweet isn't there and replyPage is complete
@@ -183,27 +222,6 @@ class AnalysisReportRepliesBasic implements IAnalysisReportRepliesBasic {
 		return getTweetOrder( tempList, tweetID );
 	}
 
-	@Override
-	public void run() throws Exception {
-		reportItems.clear();
-
-		ITweetCollection tweetColTimeline = searchRun.getTimeline().getTweetCollection();
-
-		Set<Long> originalReplyIDs = searchRun.getOriginalReplyIDs();
-
-		for ( Long originalReplyID : originalReplyIDs ) {
-			ITweet originalTweet = tweetColTimeline.getTweetByID( originalReplyID );
-			ISnapshotUserPageIndividualTweet replyPage = searchRun.getOriginalReplyByID( originalReplyID );
-
-			//logger.info( "originalTweet=" + originalTweet.getSummary() );
-			//logger.info( "replyPage=" + replyPage );
-
-			if ( originalTweet != null && replyPage != null ) {
-				reportItems.add( createReportItem( originalTweet, replyPage ) );
-			}
-		}
-	}
-
 	protected String summarizeTweetList( List<ITweet> tweets ) {
 		List<String> temp = new ArrayList<String>( tweets.size() );
 
@@ -211,7 +229,7 @@ class AnalysisReportRepliesBasic implements IAnalysisReportRepliesBasic {
 			temp.add( tweet.getSummary() );
 		}
 
-		return StringUtils.join( temp, "\n" );
+		return "\n" + StringUtils.join( temp, "\n" );
 	}
 
 	@Override
@@ -221,12 +239,14 @@ class AnalysisReportRepliesBasic implements IAnalysisReportRepliesBasic {
 
 	@Override
 	public String getName() {
-		return bundle.getString( "arb_name", searchRun.getInitiatingUser().getHandle(), "" + searchRun.getStartTime() );
+		ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant( searchRun.getStartTime(), ZoneId.systemDefault() );
+		return bundle.getString( "arb_name", searchRun.getInitiatingUser().getHandle(), zonedDateTime.format( nameDateFormatter ) );
 	}
 
 	@Override
 	public String getDescription() {
-		return bundle.getString( "arb_description", searchRun.getInitiatingUser().getHandle(), "" + searchRun.getStartTime() );
+		ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant( searchRun.getStartTime(), ZoneId.systemDefault() );
+		return bundle.getString( "arb_description", searchRun.getInitiatingUser().getHandle(), zonedDateTime.format( nameDateFormatter ) );
 	}
 
 	@Override
