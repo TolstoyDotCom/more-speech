@@ -29,6 +29,8 @@ import com.tolstoy.basic.api.utils.IResourceBundleWithFormatting;
 import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
 import com.tolstoy.censorship.twitter.checker.api.analyzer.*;
 import com.tolstoy.censorship.twitter.checker.app.helpers.IAppDirectories;
+import com.tolstoy.censorship.twitter.checker.api.snapshot.IReplyThread;
+import com.tolstoy.censorship.twitter.checker.api.snapshot.ReplyThreadType;
 import org.jtwig.JtwigModel;
 import org.jtwig.JtwigTemplate;
 
@@ -37,12 +39,13 @@ import org.jtwig.JtwigTemplate;
 public class ReportWriterRepliesBasic {
 	private static final Logger logger = LogManager.getLogger( ReportWriterRepliesBasic.class );
 
-	private static final DateFormat dateFormat = new SimpleDateFormat( "yyyy_MM_dd_hh_mm_ss" );
+	private static final DateFormat filenameDateFormat = new SimpleDateFormat( "yyyy_MM_dd_hh_mm_ss" );
 
 	private IResourceBundleWithFormatting bundle;
 	private IPreferences prefs;
 	private IAppDirectories appDirectories;
 	private JtwigTemplate layoutTemplate, tableTemplate, tweetOriginalTemplate, tweetReplyTemplate, rankTemplate, statusTemplate;
+	private DateFormat tweetDateFormat;
 	private String filename;
 	private boolean debugMode;
 
@@ -59,6 +62,8 @@ public class ReportWriterRepliesBasic {
 		this.tweetReplyTemplate = JtwigTemplate.classpathTemplate( "templates/reportbasic_element_tweetreply.twig" );
 		this.rankTemplate = JtwigTemplate.classpathTemplate( "templates/reportbasic_element_rank.twig" );
 		this.statusTemplate = JtwigTemplate.classpathTemplate( "templates/reportbasic_element_status.twig" );
+
+		this.tweetDateFormat = new SimpleDateFormat( bundle.getString( "rpt_tweet_dateformat" ) );
 	}
 
 	public void writeReport( IAnalysisReportRepliesBasic report ) throws Exception {
@@ -70,11 +75,16 @@ public class ReportWriterRepliesBasic {
 			htmlItems += makeItemHTML( item );
 		}
 
+		boolean bLoggedIn = Utils.isStringTrue( report.getSearchRun().getAttribute( "loggedin" ) );
+
 		JtwigModel model = JtwigModel.newModel()
 			.with( "reporttitle", report.getName() )
+			.with( "loggedin", bLoggedIn )
 			.with( "content", htmlItems );
 
-		filename = String.format( "report_%s_%s.html", report.getSearchRun().getInitiatingUser().getHandle(), dateFormat.format( new Date() ) );
+		filename = String.format( "report_%s_%s_%s.html", report.getSearchRun().getInitiatingUser().getHandle(),
+															filenameDateFormat.format( new Date() ),
+															( bLoggedIn ? "LI" : "NLI" ) );
 
 		FileOutputStream fos = null;
 
@@ -107,7 +117,7 @@ public class ReportWriterRepliesBasic {
 		JtwigModel model = JtwigModel.newModel()
 			.with( "debugData", debugData )
 			.with( "replytweet", makeTweetReplyElement( item.getRepliedToTweet() ) )
-			.with( "originaltweet", makeTweetOriginalElement( item.getOriginalReply() ) )
+			.with( "sourcetweet", makeTweetSourceElement( item.getSourceTweet() ) )
 			.with( "status", makeStatusElement( item.getTweetStatus() ) )
 			.with( "rank", makeRankElement( item.getRank(), item.getTotalReplies(), item.getListIsComplete() ) )
 			.with( "rank_by_interaction", item.getExpectedRankByInteraction() )
@@ -131,7 +141,7 @@ public class ReportWriterRepliesBasic {
 		return tweetReplyTemplate.render( model );
 	}
 
-	protected String makeTweetOriginalElement( ITweet tweet ) {
+	protected String makeTweetSourceElement( ITweet tweet ) {
 		JtwigModel model = getTweetParams( tweet );
 
 		return tweetOriginalTemplate.render( model );
