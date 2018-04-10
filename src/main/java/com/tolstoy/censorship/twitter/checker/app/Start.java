@@ -41,7 +41,7 @@ import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
 import com.tolstoy.censorship.twitter.checker.api.webdriver.IWebDriverFactory;
 import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotFactory;
 import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunFactory;
-import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunRepliesProcessor;
+import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunProcessor;
 import com.tolstoy.censorship.twitter.checker.api.analyzer.*;
 import com.tolstoy.censorship.twitter.checker.app.preferences.PreferencesFactory;
 import com.tolstoy.censorship.twitter.checker.app.webdriver.WebDriverFactoryJS;
@@ -77,7 +77,7 @@ public final class Start {
 		ISnapshotFactory snapshotFactory = null;
 		ITweetFactory tweetFactory = null;
 		IAnalysisReportFactory analysisReportFactory = null;
-		List<ISearchRunRepliesProcessor> searchRunProcessors = null;
+		List<ISearchRunProcessor> searchRunProcessors = null;
 		IAppDirectories appDirectories = null;
 		String databaseConnectionString = null;
 
@@ -165,13 +165,13 @@ public final class Start {
 		}
 
 		try {
-			searchRunProcessors = new ArrayList<ISearchRunRepliesProcessor>( 2 );
+			searchRunProcessors = new ArrayList<ISearchRunProcessor>( 2 );
 
-			searchRunProcessors.add( new SearchRunRepliesProcessorInsertNewToStorage( bundle, prefs, storage ) );
+			searchRunProcessors.add( new SearchRunProcessorInsertNewToStorage( bundle, prefs, storage ) );
 
-			searchRunProcessors.add( new SearchRunRepliesProcessorUploadDataJson( bundle, prefs ) );
+			searchRunProcessors.add( new SearchRunProcessorUploadDataJson( bundle, prefs ) );
 
-			searchRunProcessors.add( new SearchRunRepliesProcessorWriteReport( bundle, prefs, appDirectories, analysisReportFactory, DEBUG_MODE ) );
+			searchRunProcessors.add( new SearchRunProcessorWriteReport( bundle, prefs, appDirectories, analysisReportFactory, DEBUG_MODE ) );
 		}
 		catch ( Exception e ) {
 			handleError( false, bundle.getString( "exc_searchrunprocessors_init" ), e );
