@@ -39,6 +39,10 @@ public final class Utils {
 		mapper.enableDefaultTyping( ObjectMapper.DefaultTyping.NON_FINAL );
 	}
 
+	public static int makePercentInt( int dividend, int divisor ) {
+		return (int) Math.floor( ( 100.0 * (float) dividend ) / (float) divisor );
+	}
+
 	public static String removeAllEmojis( String s ) {
 		return emoji4j.EmojiUtils.removeAllEmojis( s );
 	}
@@ -58,6 +62,19 @@ public final class Utils {
 	public static String formatTimestampString( String s, String defaultValue ) {
 		try {
 			return formatTimestampString( s );
+		}
+		catch ( Exception e ) {
+			return defaultValue;
+		}
+	}
+
+	public static String formatTimestampString( DateFormat format, String s ) throws Exception {
+		return format.format( new Date( 1000L * Integer.parseInt( s ) ) );
+	}
+
+	public static String formatTimestampString( DateFormat format, String s, String defaultValue ) {
+		try {
+			return formatTimestampString( format, s );
 		}
 		catch ( Exception e ) {
 			return defaultValue;
