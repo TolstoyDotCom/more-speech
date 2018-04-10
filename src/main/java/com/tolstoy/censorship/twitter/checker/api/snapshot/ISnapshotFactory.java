@@ -14,8 +14,16 @@
 package com.tolstoy.censorship.twitter.checker.api.snapshot;
 
 import java.time.Instant;
+import com.tolstoy.basic.api.tweet.ITweet;
+import com.tolstoy.basic.api.tweet.ITweetCollection;
 
 public interface ISnapshotFactory {
 	ISnapshotUserPageTimeline makeSnapshotUserPageTimeline( String url, Instant retrievalTime );
 	ISnapshotUserPageIndividualTweet makeSnapshotUserPageIndividualTweet( String url, Instant retrievalTime );
+	IReplyThread makeReplyThread( ReplyThreadType replyThreadType,
+									ITweet sourceTweet,
+									ITweet repliedToTweet,
+									ISnapshotUserPageIndividualTweet replyPage,
+									ITweetCollection conversationTweetCollection );
 }
+
