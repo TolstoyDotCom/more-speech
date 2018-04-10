@@ -16,6 +16,7 @@ package com.tolstoy.censorship.twitter.checker.api.searchrun;
 import java.util.Map;
 import java.time.Instant;
 import com.tolstoy.basic.api.tweet.ITweetUser;
+import com.tolstoy.censorship.twitter.checker.api.snapshot.IReplyThread;
 import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageTimeline;
 import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageIndividualTweet;
 
@@ -23,11 +24,22 @@ public interface ISearchRunFactory {
 	ISearchRunReplies makeSearchRunReplies( long id, ITweetUser user, Instant startTime, Instant endTime );
 	ISearchRunReplies makeSearchRunReplies( long id, ITweetUser user, Instant startTime, Instant endTime,
 											ISnapshotUserPageTimeline timeline,
-											Map<Long,ISnapshotUserPageIndividualTweet> replies );
+											Map<Long,IReplyThread> replies );
 	ISearchRunReplies makeSearchRunReplies( long id, ITweetUser user, Instant startTime, Instant endTime,
 											Map<String,String> attributes );
 	ISearchRunReplies makeSearchRunReplies( long id, ITweetUser user, Instant startTime, Instant endTime,
 											ISnapshotUserPageTimeline timeline,
-											Map<Long,ISnapshotUserPageIndividualTweet> replies,
+											Map<Long,IReplyThread> replies,
 											Map<String,String> attributes );
+
+	ISearchRunTimeline makeSearchRunTimeline( long id, ITweetUser user, Instant startTime, Instant endTime );
+	ISearchRunTimeline makeSearchRunTimeline( long id, ITweetUser user, Instant startTime, Instant endTime,
+												ISnapshotUserPageTimeline timeline,
+												Map<Long,ISnapshotUserPageIndividualTweet> replies );
+	ISearchRunTimeline makeSearchRunTimeline( long id, ITweetUser user, Instant startTime, Instant endTime,
+												Map<String,String> attributes );
+	ISearchRunTimeline makeSearchRunTimeline( long id, ITweetUser user, Instant startTime, Instant endTime,
+												ISnapshotUserPageTimeline timeline,
+												Map<Long,ISnapshotUserPageIndividualTweet> replies,
+												Map<String,String> attributes );
 }

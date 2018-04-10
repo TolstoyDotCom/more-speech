@@ -35,7 +35,7 @@ public class SearchRunFactory implements ISearchRunFactory {
 	@Override
 	public ISearchRunReplies makeSearchRunReplies( long id, ITweetUser user, Instant startTime, Instant endTime,
 											ISnapshotUserPageTimeline timeline,
-											Map<Long,ISnapshotUserPageIndividualTweet> replies ) {
+											Map<Long,IReplyThread> replies ) {
 		return new SearchRunReplies( id, user, startTime, endTime, timeline, replies );
 	}
 
@@ -48,8 +48,34 @@ public class SearchRunFactory implements ISearchRunFactory {
 	@Override
 	public ISearchRunReplies makeSearchRunReplies( long id, ITweetUser user, Instant startTime, Instant endTime,
 											ISnapshotUserPageTimeline timeline,
-											Map<Long,ISnapshotUserPageIndividualTweet> replies,
+											Map<Long,IReplyThread> replies,
 											Map<String,String> attributes ) {
 		return new SearchRunReplies( id, user, startTime, endTime, timeline, replies, attributes );
+	}
+
+	@Override
+	public ISearchRunTimeline makeSearchRunTimeline( long id, ITweetUser user, Instant startTime, Instant endTime ) {
+		return new SearchRunTimeline( id, user, startTime, endTime );
+	}
+
+	@Override
+	public ISearchRunTimeline makeSearchRunTimeline( long id, ITweetUser user, Instant startTime, Instant endTime,
+											ISnapshotUserPageTimeline timeline,
+											Map<Long,ISnapshotUserPageIndividualTweet> replies ) {
+		return new SearchRunTimeline( id, user, startTime, endTime, timeline, replies );
+	}
+
+	@Override
+	public ISearchRunTimeline makeSearchRunTimeline( long id, ITweetUser user, Instant startTime, Instant endTime,
+													Map<String,String> attributes ) {
+		return new SearchRunTimeline( id, user, startTime, endTime, attributes );
+	}
+
+	@Override
+	public ISearchRunTimeline makeSearchRunTimeline( long id, ITweetUser user, Instant startTime, Instant endTime,
+											ISnapshotUserPageTimeline timeline,
+											Map<Long,ISnapshotUserPageIndividualTweet> replies,
+											Map<String,String> attributes ) {
+		return new SearchRunTimeline( id, user, startTime, endTime, timeline, replies, attributes );
 	}
 }
