@@ -44,7 +44,8 @@ public class ReportWriterRepliesBasic {
 	private IResourceBundleWithFormatting bundle;
 	private IPreferences prefs;
 	private IAppDirectories appDirectories;
-	private JtwigTemplate layoutTemplate, tableTemplate, tweetOriginalTemplate, tweetReplyTemplate, rankTemplate, statusTemplate;
+	private JtwigTemplate layoutTemplate, helpAreaTemplate, tableTemplate,
+							tweetSourceTemplate, tweetReplyTemplate, rankTemplate, statusTemplate;
 	private DateFormat tweetDateFormat;
 	private String filename;
 	private boolean debugMode;
@@ -57,11 +58,12 @@ public class ReportWriterRepliesBasic {
 
 		this.filename = "";
 		this.layoutTemplate = JtwigTemplate.classpathTemplate( "templates/reportbasic_layout.twig" );
-		this.tableTemplate = JtwigTemplate.classpathTemplate( "templates/reportbasic_table.twig" );
-		this.tweetOriginalTemplate = JtwigTemplate.classpathTemplate( "templates/reportbasic_element_tweetoriginal.twig" );
-		this.tweetReplyTemplate = JtwigTemplate.classpathTemplate( "templates/reportbasic_element_tweetreply.twig" );
-		this.rankTemplate = JtwigTemplate.classpathTemplate( "templates/reportbasic_element_rank.twig" );
-		this.statusTemplate = JtwigTemplate.classpathTemplate( "templates/reportbasic_element_status.twig" );
+		this.helpAreaTemplate = JtwigTemplate.classpathTemplate( "templates/reportrepliesbasic_helparea.twig" );
+		this.tableTemplate = JtwigTemplate.classpathTemplate( "templates/reportrepliesbasic_table.twig" );
+		this.tweetSourceTemplate = JtwigTemplate.classpathTemplate( "templates/reportrepliesbasic_element_tweetsource.twig" );
+		this.tweetReplyTemplate = JtwigTemplate.classpathTemplate( "templates/reportrepliesbasic_element_tweetreply.twig" );
+		this.rankTemplate = JtwigTemplate.classpathTemplate( "templates/reportrepliesbasic_element_rank.twig" );
+		this.statusTemplate = JtwigTemplate.classpathTemplate( "templates/reportrepliesbasic_element_status.twig" );
 
 		this.tweetDateFormat = new SimpleDateFormat( bundle.getString( "rpt_tweet_dateformat" ) );
 	}
@@ -79,6 +81,7 @@ public class ReportWriterRepliesBasic {
 
 		JtwigModel model = JtwigModel.newModel()
 			.with( "reporttitle", report.getName() )
+			.with( "helparea", makeHelpArea( report ) )
 			.with( "loggedin", bLoggedIn )
 			.with( "content", htmlItems );
 
@@ -119,17 +122,18 @@ public class ReportWriterRepliesBasic {
 			.with( "replytweet", makeTweetReplyElement( item.getRepliedToTweet() ) )
 			.with( "sourcetweet", makeTweetSourceElement( item.getSourceTweet() ) )
 			.with( "status", makeStatusElement( item.getTweetStatus() ) )
-			.with( "rank", makeRankElement( item.getRank(), item.getTotalReplies(), item.getListIsComplete() ) )
+			.with( "rank", makeRankElement( item.getRank(), item.getTotalReplies(), item.getTotalRepliesActual(), item.getListIsComplete() ) )
 			.with( "rank_by_interaction", item.getExpectedRankByInteraction() )
 			.with( "rank_by_date", item.getExpectedRankByDate() );
 
 		return tableTemplate.render( model );
 	}
 
-	protected String makeRankElement( int rank, int totalReplies, boolean isComplete ) {
+	protected String makeRankElement( int rank, int totalReplies, int totalRepliesActual, boolean isComplete ) {
 		JtwigModel model = JtwigModel.newModel()
 			.with( "rank", rank )
 			.with( "totalReplies", totalReplies )
+			.with( "totalRepliesActual", totalRepliesActual )
 			.with( "isComplete", isComplete );
 
 		return rankTemplate.render( model );
@@ -144,7 +148,7 @@ public class ReportWriterRepliesBasic {
 	protected String makeTweetSourceElement( ITweet tweet ) {
 		JtwigModel model = getTweetParams( tweet );
 
-		return tweetOriginalTemplate.render( model );
+		return tweetSourceTemplate.render( model );
 	}
 
 	protected String makeStatusElement( AnalysisReportItemBasicTweetStatus status ) {
@@ -153,6 +157,14 @@ public class ReportWriterRepliesBasic {
 			.with( "statusColor", bundle.getString( status.getKey() + "_color" ) );
 
 		return statusTemplate.render( model );
+	}
+
+	protected String makeHelpArea( IAnalysisReportRepliesBasic report ) {
+		JtwigModel model = JtwigModel.newModel()
+			.with( "initiating_user", report.getSearchRun().getInitiatingUser().getHandle() )
+			.with( "ranking_function_name", report.getAttributes().get( "rankingFunctionName" ) );
+
+		return helpAreaTemplate.render( model );
 	}
 
 	protected JtwigModel getTweetParams( ITweet tweet ) {
