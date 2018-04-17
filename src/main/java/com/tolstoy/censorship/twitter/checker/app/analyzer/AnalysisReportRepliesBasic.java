@@ -31,38 +31,34 @@ import com.tolstoy.basic.api.tweet.*;
 import com.tolstoy.basic.api.utils.IResourceBundleWithFormatting;
 import com.tolstoy.basic.app.utils.Utils;
 import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
-import com.tolstoy.censorship.twitter.checker.api.analyzer.IAnalysisReportRepliesBasic;
-import com.tolstoy.censorship.twitter.checker.api.analyzer.IAnalysisReportRepliesItemBasic;
-import com.tolstoy.censorship.twitter.checker.api.analyzer.AnalysisReportItemBasicTweetStatus;
+import com.tolstoy.censorship.twitter.checker.api.analyzer.*;
 import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunReplies;
 import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageIndividualTweet;
 import com.tolstoy.censorship.twitter.checker.api.snapshot.IReplyThread;
 import com.tolstoy.censorship.twitter.checker.api.snapshot.ReplyThreadType;
 
-class AnalysisReportRepliesBasic implements IAnalysisReportRepliesBasic {
+class AnalysisReportRepliesBasic extends AnalysisReportBasicBase implements IAnalysisReportRepliesBasic {
 	private static final Logger logger = LogManager.getLogger( AnalysisReportRepliesBasic.class );
 
-	private static final String LOW_QUALITY_TEST = "low";
 	private static final int BOOST_REPLIES = 4;
 	private static final int BOOST_RETWEETS = 2;
 	private static final int BOOST_FAVORITES = 1;
 
 	private final ISearchRunReplies searchRun;
-	private final ITweetFactory tweetFactory;
-	private final IPreferences prefs;
-	private final IResourceBundleWithFormatting bundle;
+	private final ITweetRanker tweetRanker;
 	private final List<IAnalysisReportRepliesItemBasic> reportItems;
 	private Map<String,String> attributes;
 	private DateTimeFormatter nameDateFormatter;
 
-	AnalysisReportRepliesBasic( ISearchRunReplies searchRun, ITweetFactory tweetFactory, IPreferences prefs, IResourceBundleWithFormatting bundle ) {
-		this.tweetFactory = tweetFactory;
+	AnalysisReportRepliesBasic( ISearchRunReplies searchRun, ITweetRanker tweetRanker, IAnalysisReportFactory analysisReportFactory,
+								ITweetFactory tweetFactory, IPreferences prefs, IResourceBundleWithFormatting bundle ) {
+		super( analysisReportFactory, tweetFactory, prefs, bundle );
+
 		this.searchRun = searchRun;
-		this.prefs = prefs;
-		this.bundle = bundle;
+		this.tweetRanker = tweetRanker;
 		this.attributes = new HashMap<String,String>();
 		this.reportItems = new ArrayList<IAnalysisReportRepliesItemBasic>();
-		this.nameDateFormatter = DateTimeFormatter.ofPattern( bundle.getString( "rpt_name_dateformat" ) );
+		this.nameDateFormatter = DateTimeFormatter.ofPattern( getBundle().getString( "rpt_name_dateformat" ) );
 	}
 
 	@Override
@@ -87,7 +83,7 @@ class AnalysisReportRepliesBasic implements IAnalysisReportRepliesBasic {
 	}
 
 	protected IAnalysisReportRepliesItemBasic createReportItem( ITweet sourceTweet, IReplyThread replyThread ) {
-		AnalysisReportRepliesItemBasic ret = new AnalysisReportRepliesItemBasic( tweetFactory, sourceTweet, replyThread );
+		AnalysisReportRepliesItemBasic ret = new AnalysisReportRepliesItemBasic( getTweetFactory(), sourceTweet, replyThread );
 
 		ISnapshotUserPageIndividualTweet replyPage = replyThread.getReplyPage();
 
@@ -101,6 +97,8 @@ class AnalysisReportRepliesBasic implements IAnalysisReportRepliesBasic {
 		ret.setAttribute( "reply thread type", "" + replyThread.getReplyThreadType() );
 
 		ret.setAttribute( "total replies", "" + replyPage.getNumReplies() );
+		ret.setAttribute( "totalReplies", "" + ret.getTotalReplies() );
+		ret.setAttribute( "totalRepliesActual", "" + ret.getTotalRepliesActual() );
 
 		List<ITweet> tweets = replyPage.getTweetCollection().getTweets();
 		ret.setAttribute( "_sourcetweets", summarizeTweetList( tweets ) );
@@ -142,9 +140,12 @@ class AnalysisReportRepliesBasic implements IAnalysisReportRepliesBasic {
 		ret.setExpectedRankByInteraction( interactionOrder );
 		ret.setExpectedRankByDate( dateOrder );
 
-		String quality = Utils.trimDefault( foundSourceTweet.getAttribute( "quality" ) ).toLowerCase();
-		if ( quality.indexOf( LOW_QUALITY_TEST ) > -1 ) {
-				//	the reply is hidden behind the "Show more replies" button
+		if ( foundSourceTweet.getSupposedQuality() == TweetSupposedQuality.ABUSIVE ) {
+				//	the reply is hidden behind a "may contain offensive content" link
+			ret.setTweetStatus( AnalysisReportItemBasicTweetStatus.CENSORED_ABUSIVE );
+		}
+		else if ( foundSourceTweet.getSupposedQuality().getCensored() ) {
+				//	the reply is hidden behind a "Show more replies" link
 			ret.setTweetStatus( AnalysisReportItemBasicTweetStatus.CENSORED_HIDDEN );
 		}
 		else if ( pageOrder <= 2 ) {
@@ -190,18 +191,6 @@ class AnalysisReportRepliesBasic implements IAnalysisReportRepliesBasic {
 		}
 	}
 
-	protected int getTweetOrder( List<ITweet> tweets, long tweetID ) {
-		int order = 1;
-		for ( ITweet tweet : tweets ) {
-			if ( tweet.getID() == tweetID ) {
-				return order;
-			}
-			order++;
-		}
-
-		return 0;
-	}
-
 	protected int getTweetDateOrder( AnalysisReportRepliesItemBasic ret, List<ITweet> tweets, long tweetID ) {
 		List<ITweet> tempList = new ArrayList<ITweet>( tweets );
 
@@ -222,16 +211,6 @@ class AnalysisReportRepliesBasic implements IAnalysisReportRepliesBasic {
 		return getTweetOrder( tempList, tweetID );
 	}
 
-	protected String summarizeTweetList( List<ITweet> tweets ) {
-		List<String> temp = new ArrayList<String>( tweets.size() );
-
-		for ( ITweet tweet : tweets ) {
-			temp.add( tweet.getSummary() );
-		}
-
-		return "\n" + StringUtils.join( temp, "\n" );
-	}
-
 	@Override
 	public String getAnalysisType() {
 		return "basic";
@@ -240,13 +219,13 @@ class AnalysisReportRepliesBasic implements IAnalysisReportRepliesBasic {
 	@Override
 	public String getName() {
 		ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant( searchRun.getStartTime(), ZoneId.systemDefault() );
-		return bundle.getString( "arb_name", searchRun.getInitiatingUser().getHandle(), zonedDateTime.format( nameDateFormatter ) );
+		return getBundle().getString( "arb_name", searchRun.getInitiatingUser().getHandle(), zonedDateTime.format( nameDateFormatter ) );
 	}
 
 	@Override
 	public String getDescription() {
 		ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant( searchRun.getStartTime(), ZoneId.systemDefault() );
-		return bundle.getString( "arb_description", searchRun.getInitiatingUser().getHandle(), zonedDateTime.format( nameDateFormatter ) );
+		return getBundle().getString( "arb_description", searchRun.getInitiatingUser().getHandle(), zonedDateTime.format( nameDateFormatter ) );
 	}
 
 	@Override
@@ -270,20 +249,6 @@ class AnalysisReportRepliesBasic implements IAnalysisReportRepliesBasic {
 		.append( "reportItems", reportItems )
 		.append( "attributes", attributes )
 		.toString();
-	}
-
-	protected int countNewerTweets( ITweet testTweet, List<ITweet> tweets ) {
-		int time = Utils.parseIntDefault( testTweet.getAttribute( "time" ) );
-		int count = 0;
-
-		for ( ITweet tweet : tweets ) {
-			int tempTime = Utils.parseIntDefault( tweet.getAttribute( "time" ) );
-			if ( tempTime > time ) {
-				count++;
-			}
-		}
-
-		return count;
 	}
 }
 

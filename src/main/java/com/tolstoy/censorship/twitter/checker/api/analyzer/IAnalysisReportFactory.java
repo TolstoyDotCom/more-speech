@@ -14,8 +14,18 @@
 package com.tolstoy.censorship.twitter.checker.api.analyzer;
 
 import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunReplies;
+import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunTimeline;
+import com.tolstoy.basic.api.tweet.ITweet;
 
 public interface IAnalysisReportFactory {
-	IAnalysisReportRepliesBasic createAnalysisReportRepliesBasic( ISearchRunReplies searchRun ) throws Exception;
-}
+	IAnalysisReportRepliesBasic makeAnalysisReportRepliesBasic( ISearchRunReplies searchRun, ITweetRanker tweetRanker ) throws Exception;
 
+	IAnalysisReportTimelineBasic makeAnalysisReportTimelineBasic( ISearchRunTimeline searchRun, ITweetRanker tweetRanker )
+	throws Exception;
+
+	IAnalyzedTweet makeAnalyzedTweet( ITweet tweet, int order, IAnalyzedTweet referenceTweet );
+
+	ITweetRanker makeTweetRankerBasic();
+
+	ITweetRanker makeTweetRankerJavascript();
+}

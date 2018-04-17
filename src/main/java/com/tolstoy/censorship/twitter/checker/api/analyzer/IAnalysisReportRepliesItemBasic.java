@@ -24,6 +24,7 @@ public interface IAnalysisReportRepliesItemBasic {
 	IReplyThread getReplyThread();
 
 	int getTotalReplies();
+	int getTotalRepliesActual();
 	boolean getListIsComplete();
 
 	int getRank();
@@ -47,8 +48,8 @@ public interface IAnalysisReportRepliesItemBasic {
 	ITweetCollection getAnomalousLowerTweets();
 	void setAnomalousLowerTweets( ITweetCollection anomalousLowerTweets );
 
-	ITweetCollection getSuppressedTweets();
-	void setSuppressedTweets( ITweetCollection suppressedTweets );
+	ITweetCollection getSuppressedOrHiddenTweets();
+	void setSuppressedOrHiddenTweets( ITweetCollection suppressedOrHiddenTweets );
 
 	/**
 	 * Optional, free-form metadata such as related to the the computations, etc.

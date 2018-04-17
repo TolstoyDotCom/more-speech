@@ -37,9 +37,15 @@ public enum AnalysisReportItemBasicTweetStatus {
 
 	/**
 	 * This value means a tweet is in the tweet page, but was put into the
-	 * "LowQuality" section hidden behind the "Show more tweets" button.
+	 * "LowQuality" section hidden behind a "Show more tweets" link.
 	 */
 	CENSORED_HIDDEN( "tweet_status_censored_hidden" ),
+
+	/**
+	 * This value means a tweet is in the tweet page, but was put into the
+	 * "AbusiveQuality" section hidden behind a "may contain offensive content" link.
+	 */
+	CENSORED_ABUSIVE( "tweet_status_censored_abusive" ),
 
 	/**
 	 * This value is used when the list of tweets is complete and the tweet

@@ -32,10 +32,10 @@ class AnalysisReportRepliesItemBasic implements IAnalysisReportRepliesItemBasic 
 	private final ITweetFactory tweetFactory;
 	private final ITweet sourceTweet, repliedToTweet;
 	private final IReplyThread replyThread;
-	private ITweetCollection anomalousHigherTweets, anomalousLowerTweets, suppressedTweets;
+	private ITweetCollection anomalousHigherTweets, anomalousLowerTweets, suppressedOrHiddenTweets;
 	private AnalysisReportItemBasicTweetStatus status;
 	private Map<String,String> attributes;
-	private int totalReplies, rank, expectedRankByInteraction, expectedRankByDate, expectedRankByOverallRanking;
+	private int totalReplies, totalRepliesActual, rank, expectedRankByInteraction, expectedRankByDate, expectedRankByOverallRanking;
 	private boolean isComplete;
 
 	AnalysisReportRepliesItemBasic( ITweetFactory tweetFactory, ITweet sourceTweet, IReplyThread replyThread ) {
@@ -44,6 +44,7 @@ class AnalysisReportRepliesItemBasic implements IAnalysisReportRepliesItemBasic 
 		this.replyThread = replyThread;
 		this.repliedToTweet = replyThread.getRepliedToTweet();
 		this.totalReplies = replyThread.getReplyPage().getNumReplies();
+		this.totalRepliesActual = replyThread.getReplyPage().getTweetCollection().getTweets().size();
 		this.isComplete = replyThread.getReplyPage().getComplete();
 
 		this.status = AnalysisReportItemBasicTweetStatus.UNKNOWN;
@@ -53,7 +54,7 @@ class AnalysisReportRepliesItemBasic implements IAnalysisReportRepliesItemBasic 
 		this.expectedRankByOverallRanking = 0;
 		this.anomalousHigherTweets = this.tweetFactory.makeTweetCollection();
 		this.anomalousLowerTweets = this.tweetFactory.makeTweetCollection();
-		this.suppressedTweets = this.tweetFactory.makeTweetCollection();
+		this.suppressedOrHiddenTweets = this.tweetFactory.makeTweetCollection();
 		this.attributes = new HashMap<String,String>();
 	}
 
@@ -75,6 +76,11 @@ class AnalysisReportRepliesItemBasic implements IAnalysisReportRepliesItemBasic 
 	@Override
 	public int getTotalReplies() {
 		return totalReplies;
+	}
+
+	@Override
+	public int getTotalRepliesActual() {
+		return totalRepliesActual;
 	}
 
 	@Override
@@ -153,13 +159,13 @@ class AnalysisReportRepliesItemBasic implements IAnalysisReportRepliesItemBasic 
 	}
 
 	@Override
-	public ITweetCollection getSuppressedTweets() {
-		return suppressedTweets;
+	public ITweetCollection getSuppressedOrHiddenTweets() {
+		return suppressedOrHiddenTweets;
 	}
 
 	@Override
-	public void setSuppressedTweets( ITweetCollection suppressedTweets ) {
-		this.suppressedTweets = suppressedTweets;
+	public void setSuppressedOrHiddenTweets( ITweetCollection suppressedOrHiddenTweets ) {
+		this.suppressedOrHiddenTweets = suppressedOrHiddenTweets;
 	}
 
 	@Override
@@ -189,6 +195,7 @@ class AnalysisReportRepliesItemBasic implements IAnalysisReportRepliesItemBasic 
 		.append( "repliedToTweet", repliedToTweet )
 		.append( "status", status )
 		.append( "totalReplies", totalReplies )
+		.append( "totalRepliesActual", totalRepliesActual )
 		.append( "isComplete", isComplete )
 		.append( "rank", rank )
 		.append( "expectedRankByInteraction", expectedRankByInteraction )
@@ -196,7 +203,7 @@ class AnalysisReportRepliesItemBasic implements IAnalysisReportRepliesItemBasic 
 		.append( "expectedRankByOverallRanking", expectedRankByOverallRanking )
 		.append( "anomalousHigherTweets", anomalousHigherTweets )
 		.append( "anomalousLowerTweets", anomalousLowerTweets )
-		.append( "suppressedTweets", suppressedTweets )
+		.append( "suppressedOrHiddenTweets", suppressedOrHiddenTweets )
 		.append( "attributes", attributes )
 		.toString();
 	}
