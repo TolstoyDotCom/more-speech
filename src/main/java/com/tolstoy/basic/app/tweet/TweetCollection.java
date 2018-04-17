@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.time.Instant;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -90,6 +91,19 @@ class TweetCollection implements ITweetCollection {
 	@Override
 	public void addTweet( ITweet tweet ) {
 		tweets.add( tweet );
+	}
+
+	@Override
+	public void removeTweetByID( long id ) {
+		Iterator<ITweet> iter = tweets.iterator();
+
+		while ( iter.hasNext() ) {
+			ITweet tweet = iter.next();
+
+			if ( tweet.getID() == id ) {
+				iter.remove();
+			}
+		}
 	}
 
 	@Override

@@ -59,6 +59,12 @@ public interface ITweetCollection {
 	 */
 	void addTweet( ITweet tweet );
 
+	/**
+	 * Removes all tweets that have the given ID
+	 * @param id the ID to match
+	 */
+	void removeTweetByID( long id );
+
 	Instant getRetrievalTime();
 	void setRetrievalTime( Instant retrievalTime );
 
