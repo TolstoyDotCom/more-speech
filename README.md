@@ -162,6 +162,9 @@ and change some settings. No other modifications were made.
 The Windows version was built using and uses the launcher from [packr](https://github.com/libgdx/packr) which is licensed under
 The Apache Software License, Version 2.0.
 
+Two files from the [dkpro-core](https://github.com/dkpro/dkpro-core) project have been included in this project as source
+files, to avoid large dependencies. Those files are licensed under The Apache Software License, Version 2.0.
+
 Can they do that?
 ------
 Twitter certainly has a right to deceive their users in any way the want to as long as they abide by the law and their Terms
