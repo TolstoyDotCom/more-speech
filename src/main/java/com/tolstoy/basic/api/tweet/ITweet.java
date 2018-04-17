@@ -76,6 +76,11 @@ public interface ITweet {
 	*/
 	String getSummary();
 
+	/** Get a brief summary of this tweet as a map.
+	 * @return a brief summary
+	*/
+	Map<String,String> getAsMapBasic();
+
 	/** Get whether this tweet is valid or not.
 	 * A tweet is considered invalid if it isn't from a user (for instance,
 	 * some lists of tweets contain placeholder(s) that don't represent
@@ -111,6 +116,11 @@ public interface ITweet {
 	 * @return the other tweet's user ID or 0 if this is not a reply
 	*/
 	long getRepliedToUserID();
+
+	/** Get the supposed quality (as given in the HTML).
+	 * @return the supposed quality
+	*/
+	TweetSupposedQuality getSupposedQuality();
 
 	/** Get all the attributes.
 	 * @return a map of attributes

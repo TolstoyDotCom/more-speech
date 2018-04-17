@@ -26,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.apache.commons.lang3.StringUtils;
 import com.tolstoy.basic.api.tweet.ITweet;
+import com.tolstoy.basic.api.tweet.TweetSupposedQuality;
 import com.tolstoy.basic.api.tweet.ITweetUser;
 import com.tolstoy.basic.app.utils.Utils;
 import com.tolstoy.basic.app.utils.StringList;
@@ -78,6 +79,24 @@ class Tweet implements ITweet {
 
 	@JsonIgnore
 	@Override
+	public Map<String,String> getAsMapBasic() {
+		Map<String,String> ret = new HashMap<String,String>();
+
+		ret.put( "time", Utils.trimDefault( getAttribute( "time" ), "0" ) );
+		ret.put( "id", "" + getID() );
+		ret.put( "user_from", getUser().getHandle() );
+		ret.put( "user_verified", "" + getUser().getVerifiedStatus() );
+		ret.put( "quality", "" + getSupposedQuality() );
+		ret.put( "retweetcount", Utils.trimDefault( getAttribute( "retweetcount" ), "-1" ) );
+		ret.put( "favoritecount", Utils.trimDefault( getAttribute( "favoritecount" ), "-1" ) );
+		ret.put( "replycount", Utils.trimDefault( getAttribute( "replycount" ), "-1" ) );
+		ret.put( "text", Utils.removeNewlines( Utils.trimDefault( StringEscapeUtils.escapeHtml4( Utils.removeAllEmojis( getAttribute( "tweettext" ) ) ) ) ) );
+
+		return ret;
+	}
+
+	@JsonIgnore
+	@Override
 	public String getSummary() {
 		StringBuffer sb = new StringBuffer( 500 );
 
@@ -104,7 +123,7 @@ class Tweet implements ITweet {
 		}
 
 		sb.append( "(" );
-		sb.append( getAttribute( "quality" ) );
+		sb.append( getSupposedQuality() );
 
 		sb.append( "," );
 		sb.append( getAttribute( "retweetcount" ) );
@@ -132,6 +151,12 @@ class Tweet implements ITweet {
 	@Override
 	public void setUser( ITweetUser user ) {
 		this.user = user;
+	}
+
+	@JsonIgnore
+	@Override
+	public TweetSupposedQuality getSupposedQuality() {
+		return TweetSupposedQuality.getMatching( Utils.trimDefault( getAttribute( "quality" ) ) );
 	}
 
 	@Override
