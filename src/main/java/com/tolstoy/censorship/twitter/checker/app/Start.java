@@ -158,7 +158,7 @@ public final class Start {
 			tweetFactory = new TweetFactory();
 			snapshotFactory = new SnapshotFactory();
 			searchRunFactory = new SearchRunFactory();
-			analysisReportFactory = new AnalysisReportFactory( tweetFactory, prefs, bundle );
+			analysisReportFactory = new AnalysisReportFactory( tweetFactory, appDirectories, prefs, bundle );
 		}
 		catch ( Exception e ) {
 			handleError( false, bundle.getString( "exc_tweetsnapshotfactory_init" ), e );
@@ -197,6 +197,8 @@ public final class Start {
 											searchRunFactory,
 											snapshotFactory,
 											tweetFactory,
+											analysisReportFactory,
+											appDirectories,
 											searchRunProcessors );
 				app.run();
 			}
