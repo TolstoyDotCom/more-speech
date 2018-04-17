@@ -20,7 +20,7 @@ the License.
 	<style>
 		body {
 			background-color:#DDD;
-			font-family: Arial, Helvetica, sans-serif;
+			font-family: Helvetica, Verdana, sans-serif;
 		}
 		.title {
 			width:90%;
@@ -55,6 +55,42 @@ the License.
 		.statuscell {
 			color:white;
 		}
+		.helparea {
+			width:90%;
+			margin-left:auto;
+			margin-right:auto;
+			margin-bottom: 2rem;
+			background-color:white;
+			border:1px dashed black;
+			padding:.5rem;
+		}
+		.supposedquality_low_quality {
+			background-color:#FFE6E6;
+		}
+		.supposedquality_abusive_quality {
+			background-color:#E0D6F5;
+		}
+		.supposedquality_unknown_quality {
+			background-color:#EEE;
+		}
+		.tweetorders {
+			font-weight:bold;
+		}
+		.tweetlistrow ul {
+			list-style-type: none;
+		}
+		.tweetlistrow ul li {
+			border:1px dashed black;
+			padding:.4rem;
+			margin-bottom:1rem;
+		}
+		.tweetfrom {
+			font-size:.9rem;
+		}
+		.tweetmeta {
+			font-style:italic;
+			font-size:.85rem;
+		}
 		footer {
 			width:90%;
 			margin-left:auto;
@@ -70,6 +106,10 @@ the License.
 <body>
 	<h1 class="title">{{ reporttitle }} {% if ( loggedin ) %} (logged in) {% else %} (not logged in) {% endif %}</h1>
 
+	{% if ( helparea ) %}
+		{{ helparea }}
+	{% endif %}
+
 	{{ content }}
 
 	<footer>
@@ -80,11 +120,11 @@ the License.
 	<script>
 		(function($) {
 			$(document).ready( function() {
-				$('.debugdata').hide();
+				$('.hideshowcontent').hide();
 				$('.hideshow').on( 'click', function( event ) {
 					event.stopPropagation();
-					$(this).siblings( '.debugdata' ).toggle();
-					$(this).text( $(this).siblings( '.debugdata' ).is( ':visible' ) ? 'hide' : 'show' );
+					$(this).siblings( '.hideshowcontent' ).toggle();
+					$(this).text( $(this).siblings( '.hideshowcontent' ).is( ':visible' ) ? $(this).data( 'name-hide' ) : $(this).data( 'name-show' ) );
 					return false;
 				});
 			});
@@ -92,3 +132,4 @@ the License.
 	</script>
 </body>
 </html>
+ 
