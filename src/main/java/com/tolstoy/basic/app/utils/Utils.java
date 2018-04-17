@@ -55,6 +55,15 @@ public final class Utils {
 		return s.replaceAll( "\\r\\n|\\r|\\n", " " );
 	}
 
+	public static Date stringToDate( String s ) {
+		try {
+			return new Date( 1000L * Integer.parseInt( s ) );
+		}
+		catch ( Exception e ) {
+			return new Date();
+		}
+	}
+
 	public static String formatTimestampString( String s ) throws Exception {
 		return dateFormat.format( new Date( 1000L * Integer.parseInt( s ) ) );
 	}
@@ -190,6 +199,10 @@ public final class Utils {
 
 	public static String trimDefault( String s ) {
 		return s == null ? "" : s.trim();
+	}
+
+	public static String trimDefault( String s, String defaultValue ) {
+		return s == null ? defaultValue : s.trim();
 	}
 
 	public static Instant currentInstant() {
