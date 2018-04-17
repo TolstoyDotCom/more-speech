@@ -27,12 +27,16 @@ import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
 import com.tolstoy.basic.api.statusmessage.*;
 
 public class MainGUI implements ActionListener, IStatusMessageReceiver {
+	public static final String ACTION_REPLIES = "replies";
+	public static final String ACTION_TIMELINE = "timeline";
+	public static final String ACTION_REWRITE_LAST_REPORT = "rewrite";
+
 	private EventListenerList listenerList = new EventListenerList();
 	private IPreferences prefs;
 	private IResourceBundleWithFormatting bundle;
 	private java.util.List<ElementDescriptor> descriptors;
 	private JFrame frame;
-	private JButton btnPreferences, btnAction;
+	private JButton btnPreferences, btnRewriteLastReport, btnCheckReplies, btnCheckTimeline;
 	private JEditorPane editorPaneStatusMessage;
 
 	@Override
@@ -77,7 +81,6 @@ public class MainGUI implements ActionListener, IStatusMessageReceiver {
 	public void showGUI() {
 		frame = new JFrame( bundle.getString( "main_title" ) );
 		frame.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
-		frame.setSize( 500, 400 );
 
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout( new FlowLayout() );
@@ -86,9 +89,17 @@ public class MainGUI implements ActionListener, IStatusMessageReceiver {
 		btnPreferences.addActionListener( this );
 		buttonPanel.add( btnPreferences );
 
-		btnAction = new JButton( bundle.getString( "main_run_button" ) );
-		btnAction.addActionListener( this );
-		buttonPanel.add( btnAction );
+		btnRewriteLastReport = new JButton( bundle.getString( "main_rewrite_button" ) );
+		btnRewriteLastReport.addActionListener( this );
+		buttonPanel.add( btnRewriteLastReport );
+
+		btnCheckReplies = new JButton( bundle.getString( "main_check_replies_button" ) );
+		btnCheckReplies.addActionListener( this );
+		buttonPanel.add( btnCheckReplies );
+
+		btnCheckTimeline = new JButton( bundle.getString( "main_check_timeline_button" ) );
+		btnCheckTimeline.addActionListener( this );
+		buttonPanel.add( btnCheckTimeline );
 
 		frame.getContentPane().add( buttonPanel, BorderLayout.PAGE_START );
 
@@ -98,7 +109,7 @@ public class MainGUI implements ActionListener, IStatusMessageReceiver {
 		editorPaneStatusMessage.setEditable( false );
 
 		JScrollPane scrollPane = new JScrollPane( editorPaneStatusMessage );
-		scrollPane.setPreferredSize( new Dimension( 480, 150 ) );
+		scrollPane.setPreferredSize( new Dimension( 480, 350 ) );
 		scrollPane.setVerticalScrollBarPolicy( JScrollPane.VERTICAL_SCROLLBAR_ALWAYS );
 		scrollPane.setBorder( new BevelBorder( BevelBorder.LOWERED ) );
 
@@ -111,11 +122,18 @@ public class MainGUI implements ActionListener, IStatusMessageReceiver {
 			}
 		});
 
+		frame.pack();
 		frame.setVisible( true );
 	}
 
-	public void enableRunFunction( boolean run ) {
-		btnAction.setEnabled( run );
+	public void enableRunFunction( boolean state ) {
+		btnCheckReplies.setEnabled( state );
+		btnCheckTimeline.setEnabled( state );
+		btnRewriteLastReport.setEnabled( state );
+	}
+
+	public void enablePreferencesFunction( boolean state ) {
+		btnPreferences.setEnabled( state );
 	}
 
 	@Override
@@ -128,8 +146,14 @@ public class MainGUI implements ActionListener, IStatusMessageReceiver {
 				firePreferencesEvent( new PreferencesEvent( this, userdata ) );
 			}
 		}
-		else if ( actionEvent.getSource() == btnAction ) {
-			fireRunEvent( new RunEvent( this ) );
+		else if ( actionEvent.getSource() == btnCheckReplies ) {
+			fireRunEvent( new RunEvent( this, ACTION_REPLIES ) );
+		}
+		else if ( actionEvent.getSource() == btnCheckTimeline ) {
+			fireRunEvent( new RunEvent( this, ACTION_TIMELINE ) );
+		}
+		else if ( actionEvent.getSource() == btnRewriteLastReport ) {
+			fireRunEvent( new RunEvent( this, ACTION_REWRITE_LAST_REPORT ) );
 		}
 	}
 

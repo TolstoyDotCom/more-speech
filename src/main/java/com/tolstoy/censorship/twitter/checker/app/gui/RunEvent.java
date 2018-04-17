@@ -16,7 +16,14 @@ package com.tolstoy.censorship.twitter.checker.app.gui;
 import java.util.*;
 
 public class RunEvent extends EventObject {
-	public RunEvent( Object source ) {
+	private String actionName;
+
+	public RunEvent( Object source, String actionName ) {
 		super( source );
+		this.actionName = actionName;
+	}
+
+	public String getActionName() {
+		return actionName;
 	}
 }
