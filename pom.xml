@@ -37,6 +37,10 @@
 			<name>bintray</name>
 			<url>https://dl.bintray.com/jtwig/maven</url>
 		</repository>
+		<repository>
+			<id>jitpack.io</id>
+			<url>https://jitpack.io</url>
+		</repository>
 	</repositories>
 
 	<dependencies>
@@ -126,6 +130,16 @@
 			<groupId>com.kcthota</groupId>
 			<artifactId>emoji4j</artifactId>
 			<version>5.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.github.codycoggins</groupId>
+			<artifactId>cue.language</artifactId>
+			<version>1.0.1</version>
+		</dependency>
+		<dependency>
+			<groupId>com.twitter.twittertext</groupId>
+			<artifactId>twitter-text</artifactId>
+			<version>2.0.10</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
