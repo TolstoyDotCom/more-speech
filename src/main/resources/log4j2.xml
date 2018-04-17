@@ -25,7 +25,7 @@
 				<Pattern>[%-5level] %d{yyyy-MMM-dd HH:mm:ss a} %c{1.} - %msg %throwable%n</Pattern>
 			</PatternLayout>
 			<Policies>
-				<TimeBasedTriggeringPolicy interval="86400" modulate="true" />
+				<TimeBasedTriggeringPolicy interval="3600" modulate="true" />
 				<SizeBasedTriggeringPolicy size="1 MB" />
 			</Policies>
 			<DefaultRolloverStrategy max="500" />
