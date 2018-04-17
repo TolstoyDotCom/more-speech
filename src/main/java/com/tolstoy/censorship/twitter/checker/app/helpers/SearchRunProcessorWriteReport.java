@@ -44,8 +44,17 @@ public class SearchRunProcessorWriteReport implements ISearchRunProcessor {
 
 	@Override
 	public ISearchRun process( ISearchRun searchRun, IStatusMessageReceiver statusMessageReceiver ) throws Exception {
+		ITweetRanker tweetRanker;
+
+		tweetRanker = analysisReportFactory.makeTweetRankerJavascript();
+		if ( tweetRanker == null ) {
+			tweetRanker = analysisReportFactory.makeTweetRankerBasic();
+		}
+
 		if ( searchRun instanceof ISearchRunReplies ) {
-			IAnalysisReportRepliesBasic basicRepliesReport = analysisReportFactory.createAnalysisReportRepliesBasic( (ISearchRunReplies) searchRun );
+			IAnalysisReportRepliesBasic basicRepliesReport;
+
+			basicRepliesReport = analysisReportFactory.makeAnalysisReportRepliesBasic( (ISearchRunReplies) searchRun, tweetRanker );
 
 			basicRepliesReport.run();
 
@@ -54,6 +63,19 @@ public class SearchRunProcessorWriteReport implements ISearchRunProcessor {
 			reportWriterReplies.writeReport( basicRepliesReport );
 
 			statusMessageReceiver.addMessage( new StatusMessage( "Wrote report to " + reportWriterReplies.getFilename(), StatusMessageSeverity.INFO ) );
+		}
+		else if ( searchRun instanceof ISearchRunTimeline ) {
+			IAnalysisReportTimelineBasic basicTimelineReport;
+
+			basicTimelineReport = analysisReportFactory.makeAnalysisReportTimelineBasic( (ISearchRunTimeline) searchRun, tweetRanker );
+
+			basicTimelineReport.run();
+
+			ReportWriterTimelineBasic reportWriterTimeline = new ReportWriterTimelineBasic( prefs, bundle, appDirectories, true );
+
+			reportWriterTimeline.writeReport( basicTimelineReport );
+
+			statusMessageReceiver.addMessage( new StatusMessage( "Wrote report to " + reportWriterTimeline.getFilename(), StatusMessageSeverity.INFO ) );
 		}
 
 		return searchRun;
