@@ -37,6 +37,8 @@ public class WebDriverFactory implements IWebDriverFactory {
 	private static final String TWEETUSER_HANDLE_UNKNOWN = "unknownuser";
 	private static final int DELAY_PRE_TWEETS = 10000;
 	private static final int DELAY_POST_CLICK_LOWQUALITY_BUTTON = 5000;
+	private static final int DELAY_POST_CLICK_ABUSIVEQUALITY_BUTTON = 5000;
+	private static final int NUMBER_OF_SCROLL_CHECK_FOR_BUTTONS_CYCLES = 2;
 	private static final int IMPLICITWAIT_PRE_ERRORPAGE = 5;
 	private static final int IMPLICITWAIT_PRE_SCROLLING = 20;
 	private static final int IMPLICITWAIT_PRE_TWEETS = 20;
@@ -171,19 +173,38 @@ public class WebDriverFactory implements IWebDriverFactory {
 
 		driver.manage().timeouts().implicitlyWait( IMPLICITWAIT_PRE_SCROLLING, TimeUnit.SECONDS );
 
-		logger.info( "about to scroll" );
-		infiniteScroller.activate( numberOfPagesToCheck );
-		logger.info( "done scrolling, looking..." );
+		for ( int i = 0; i < NUMBER_OF_SCROLL_CHECK_FOR_BUTTONS_CYCLES; i++ ) {
+			logger.info( "about to scroll" );
+			infiniteScroller.activate( numberOfPagesToCheck );
+			logger.info( "done scrolling phase #" + i );
 
-		driver.manage().timeouts().implicitlyWait( IMPLICITWAIT_PRE_TWEETS, TimeUnit.SECONDS );
+			boolean bNoMoreButtons = true;
 
-		List<WebElement> lowQualityButtons = driver.findElements( By.xpath( driverutils.makeByXPathClassString( "ThreadedConversation-showMoreThreadsButton" ) ) );
-		if ( lowQualityButtons.size() > 0 ) {
-			logger.info( "found 'low quality' button" );
-			lowQualityButtons.get( 0 ).click();
-			Utils.delay( DELAY_POST_CLICK_LOWQUALITY_BUTTON );
+			driver.manage().timeouts().implicitlyWait( IMPLICITWAIT_PRE_TWEETS, TimeUnit.SECONDS );
+
+			List<WebElement> lowQualityButtons = driver.findElements( By.xpath( driverutils.makeByXPathClassString( "ThreadedConversation-showMoreThreadsButton" ) ) );
+			if ( lowQualityButtons.size() > 0 ) {
+				logger.info( "found 'low quality' button" );
+				lowQualityButtons.get( 0 ).click();
+				Utils.delay( DELAY_POST_CLICK_LOWQUALITY_BUTTON );
+				bNoMoreButtons = false;
+			}
+
+			List<WebElement> abusiveQualityButtons = driver.findElements( By.xpath( driverutils.makeByXPathClassString( "ThreadedConversation-showMoreThreadsPrompt" ) ) );
+			if ( abusiveQualityButtons.size() > 0 ) {
+				logger.info( "found 'abusive quality' button" );
+				abusiveQualityButtons.get( 0 ).click();
+				Utils.delay( DELAY_POST_CLICK_ABUSIVEQUALITY_BUTTON );
+				bNoMoreButtons = false;
+			}
+
+			if ( bNoMoreButtons ) {
+				logger.info( "found no lowquality/abusivequality buttons in phase #" + i );
+				break;
+			}
 		}
 
+		logger.info( "looking for tweets..." );
 		List<WebElement> tweetElems = driver.findElements( By.xpath( driverutils.makeByXPathClassString( "tweet" ) ) );
 		logger.info( "found " + tweetElems.size() + " tweets" );
 
