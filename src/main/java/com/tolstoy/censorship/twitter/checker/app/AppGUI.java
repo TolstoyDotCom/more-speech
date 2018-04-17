@@ -29,7 +29,12 @@ import com.tolstoy.censorship.twitter.checker.api.webdriver.*;
 import com.tolstoy.censorship.twitter.checker.api.snapshot.*;
 import com.tolstoy.censorship.twitter.checker.api.searchrun.*;
 import com.tolstoy.censorship.twitter.checker.app.gui.*;
-import com.tolstoy.censorship.twitter.checker.app.helpers.SearchRunBuilder;
+import com.tolstoy.censorship.twitter.checker.app.helpers.SearchRunRepliesBuilder;
+import com.tolstoy.censorship.twitter.checker.app.helpers.SearchRunTimelineBuilder;
+import com.tolstoy.censorship.twitter.checker.app.helpers.SearchRunProcessorWriteReport;
+import com.tolstoy.censorship.twitter.checker.app.helpers.IAppDirectories;
+import com.tolstoy.censorship.twitter.checker.api.analyzer.IAnalysisReportFactory;
+import com.tolstoy.censorship.twitter.checker.app.storage.StorageTable;
 import com.tolstoy.basic.gui.ElementDescriptor;
 import com.seaglasslookandfeel.*;
 
@@ -44,11 +49,13 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, Windo
 	private ISearchRunFactory searchRunFactory;
 	private ISnapshotFactory snapshotFactory;
 	private ITweetFactory tweetFactory;
-	private List<ISearchRunRepliesProcessor> searchRunProcessors;
+	private IAnalysisReportFactory analysisReportFactory;
+	private IAppDirectories appDirectories;
+	private List<ISearchRunProcessor> searchRunProcessors;
 	private List<ElementDescriptor> guiElements;
 	private MainGUI gui;
 
-	class Worker extends SwingWorker<ISearchRunReplies, StatusMessage> implements IStatusMessageReceiver {
+	abstract class WorkerBase<T> extends SwingWorker<T, StatusMessage> implements IStatusMessageReceiver {
 		@Override
 		protected void process( List<StatusMessage> messages ) {
 			for ( StatusMessage message : messages ) {
@@ -70,11 +77,44 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, Windo
 		public void clearMessages() {
 			publish( (StatusMessage) null );
 		}
+	}
 
+	abstract class WorkerProcessingBase<T extends ISearchRun> extends WorkerBase<T> implements IStatusMessageReceiver {
+		@Override
+		public void done() {
+			try {
+				T searchRun = get();
+				//logger.info( searchRun );
+
+				if ( searchRun != null ) {
+					for ( ISearchRunProcessor processor : searchRunProcessors ) {
+						try {
+							processor.process( searchRun, this );
+						}
+						catch ( Exception e ) {
+							String s = bundle.getString( "exc_srp", processor.getDescription(), e.getMessage() );
+							logger.error( s, e );
+							gui.addMessage( new StatusMessage( s, StatusMessageSeverity.ERROR ) );
+						}
+					}
+				}
+			}
+			catch ( Exception e ) {
+				String s = bundle.getString( "exc_getresults", e.getMessage() );
+				logger.error( s, e );
+				gui.addMessage( new StatusMessage( s, StatusMessageSeverity.ERROR ) );
+			}
+
+			gui.enableRunFunction( true );
+			gui.enablePreferencesFunction( true );
+		}
+	}
+
+	class RepliesWorker extends WorkerProcessingBase<ISearchRunReplies> {
 		@Override
 		public ISearchRunReplies doInBackground() {
 			try {
-				SearchRunBuilder builder = new SearchRunBuilder( bundle,
+				SearchRunRepliesBuilder builder = new SearchRunRepliesBuilder( bundle,
 												storage,
 												prefsFactory,
 												prefs,
@@ -105,33 +145,73 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, Windo
 				return null;
 			}
 		}
+	}
 
+	class TimelineWorker extends WorkerProcessingBase<ISearchRunTimeline> {
 		@Override
-		public void done() {
+		public ISearchRunTimeline doInBackground() {
 			try {
-				ISearchRunReplies searchRunReplies = get();
-				//logger.info( searchRunReplies );
+				SearchRunTimelineBuilder builder = new SearchRunTimelineBuilder( bundle,
+																					storage,
+																					prefsFactory,
+																					prefs,
+																					webDriverFactory,
+																					searchRunFactory,
+																					snapshotFactory,
+																					tweetFactory,
+																					this,
+																					prefs.getValue( "prefs.handle_to_check" ) );
 
-				if ( searchRunReplies != null ) {
-					for ( ISearchRunRepliesProcessor processor : searchRunProcessors ) {
-						try {
-							processor.process( searchRunReplies, this );
-						}
-						catch ( Exception e ) {
-							String s = bundle.getString( "exc_srp", processor.getDescription(), e.getMessage() );
-							logger.error( s, e );
-							gui.addMessage( new StatusMessage( s, StatusMessageSeverity.ERROR ) );
-						}
-					}
+				int numTimelinePagesToCheck = Utils.parseIntDefault( prefs.getValue( "prefs.num_timeline_pages_to_check" ), 1 );
+				int numIndividualPagesToCheck = Utils.parseIntDefault( prefs.getValue( "prefs.num_individual_pages_to_check" ), 3 );
+				int maxTweets = Utils.parseIntDefault( prefs.getValue( "prefs.num_tweets_to_check" ), 5 );
+
+				ISearchRunTimeline searchRunTimeline = builder.buildSearchRunTimeline( numTimelinePagesToCheck,
+																						numIndividualPagesToCheck,
+																						maxTweets );
+
+				//logger.info( searchRunTimeline );
+				logger.info( "VALUENEXT" );
+				logger.info( Utils.getDefaultObjectMapper().writeValueAsString( searchRunTimeline ) );
+				return searchRunTimeline;
+			}
+			catch ( Exception e ) {
+				logger.error( bundle.getString( "exc_start", e.getMessage() ), e );
+				publish( new StatusMessage( bundle.getString( "exc_start", e.getMessage() ), StatusMessageSeverity.ERROR ) );
+
+				return null;
+			}
+		}
+	}
+
+	class RewriteWorker<Void> extends WorkerBase<Void> implements IStatusMessageReceiver {
+		@Override
+		public Void doInBackground() {
+			try {
+				List<IStorable> storables = storage.getRecords( StorageTable.SEARCHRUN, StorageOrdering.DESC, 1 );
+				if ( storables.size() > 0 ) {
+					IStorable storable = storables.get( 0 );
+					ISearchRun searchRun = (ISearchRun) storable;
+
+					SearchRunProcessorWriteReport writeReport = new SearchRunProcessorWriteReport( bundle, prefs, appDirectories,
+																									analysisReportFactory, true );
+
+					writeReport.process( searchRun, this );
 				}
 			}
 			catch ( Exception e ) {
-				String s = bundle.getString( "exc_getresults", e.getMessage() );
-				logger.error( s, e );
-				gui.addMessage( new StatusMessage( s, StatusMessageSeverity.ERROR ) );
+				logger.error( bundle.getString( "exc_start", e.getMessage() ), e );
+				publish( new StatusMessage( bundle.getString( "exc_start", e.getMessage() ), StatusMessageSeverity.ERROR ) );
+
 			}
 
+			return null;
+		}
+
+		@Override
+		public void done() {
 			gui.enableRunFunction( true );
+			gui.enablePreferencesFunction( true );
 		}
 	}
 
@@ -143,7 +223,9 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, Windo
 					ISearchRunFactory searchRunFactory,
 					ISnapshotFactory snapshotFactory,
 					ITweetFactory tweetFactory,
-					List<ISearchRunRepliesProcessor> searchRunProcessors ) throws Exception {
+					IAnalysisReportFactory analysisReportFactory,
+					IAppDirectories appDirectories,
+					List<ISearchRunProcessor> searchRunProcessors ) throws Exception {
 		this.bundle = bundle;
 		this.storage = storage;
 		this.prefsFactory = prefsFactory;
@@ -152,6 +234,8 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, Windo
 		this.searchRunFactory = searchRunFactory;
 		this.snapshotFactory = snapshotFactory;
 		this.tweetFactory = tweetFactory;
+		this.analysisReportFactory = analysisReportFactory;
+		this.appDirectories = appDirectories;
 		this.searchRunProcessors = searchRunProcessors;
 	}
 
@@ -162,7 +246,7 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, Windo
 			//UIManager.setLookAndFeel( "com.pagosoft.plaf.PgsLookAndFeel" );
 			UIManager.setLookAndFeel( "com.seaglasslookandfeel.SeaGlassLookAndFeel" );
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			e.printStackTrace();
 		}
 
@@ -185,10 +269,23 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, Windo
 	@Override
 	public void runEventFired( RunEvent runEvent ) {
 		gui.enableRunFunction( false );
+		gui.enablePreferencesFunction( false );
 
-		SwingWorker<ISearchRunReplies, StatusMessage> worker = new Worker();
+		if ( MainGUI.ACTION_REPLIES.equals( runEvent.getActionName() ) ) {
+			RepliesWorker repliesWorker = new RepliesWorker();
 
-		worker.execute();
+			repliesWorker.execute();
+		}
+		else if ( MainGUI.ACTION_TIMELINE.equals( runEvent.getActionName() ) ) {
+			TimelineWorker timelineWorker = new TimelineWorker();
+
+			timelineWorker.execute();
+		}
+		else if ( MainGUI.ACTION_REWRITE_LAST_REPORT.equals( runEvent.getActionName() ) ) {
+			RewriteWorker rewriteWorker = new RewriteWorker();
+
+			rewriteWorker.execute();
+		}
 	}
 
 	@Override
@@ -240,10 +337,12 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, Windo
 		if ( Utils.isEmpty( handle ) ) {
 			gui.addMessage( new StatusMessage( bundle.getString( "prefs_msg_no_handle" ), StatusMessageSeverity.ERROR ) );
 			gui.enableRunFunction( false );
+			gui.enablePreferencesFunction( true );
 		}
 		else {
 			gui.addMessage( new StatusMessage( bundle.getString( "prefs_msg_handle", handle ), StatusMessageSeverity.INFO ) );
 			gui.enableRunFunction( true );
+			gui.enablePreferencesFunction( true );
 		}
 	}
 
