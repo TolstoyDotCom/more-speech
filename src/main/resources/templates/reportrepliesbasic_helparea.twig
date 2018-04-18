@@ -1,0 +1,46 @@
+{#
+Copyright 2018 Chris Kelly
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+in compliance with the License. You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed under the License
+is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+or implied. See the License for the specific language governing permissions and limitations under
+the License.
+#}
+
+<div class="helparea">
+	<a class="hideshow" data-name-hide="Hide" data-name-show="Info" href="#">Info</a>
+	<div class="helparea_content hideshowcontent">
+		<p>
+		This page shows how Twitter rearranges replies, hiding some of them.
+		</p>
+
+		<p>
+		Each table below shows a tweet that @{{ initiating_user }} has replied to, the @{{ initiating_user }}
+		tweet reply, and statistics from the reply page:
+		</p>
+
+		<ul>
+			<li>The "Status" column summarizes where the reply tweet ranked on the reply page. In some
+			cases, the reply tweet will be hidden (see the note below).</li>
+			<li>The "Rank" column is the order of the reply tweet on the reply page.</li>
+			<li>The "Expected Rank By Interaction" column is the expected rank of the reply tweet
+			based on how many replies/retweets/favorites the reply tweet has received.</li>
+			<li>The "Expected Rank By Date" column is the expected rank of the reply tweet based on when the reply was made.</li>
+		</ul>
+
+		<p>
+		Note: a hidden tweet is one that's hidden behind the "Show more replies" link at the end of the reply page.
+		Few probably click that link, and the account that was replied to might not see those hidden tweets
+		on their "Notifications" page depending on their settings. 
+		</p>
+
+		<p>
+		Some tweets are put even lower down, into an "AbusiveQuality" section.
+		</p>
+	</div>
+</div>
