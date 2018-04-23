@@ -23,9 +23,7 @@ Features
 
 Examples
 ------
-Here's a [sample report](http://tolstoy.com/twittercensorship/report__grammar__2018_04_18_LI.html)  showing replies **from** @\_grammar\_ (a harmless automated bot). That was logged in as a testing account; compare a [report](http://tolstoy.com/twittercensorship/report__grammar__2018_04_18_NLI.html) as an anonymous user.
-
-Here are reports showing replies **to** [@NASA](http://tolstoy.com/twittercensorship/report_nasa_2018_04_18_LI.html), [@TaylorTwellman](http://tolstoy.com/twittercensorship/report_taylortwellman_2018_04_18_LI.html), [@JakeTapper](http://tolstoy.com/twittercensorship/report_jaketapper_2018_04_18_LI.html), [@JessMendoza](http://tolstoy.com/twittercensorship/report_jessmendoza_2018_04_18_LI.html), [@KeithOlbermann](http://tolstoy.com/twittercensorship/report_keitholbermann_2018_04_18_LI.html), [@JackKingston](http://tolstoy.com/twittercensorship/report_jackkingston_2018_04_18_LI.html), [@MikeTrout](http://tolstoy.com/twittercensorship/report_miketrout_2018_04_18_LI.html), [@housegop](http://tolstoy.com/twittercensorship/report_housegop_2018_04_18_LI.html), and [@housedemocrats](http://tolstoy.com/twittercensorship/report_housedemocrats_2018_04_18_LI.html). (All were as a logged-in user, and we aren't affiliated with/endorsing them or @\_grammar\_, those are only presented as examples.)
+Here are several [sample Twitter censorship reports](http://tolstoy.com/twittercensorship/) showing replies to a variety of sources: politicians, pundits, NASA, sports figures, musicians, etc. A couple of major politicians have no replies censored; others are higher or much higher. More will be added occasionally. (Almost all were as a logged-in user, and we aren't affiliated with/endorsing them/unendorsing them, they're only presented as examples.)
 
 Installation (Windows)
 ------
