@@ -1,4 +1,21 @@
 # more-speech
+
+## Table of Contents
+
+- [Features](#features)
+- [Examples](#examples)
+- [Installation (Windows)](#installation-windows)
+- [Installation (Linux, Mac, or manual on Windows)](#installothers)
+- [Using the application](#using-the-application)
+- [Support the project](#support-the-project)
+- [How to build it](#how-to-build-it)
+- [Options](#options)
+- [Troubleshooting](#troubleshooting)
+- [Privacy](#privacy)
+- [Licensing](#licensing)
+- [What Twitter Does](#what-twitter-does)
+- [Is this a partisan issue?](#is-this-a-partisan-issue)
+
 More Speech is a desktop application that shows how Twitter censors many of its users. Twitter deceives those users into thinking their replies are visible, but to other users those replies are suppressed or hidden. This deceptive practice is called "shadowbanning" or "ghosting". *(See the What Twitter Does section below for a detailed explanation.)*
 
 It's important to note that Twitter does this to a wide variety of users regardless of the topic or their ideology: this deceptive practice isn't limited to just one group. Twitter also seems to do this regardless of the content of the tweet itself.
@@ -35,7 +52,7 @@ Installation (Windows)
 
 4. Skip to the *Using the app* section below for more information on running the app.
 
-Installation (Linux, Mac, or manual on Windows)
+<a name="installothers"></a>Installation (Linux, Mac, or manual on Windows)
 ------
 The first version requires some setup, but future versions will make the process easier. This version has also only been tested on Linux. For now, the requirements are:
 
@@ -71,6 +88,15 @@ Using the application
 4. When the app finishes, the Firefox window should close and the app will indicate the name of the report that it produced. The reports are stored in the `reports` directory and are self-contained HTML files that can be opened with any browser. They also contain debug data showing the raw tweets and computations that were performed.
 
 5. The *Rewrite last report* button is discussed in the Options section.
+
+Support the project
+------
+Pull requests are welcome. The primary issues are improving performance, fixing an encoding issue on Windows, dealing better with self-replies, and others. An enhancement would be to perform multiple searches in one session to avoid logging in each time. Another would be obtaining follower counts, etc. for each account listed in a report, either using the Twitter API or by scraping the user hover popup.
+
+If you'd like to help fund past and future development as well as future promotion, please donate now:
+
+[![Visit this page now.](https://funds.gofundme.com/css/3.0_donate/green/widget.png)](https://www.gofundme.com/fight-twitter-censorship?utm_medium=wdgt)
+
 
 How to build it
 ------
