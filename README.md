@@ -91,11 +91,9 @@ Using the application
 
 Support the project
 ------
-Pull requests are welcome. The primary issues are improving performance, fixing an encoding issue on Windows, dealing better with self-replies, and others. An enhancement would be to perform multiple searches in one session to avoid logging in each time. Another would be obtaining follower counts, etc. for each account listed in a report, either using the Twitter API or by scraping the user hover popup.
+Pull requests are welcome. The primary issues are improving performance, fixing an encoding issue on Windows, dealing better with self-replies, dealing with reply pages that have around 200 or more replies, and others. An enhancement would be to perform multiple searches in one session to avoid logging in each time. Another would be obtaining follower counts, etc. for each account listed in a report, either using the Twitter API or by scraping the user hover popup.
 
-If you'd like to help fund past and future development as well as future promotion, please donate now:
-
-[![Visit this page now.](https://funds.gofundme.com/css/3.0_donate/green/widget.png)](https://www.gofundme.com/fight-twitter-censorship?utm_medium=wdgt)
+If you'd like to help fund past and future development as well as future promotion, [please click here to donate now](https://paypal.me/twittercensorship).
 
 
 How to build it
@@ -171,4 +169,4 @@ No. Some of those who try to make it a partisan issue seem to support censorship
 
 -----
 (1) arstechnica.com/tech-policy/2018/01/activist-says-twitter-shadow-bans-conservatives-dont-believe-it/2/
-[](http://tolstoy.com/twittercensorship/report__grammar__2018_04_18_LI.html) 
+
