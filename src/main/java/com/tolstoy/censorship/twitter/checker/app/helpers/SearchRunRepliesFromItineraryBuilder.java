@@ -32,30 +32,8 @@ import com.tolstoy.basic.app.utils.Utils;
 import com.tolstoy.censorship.twitter.checker.app.gui.*;
 import com.tolstoy.basic.api.statusmessage.*;
 
-/**
- * Utility that uses WebDriver to build an ISearchRunReplies object.
- *
- * First, read the tweets on the given user's timeline. Then for each
- * of those, if it's a reply, look on the replied-to page to see
- * where the tweet appears (if it does).
- *
- * This is complicated because of Twitter's conversations setup. Whether
- * intentionally or not, some tweets in the timeline don't have the actual
- * ID of the tweet that was replied to. Instead, they have a conversation
- * ID that's could be the ID of the tweet that was replied to, or it could
- * be the ID of the initial tweet in a series. If someone else replies to
- * their own tweet and you reply to their reply, the HTML of your timeline
- * will have the initial tweet's ID.
- *
- * What that means is that in some cases this class has to load an additional
- * page to find the right tweet listing. First the individual tweet page
- * with the reply is loaded to get the ID of the tweet that was replied to.
- * Then the individual tweet page is loaded per usual to get the correct
- * tweet listing. There may be cases where even that doesn't work, or the
- * logic used to select the actual replied-to tweet doesn't work.
- */
-public class SearchRunRepliesBuilder {
-	private static final Logger logger = LogManager.getLogger( SearchRunRepliesBuilder.class );
+public class SearchRunRepliesFromItineraryBuilder {
+	private static final Logger logger = LogManager.getLogger( SearchRunRepliesFromItineraryBuilder.class );
 
 	private SearchRunRepliesBuilderHelper helper;
 	private IResourceBundleWithFormatting bundle;
@@ -67,9 +45,10 @@ public class SearchRunRepliesBuilder {
 	private ISnapshotFactory snapshotFactory;
 	private ITweetFactory tweetFactory;
 	private IStatusMessageReceiver statusMessageReceiver;
+	private ISearchRunRepliesItinerary itinerary;
 	private String handleToCheck;
 
-	public SearchRunRepliesBuilder( IResourceBundleWithFormatting bundle,
+	public SearchRunRepliesFromItineraryBuilder( IResourceBundleWithFormatting bundle,
 						IStorage storage,
 						IPreferencesFactory prefsFactory,
 						IPreferences prefs,
@@ -78,7 +57,7 @@ public class SearchRunRepliesBuilder {
 						ISnapshotFactory snapshotFactory,
 						ITweetFactory tweetFactory,
 						IStatusMessageReceiver statusMessageReceiver,
-						String handleToCheck ) throws Exception {
+						ISearchRunRepliesItinerary itinerary ) throws Exception {
 		this.bundle = bundle;
 		this.storage = storage;
 		this.prefsFactory = prefsFactory;
@@ -88,7 +67,8 @@ public class SearchRunRepliesBuilder {
 		this.snapshotFactory = snapshotFactory;
 		this.tweetFactory = tweetFactory;
 		this.statusMessageReceiver = statusMessageReceiver;
-		this.handleToCheck = handleToCheck;
+		this.itinerary = itinerary;
+		this.handleToCheck = Utils.trimDefault( itinerary.getInitiatingUser().getHandle() ).toLowerCase();
 
 		this.helper = new SearchRunRepliesBuilderHelper( bundle,
 															storage,
@@ -109,6 +89,8 @@ public class SearchRunRepliesBuilder {
 		if ( webDriverFactory == null ) {
 			throw new RuntimeException( bundle.getString( "exc_no_webdriverfactory" ) );
 		}
+
+		statusMessageReceiver.addMessage( new StatusMessage( bundle.getString( "srrfib_msg_handle", handleToCheck ), StatusMessageSeverity.INFO ) );
 
 		try {
 			webDriver = webDriverFactory.makeWebDriver();
@@ -165,27 +147,18 @@ public class SearchRunRepliesBuilder {
 
 		String url = String.format( prefs.getValue( "targetsite.pattern.timeline" ), handleToCheck );
 
-		logInfo( bundle.getString( "srb_loading_timeline", url ) );
+		ISnapshotUserPageTimeline timeline = snapshotFactory.makeSnapshotUserPageTimeline( url, startTime );
 
-		webDriver.get( url );
-
-		IInfiniteScrollingActivator scroller;
-		scroller = webDriverFactory.makeInfiniteScrollingActivator( webDriver,
-																	webDriverUtils,
-																	InfiniteScrollingActivatorType.TIMELINE );
-
-		ISnapshotUserPageTimeline timeline;
-		timeline = webDriverFactory.makeSnapshotUserPageTimelineFromURL( webDriver,
-																			webDriverUtils,
-																			scroller,
-																			url,
-																			numberOfTimelinePagesToCheck,
-																			10 * maxReplies );
-
-		ITweetUser user = timeline.getUser();
+		ITweetUser user = itinerary.getInitiatingUser();
 		if ( user == null || Utils.isEmpty( user.getHandle() ) ) {
 			throw new RuntimeException( "timeline does not have a user" );
 		}
+
+		timeline.setUser( user );
+		timeline.setTweetCollection( itinerary.getTimelineTweetCollection() );
+		timeline.setNumTotalTweets( itinerary.getInitiatingUser().getNumTotalTweets() );
+		timeline.setNumFollowers( itinerary.getInitiatingUser().getNumFollowers() );
+		timeline.setNumFollowing( itinerary.getInitiatingUser().getNumFollowing() );
 
 		Map<Long,IReplyThread> replies;
 		ITweetCollection tweetCollection = timeline.getTweetCollection();

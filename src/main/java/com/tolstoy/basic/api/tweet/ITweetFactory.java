@@ -22,6 +22,7 @@ import com.tolstoy.basic.app.utils.StringList;
 public interface ITweetFactory {
 	ITweet makeTweet();
 	ITweet makeTweet( long id, Map<String,String> attributes, StringList classes, StringList mentions, ITweetUser user );
+	ITweet makeTweet( Map<String,String> data, String tweetKey, String attributesKey, String userKey ) throws Exception;
 
 	ITweetCollection makeTweetCollection();
 	ITweetCollection makeTweetCollection( List<ITweet> tweets, Instant retrievalTime, Map<String,String> attributes );
@@ -31,4 +32,21 @@ public interface ITweetFactory {
 	ITweetUser makeTweetUser( String handle, long id, String displayName );
 	ITweetUser makeTweetUser( String handle, long id, String displayName, TweetUserVerifiedStatus verifiedStatus );
 	ITweetUser makeTweetUser( String handle, long id, String displayName, TweetUserVerifiedStatus verifiedStatus, String avatarURL );
+	ITweetUser makeTweetUser( String handle, long id, String displayName, TweetUserVerifiedStatus verifiedStatus, String avatarURL, int numTotalTweets, int numFollowers, int numFollowing );
+
+	/**
+	 * Construct from a map containing fields in String form.
+	 * @param data must contain these keys:
+	 * <ul>
+	 * <li>id (parseable as a Long)</li>
+	 * <li>verified_status @see TweetUserVerifiedStatus</li>
+	 * <li>num_total_tweets (parseable as an Integer)</li>
+	 * <li>num_followers (parseable as an Integer)</li>
+	 * <li>num_following (parseable as an Integer)</li>
+	 * </ul>
+	 * It can also contain display_name and avatar_url keys.
+	 * @param baseKey the first part of each key of the map or an empty String
+	 */
+	ITweetUser makeTweetUser( Map<String,String> data, String baseKey ) throws Exception;
 }
+

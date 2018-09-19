@@ -13,6 +13,7 @@
  */
 package com.tolstoy.basic.app.tweet;
 
+import java.util.Map;
 import java.util.Objects;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -45,11 +46,31 @@ class TweetUser implements ITweetUser {
 	@JsonProperty
 	private TweetUserVerifiedStatus verifiedStatus;
 
-	public TweetUser( @JsonProperty("handle") String handle,
+	@JsonProperty
+	private int numTotalTweets;
+
+	@JsonProperty
+	private int numFollowers;
+
+	@JsonProperty
+	private int numFollowing;
+
+	TweetUser( String handle,
+						long id,
+						String displayName,
+						TweetUserVerifiedStatus verifiedStatus,
+						String avatarURL ) {
+		this( handle, id, displayName, verifiedStatus, avatarURL, 0, 0, 0 );
+	}
+
+	TweetUser( @JsonProperty("handle") String handle,
 						@JsonProperty("id") long id,
 						@JsonProperty("displayName") String displayName,
 						@JsonProperty("verifiedStatus") TweetUserVerifiedStatus verifiedStatus,
-						@JsonProperty("avatarURL") String avatarURL ) {
+						@JsonProperty("avatarURL") String avatarURL,
+						@JsonProperty("numTotalTweets") int numTotalTweets,
+						@JsonProperty("numFollowers") int numFollowers,
+						@JsonProperty("numFollowing") int numFollowing ) {
 		if ( Utils.isEmpty( handle ) ) {
 			throw new IllegalArgumentException( "handle cannot be empty" );
 		}
@@ -63,6 +84,10 @@ class TweetUser implements ITweetUser {
 		this.displayName = ( !Utils.isEmpty( displayName ) ? displayName : handle );
 		this.verifiedStatus = verifiedStatus;
 		this.avatarURL = avatarURL;
+
+		this.numTotalTweets = numTotalTweets;
+		this.numFollowers = numFollowers;
+		this.numFollowing = numFollowing;
 	}
 
 	@Override
@@ -88,6 +113,21 @@ class TweetUser implements ITweetUser {
 	@Override
 	public TweetUserVerifiedStatus getVerifiedStatus() {
 		return verifiedStatus;
+	}
+
+	@Override
+	public int getNumTotalTweets() {
+		return numTotalTweets;
+	}
+
+	@Override
+	public int getNumFollowers() {
+		return numFollowers;
+	}
+
+	@Override
+	public int getNumFollowing() {
+		return numFollowing;
 	}
 
 	@Override

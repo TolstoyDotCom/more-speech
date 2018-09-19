@@ -11,19 +11,20 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.tolstoy.basic.api.tweet;
+package com.tolstoy.censorship.twitter.checker.app.gui;
 
-import java.io.*;
-import java.net.*;
 import java.util.*;
+import java.io.File;
 
-public interface ITweetUser {
-	long getID();
-	String getHandle();
-	String getDisplayName();
-	String getAvatarURL();
-	TweetUserVerifiedStatus getVerifiedStatus();
-	int getNumTotalTweets();
-	int getNumFollowers();
-	int getNumFollowing();
+public class RunItineraryEvent extends EventObject {
+	private File itineraryFile;
+
+	public RunItineraryEvent( Object source, File itineraryFile ) {
+		super( source );
+		this.itineraryFile = itineraryFile;
+	}
+
+	public File getItineraryFile() {
+		return itineraryFile;
+	}
 }

@@ -59,5 +59,16 @@ the License.
 		<p>
 		Some tweets are put even lower down, into an "AbusiveQuality" section. Those are highlighted in light purple.
 		</p>
+
+		<p>
+		Note that Twitter only shows around a maximum of 200 replies, even if there are hundreds more.
+		For instance, assume that "Number of replies" is "194 of 1841 (reached end)", "Available" is 10%, and "Hidden" is 0%.
+		That means the tweet was listed as having 1841 replies, but a maximum of 194 were retrieved: Twitter wouldn't show any more.
+		The "reached end" means that the app scrolled until no more replies were available.
+		The "Available" column has the percentage (in this case 194/1841 as a percentage ).
+		In cases like this, the "Hidden" column isn't reliable because it wasn't possible to scroll the
+		list of replies low enough to reach the hidden section.
+		The closer the "Available" column is to 100%, the more reliable is the "Hidden" column.
+		</p>
 	</div>
 </div>

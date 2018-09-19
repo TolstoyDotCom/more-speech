@@ -11,19 +11,22 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.tolstoy.basic.api.tweet;
+package com.tolstoy.censorship.twitter.checker.api.searchrun;
 
-import java.io.*;
-import java.net.*;
-import java.util.*;
+import java.util.Map;
+import com.tolstoy.basic.api.tweet.ITweetUser;
 
-public interface ITweetUser {
-	long getID();
-	String getHandle();
-	String getDisplayName();
-	String getAvatarURL();
-	TweetUserVerifiedStatus getVerifiedStatus();
-	int getNumTotalTweets();
-	int getNumFollowers();
-	int getNumFollowing();
+public interface ISearchRunItinerary {
+	ITweetUser getInitiatingUser();
+	void setInitiatingUser( ITweetUser user );
+
+	/**
+	 * Optional, free-form metadata such as "loggedin", etc.
+	 * Don't rely on any of those being available.
+	 */
+	Map<String,String> getAttributes();
+	void setAttributes( Map<String,String> attributes );
+
+	String getAttribute( String key );
+	void setAttribute( String key, String value );
 }

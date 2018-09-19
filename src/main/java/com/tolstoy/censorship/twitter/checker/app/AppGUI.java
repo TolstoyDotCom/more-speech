@@ -14,9 +14,11 @@
 package com.tolstoy.censorship.twitter.checker.app;
 
 import java.util.*;
-import java.sql.*;
+import java.io.File;
 import javax.swing.*;
 import java.time.Instant;
+import java.nio.charset.Charset;
+import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import com.tolstoy.basic.api.storage.*;
@@ -31,6 +33,7 @@ import com.tolstoy.censorship.twitter.checker.api.searchrun.*;
 import com.tolstoy.censorship.twitter.checker.app.gui.*;
 import com.tolstoy.censorship.twitter.checker.app.helpers.SearchRunRepliesBuilder;
 import com.tolstoy.censorship.twitter.checker.app.helpers.SearchRunTimelineBuilder;
+import com.tolstoy.censorship.twitter.checker.app.helpers.SearchRunRepliesFromItineraryBuilder;
 import com.tolstoy.censorship.twitter.checker.app.helpers.SearchRunProcessorWriteReport;
 import com.tolstoy.censorship.twitter.checker.app.helpers.IAppDirectories;
 import com.tolstoy.censorship.twitter.checker.api.analyzer.IAnalysisReportFactory;
@@ -38,7 +41,7 @@ import com.tolstoy.censorship.twitter.checker.app.storage.StorageTable;
 import com.tolstoy.basic.gui.ElementDescriptor;
 import com.seaglasslookandfeel.*;
 
-public class AppGUI implements RunEventListener, PreferencesEventListener, WindowClosingEventListener {
+public class AppGUI implements RunEventListener, PreferencesEventListener, RunItineraryEventListener, WindowClosingEventListener {
 	private static final Logger logger = LogManager.getLogger( AppGUI.class );
 
 	private IResourceBundleWithFormatting bundle;
@@ -184,6 +187,49 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, Windo
 		}
 	}
 
+	class ItineraryRepliesWorker extends WorkerProcessingBase<ISearchRunReplies> {
+		private ISearchRunRepliesItinerary itinerary;
+
+		public ItineraryRepliesWorker( ISearchRunRepliesItinerary itinerary ) {
+			this.itinerary = itinerary;
+		}
+
+		@Override
+		public ISearchRunReplies doInBackground() {
+			try {
+				SearchRunRepliesFromItineraryBuilder builder = new SearchRunRepliesFromItineraryBuilder( bundle,
+																storage,
+																prefsFactory,
+																prefs,
+																webDriverFactory,
+																searchRunFactory,
+																snapshotFactory,
+																tweetFactory,
+																this,
+																itinerary );
+
+				int numTimelinePagesToCheck = Utils.parseIntDefault( prefs.getValue( "prefs.num_timeline_pages_to_check" ), 1 );
+				int numIndividualPagesToCheck = Utils.parseIntDefault( prefs.getValue( "prefs.num_individual_pages_to_check" ), 3 );
+				int maxTweets = Utils.parseIntDefault( prefs.getValue( "prefs.num_tweets_to_check" ), 5 );
+
+				ISearchRunReplies searchRunReplies = builder.buildSearchRunReplies( numTimelinePagesToCheck,
+																					numIndividualPagesToCheck,
+																					maxTweets );
+
+				//logger.info( searchRunReplies );
+				logger.info( "VALUENEXT" );
+				logger.info( Utils.getDefaultObjectMapper().writeValueAsString( searchRunReplies ) );
+				return searchRunReplies;
+			}
+			catch ( Exception e ) {
+				logger.error( bundle.getString( "exc_start", e.getMessage() ), e );
+				publish( new StatusMessage( bundle.getString( "exc_start", e.getMessage() ), StatusMessageSeverity.ERROR ) );
+
+				return null;
+			}
+		}
+	}
+
 	class RewriteWorker<Void> extends WorkerBase<Void> implements IStatusMessageReceiver {
 		@Override
 		public Void doInBackground() {
@@ -256,12 +302,13 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, Windo
 
 		gui.addRunEventListener( this );
 		gui.addPreferencesEventListener( this );
+		gui.addRunItineraryEventListener( this );
 		gui.addWindowClosingEventListener( this );
 
 		SwingUtilities.invokeLater( new Runnable() {
 			public void run() {
 				gui.showGUI();
-				checkPreferences();
+				validatePreferences();
 			}
 		});
 	}
@@ -297,13 +344,50 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, Windo
 
 		try {
 			prefs.save();
-			checkPreferences();
+			validatePreferences();
 		}
 		catch ( Exception e ) {
 			String s = bundle.getString( "exc_cannot_save_prefs", "" + Utils.sanitizeMap( prefs.getValues() ) );
 			logger.error( s, e );
 			gui.addMessage( new StatusMessage( s, StatusMessageSeverity.ERROR ) );
 		}
+	}
+
+	@Override
+	public void runItineraryEventFired( RunItineraryEvent runItineraryEvent ) {
+		gui.enableRunFunction( false );
+		gui.enablePreferencesFunction( false );
+
+		ISearchRunItinerary itinerary;
+
+		File itineraryFile = runItineraryEvent.getItineraryFile();
+
+		try {
+			String jsonData = FileUtils.readFileToString( itineraryFile, Charset.defaultCharset() );
+			itinerary = searchRunFactory.makeSearchRunItineraryFromJSON( jsonData );
+		}
+		catch ( Exception e ) {
+			String s = bundle.getString( "exc_bad_itinerary_file", itineraryFile.getAbsolutePath() );
+			logger.error( s, e );
+			gui.addMessage( new StatusMessage( s, StatusMessageSeverity.ERROR ) );
+			gui.enableRunFunction( true );
+			gui.enablePreferencesFunction( true );
+
+			return;
+		}
+
+		if ( !( itinerary instanceof ISearchRunRepliesItinerary ) ) {
+			String s = bundle.getString( "exc_bad_itinerary_file", itineraryFile.getAbsolutePath() );
+			gui.addMessage( new StatusMessage( s, StatusMessageSeverity.ERROR ) );
+			gui.enableRunFunction( true );
+			gui.enablePreferencesFunction( true );
+
+			return;
+		}
+
+		ItineraryRepliesWorker itineraryWorker = new ItineraryRepliesWorker( (ISearchRunRepliesItinerary) itinerary );
+
+		itineraryWorker.execute();
 	}
 
 	@Override
@@ -314,7 +398,7 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, Windo
 		System.exit( 0 );
 	}
 
-	private void checkPreferences() {
+	private void validatePreferences() {
 		if ( Utils.isEmpty( prefs.getValue( "prefs.testing_account_name_private" ) ) ||
 				Utils.isEmpty( prefs.getValue( "prefs.testing_account_password_private" ) ) ) {
 			gui.addMessage( new StatusMessage( bundle.getString( "prefs_msg_no_user" ), StatusMessageSeverity.WARN ) );
@@ -382,6 +466,12 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, Windo
 		guiElements.add( new ElementDescriptor( "textfield", "prefs.firefox_path_profile",
 													bundle.getString( "prefs_element_firefox_path_profile_name" ),
 													bundle.getString( "prefs_element_firefox_path_profile_help" ), 30 ) );
+		guiElements.add( new ElementDescriptor( "textfield", "prefs.firefox_screen_position_x",
+													bundle.getString( "prefs_element_firefox_screen_position_x_name" ),
+													bundle.getString( "prefs_element_firefox_screen_position_x_help" ), 30 ) );
+		guiElements.add( new ElementDescriptor( "textfield", "prefs.firefox_screen_position_y",
+													bundle.getString( "prefs_element_firefox_screen_position_y_name" ),
+													bundle.getString( "prefs_element_firefox_screen_position_y_help" ), 30 ) );
 	}
 }
 

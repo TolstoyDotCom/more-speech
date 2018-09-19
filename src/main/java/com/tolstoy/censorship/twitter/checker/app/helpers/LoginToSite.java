@@ -50,6 +50,8 @@ public class LoginToSite {
 		actions.sendKeys( temp, username );
 		actions.perform();
 
+		Utils.delay( 1000 );
+
 		temp = webDriverUtils.safeFindByClass( formElem, "js-password-field" );
 		actions = new Actions( webDriver );
 		actions.sendKeys( temp, password );

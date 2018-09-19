@@ -31,15 +31,38 @@ public final class Utils {
 
 	private static final DateFormat dateFormat = new SimpleDateFormat( "MM/dd/yy hh:mm:ss" );	//	TODO i18n
 
-	private static ObjectMapper mapper;
+	private static ObjectMapper mapper, plainMapper;
 
 	static {
 		mapper = new ObjectMapper();
 		mapper.registerModule( new JavaTimeModule() );
 		mapper.enableDefaultTyping( ObjectMapper.DefaultTyping.NON_FINAL );
+
+		plainMapper = new ObjectMapper();
+		plainMapper.registerModule( new JavaTimeModule() );
+	}
+
+	public static <V> Map<String,V> copyMapWithMatchingKeys( Map<String,V> data, String baseKey ) {
+		Map<String,V> ret = new HashMap<String,V>( data.size() );
+		int baseKeyLen = baseKey.length();
+
+		for ( String key : data.keySet() ) {
+			if ( key != null && key.startsWith( baseKey ) ) {
+				String newKey = key.substring( baseKeyLen );
+				if ( !Utils.isEmpty( newKey ) ) {
+					ret.put( newKey, data.get( key ) );
+				}
+			}
+		}
+
+		return ret;
 	}
 
 	public static int makePercentInt( int dividend, int divisor ) {
+		if ( divisor == 0 ) {
+			return 100;
+		}
+
 		return (int) Math.floor( ( 100.0 * (float) dividend ) / (float) divisor );
 	}
 
@@ -92,6 +115,10 @@ public final class Utils {
 
 	public static ObjectMapper getDefaultObjectMapper() {
 		return mapper;
+	}
+
+	public static ObjectMapper getPlainObjectMapper() {
+		return plainMapper;
 	}
 
 	public static Map<String,String> sanitizeMap( Map<String,String> map ) {

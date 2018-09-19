@@ -18,6 +18,7 @@ import java.io.FileOutputStream;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.Set;
 import java.util.Date;
 import java.text.DateFormat;
@@ -81,6 +82,7 @@ public class ReportWriterTimelineBasic {
 		boolean bLoggedIn = Utils.isStringTrue( report.getSearchRun().getAttribute( "loggedin" ) );
 
 		JtwigModel model = JtwigModel.newModel()
+			.with( "reporttype", "timeline/" + report.getAnalysisType() )
 			.with( "reporttitle", report.getName() )
 			.with( "helparea", makeHelpArea( report ) )
 			.with( "loggedin", bLoggedIn )
@@ -116,7 +118,7 @@ public class ReportWriterTimelineBasic {
 		return ret;
 	}
 
-	protected String makeItemHTML( IAnalysisReportTimelineItemBasic item ) {
+	protected String makeItemHTML( IAnalysisReportTimelineItemBasic item ) throws Exception {
 		String debugData = "";
 
 		if ( debugMode ) {
@@ -127,11 +129,26 @@ public class ReportWriterTimelineBasic {
 			}
 		}
 
+		Map<String,String> summaryMap = new HashMap<String,String>( 10 );
+
+		summaryMap.put( "source_tweet_handle", item.getSourceTweet().getUser().getHandle() );
+		summaryMap.put( "source_tweet_id", "" + item.getSourceTweet().getID() );
+		summaryMap.put( "status", item.getTimelineRepliesStatus().getKey() );
+		summaryMap.put( "num_replies", "" + item.getTotalReplies() );
+		summaryMap.put( "num_replies_actual", "" + item.getTotalRepliesActual() );
+		summaryMap.put( "num_replies_is_complete", ( item.getListIsComplete() ? "1" : "0" ) );
+		summaryMap.put( "num_suppressed", "" + item.getNumSuppressed() );
+		summaryMap.put( "num_hidden", "" + item.getNumHidden() );
+		summaryMap.put( "num_anomalous_elevated_tweets", "" + item.getAnomalousElevatedTweets().size() );
+		summaryMap.put( "num_anomalous_suppressed_tweets", "" + item.getAnomalousSuppressedOrHiddenTweets().size() );
+
 		JtwigModel model = JtwigModel.newModel()
+			.with( "jsonData", Utils.getPlainObjectMapper().writeValueAsString( summaryMap ) )
 			.with( "debugData", debugData )
 			.with( "sourcetweet", makeTweetSourceElement( item.getSourceTweet() ) )
 			.with( "status", makeStatusElement( item.getTimelineRepliesStatus().getKey() ) )
 			.with( "num_replies", makeNumRepliesElement( item.getTotalReplies(), item.getTotalRepliesActual(), item.getListIsComplete() ) )
+			.with( "percent_available", Utils.makePercentInt( item.getTotalRepliesActual(), item.getTotalReplies() ) )
 			.with( "percent_suppressed", Utils.makePercentInt( item.getNumSuppressed(), item.getTotalRepliesActual() ) )
 			.with( "percent_hidden", Utils.makePercentInt( item.getNumHidden(), item.getTotalRepliesActual() ) )
 			.with( "anomalous_elevated_tweets", makeTweetList( item.getAnomalousElevatedTweets() ) )

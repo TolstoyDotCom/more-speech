@@ -157,7 +157,7 @@ public final class Start {
 		try {
 			tweetFactory = new TweetFactory();
 			snapshotFactory = new SnapshotFactory();
-			searchRunFactory = new SearchRunFactory();
+			searchRunFactory = new SearchRunFactory( tweetFactory );
 			analysisReportFactory = new AnalysisReportFactory( tweetFactory, appDirectories, prefs, bundle );
 		}
 		catch ( Exception e ) {

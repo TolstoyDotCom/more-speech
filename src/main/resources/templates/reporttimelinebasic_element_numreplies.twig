@@ -12,4 +12,4 @@ or implied. See the License for the specific language governing permissions and 
 the License.
 #}
 
-<span>{{ totalRepliesActual }} {% if (isComplete) %} (list is complete) {% else %} (list is not complete) {% endif %}</span>
+<span>{{ totalRepliesActual }} of {{ totalReplies }} {% if (isComplete) %} (reached end) {% else %} (did not reach end) {% endif %}</span>

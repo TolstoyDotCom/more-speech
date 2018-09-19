@@ -12,35 +12,42 @@ or implied. See the License for the specific language governing permissions and 
 the License.
 #}
 
+<script>
+censorshipCheckerTemp={{ jsonData }};
+censorshipCheckerData.push( censorshipCheckerTemp );
+</script>
+
 <table class="tweettable">
 	{% if ( sourcetweet ) %}
 	<tr class="tweetrow">
-		<td colspan="4">{{ sourcetweet }}</td>
+		<td colspan="5">{{ sourcetweet }}</td>
 	</tr>
 	{% endif %}
 
 	<tr class="infoheader">
 		<th>Status</th>
 		<th>Number of replies</th>
-		<th>Percent suppressed replies</th>
-		<th>Percent hidden replies</th>
+		<th>Available</th>
+		<th>Suppressed</th>
+		<th>Hidden</th>
 	</tr>
 
 	<tr class="inforow">
 		{{ status }}
 		<td>{{ num_replies }}</td>
+		<td>{{ percent_available }}%</td>
 		<td>{{ percent_suppressed }}%</td>
 		<td>{{ percent_hidden }}%</td>
 	</tr>
 
 	<tr class="sectionheader">
-		<th colspan="4">
-			Anomalous elevated tweets:
+		<th colspan="5">
+			Anomalous elevated replies:
 		</th>
 	</tr>
 
 	<tr class="tweetlistrow">
-		<td colspan="4">
+		<td colspan="5">
 			<ul>
 				{% for item in anomalous_elevated_tweets %}
 				<li>
@@ -52,13 +59,13 @@ the License.
 	</tr>
 
 	<tr class="sectionheader">
-		<th colspan="4">
-			Anomalous suppressed/hidden tweets:
+		<th colspan="5">
+			Anomalous suppressed/hidden replies:
 		</th>
 	</tr>
 
 	<tr class="tweetlistrow">
-		<td colspan="4">
+		<td colspan="5">
 			<ul>
 				{% for item in anomalous_suppressed_tweets %}
 				<li>
@@ -70,13 +77,13 @@ the License.
 	</tr>
 
 	<tr class="sectionheader">
-		<th colspan="4">
-			Other hidden tweets:
+		<th colspan="5">
+			Other hidden replies:
 		</th>
 	</tr>
 
 	<tr class="tweetlistrow">
-		<td colspan="4">
+		<td colspan="5">
 			<ul>
 				{% for item in hidden_tweets %}
 				<li>
@@ -90,7 +97,7 @@ the License.
 
 	{% if ( debugData != null ) %}
 	<tr class="debugrow">
-		<td colspan="4"><a class="hideshow" data-name-hide="hide" data-name-show="show" href="#">show</a> <pre class="debugdata hideshowcontent">{{ debugData }}</pre></td>
+		<td colspan="5"><a class="hideshow" data-name-hide="hide" data-name-show="show" href="#">show</a> <pre class="debugdata hideshowcontent">{{ debugData }}</pre></td>
 	</tr>
 	{% endif %}
 </table>

@@ -11,19 +11,12 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.tolstoy.basic.api.tweet;
+package com.tolstoy.censorship.twitter.checker.api.searchrun;
 
-import java.io.*;
-import java.net.*;
-import java.util.*;
+import java.util.Map;
+import com.tolstoy.basic.api.tweet.ITweetCollection;
 
-public interface ITweetUser {
-	long getID();
-	String getHandle();
-	String getDisplayName();
-	String getAvatarURL();
-	TweetUserVerifiedStatus getVerifiedStatus();
-	int getNumTotalTweets();
-	int getNumFollowers();
-	int getNumFollowing();
+public interface ISearchRunRepliesItinerary extends ISearchRunItinerary {
+	ITweetCollection getTimelineTweetCollection();
+	void setTimelineTweetCollection( ITweetCollection tweetCollection );
 }

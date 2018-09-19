@@ -13,6 +13,7 @@
  */
 package com.tolstoy.censorship.twitter.checker.app.gui;
 
+import java.io.File;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
@@ -36,7 +37,7 @@ public class MainGUI implements ActionListener, IStatusMessageReceiver {
 	private IResourceBundleWithFormatting bundle;
 	private java.util.List<ElementDescriptor> descriptors;
 	private JFrame frame;
-	private JButton btnPreferences, btnRewriteLastReport, btnCheckReplies, btnCheckTimeline;
+	private JButton btnPreferences, btnRewriteLastReport, btnRunItinerary, btnCheckReplies, btnCheckTimeline;
 	private JEditorPane editorPaneStatusMessage;
 
 	@Override
@@ -93,6 +94,10 @@ public class MainGUI implements ActionListener, IStatusMessageReceiver {
 		btnRewriteLastReport.addActionListener( this );
 		buttonPanel.add( btnRewriteLastReport );
 
+		btnRunItinerary = new JButton( bundle.getString( "main_check_itinerary_button" ) );
+		btnRunItinerary.addActionListener( this );
+		buttonPanel.add( btnRunItinerary );
+
 		btnCheckReplies = new JButton( bundle.getString( "main_check_replies_button" ) );
 		btnCheckReplies.addActionListener( this );
 		buttonPanel.add( btnCheckReplies );
@@ -130,6 +135,7 @@ public class MainGUI implements ActionListener, IStatusMessageReceiver {
 		btnCheckReplies.setEnabled( state );
 		btnCheckTimeline.setEnabled( state );
 		btnRewriteLastReport.setEnabled( state );
+		btnRunItinerary.setEnabled( state );
 	}
 
 	public void enablePreferencesFunction( boolean state ) {
@@ -155,6 +161,13 @@ public class MainGUI implements ActionListener, IStatusMessageReceiver {
 		else if ( actionEvent.getSource() == btnRewriteLastReport ) {
 			fireRunEvent( new RunEvent( this, ACTION_REWRITE_LAST_REPORT ) );
 		}
+		else if ( actionEvent.getSource() == btnRunItinerary ) {
+			JFileChooser fileChooser = new JFileChooser();
+			fileChooser.setCurrentDirectory( new File( System.getProperty( "user.home" ) ) );
+			if ( fileChooser.showOpenDialog( frame ) == JFileChooser.APPROVE_OPTION ) {
+				fireRunItineraryEvent( new RunItineraryEvent( this, fileChooser.getSelectedFile() ) );
+			}
+		}
 	}
 
 	public void addRunEventListener( RunEventListener l ) {
@@ -171,6 +184,14 @@ public class MainGUI implements ActionListener, IStatusMessageReceiver {
 
 	public void removePreferencesEventListener( PreferencesEventListener l ) {
 		listenerList.remove( PreferencesEventListener.class, l );
+	}
+
+	public void addRunItineraryEventListener( RunItineraryEventListener l ) {
+		listenerList.add( RunItineraryEventListener.class, l );
+	}
+
+	public void removeItineraryRunEventListener( RunItineraryEventListener l ) {
+		listenerList.remove( RunItineraryEventListener.class, l );
 	}
 
 	public void addWindowClosingEventListener( WindowClosingEventListener l ) {
@@ -197,6 +218,16 @@ public class MainGUI implements ActionListener, IStatusMessageReceiver {
 		for ( int i = listeners.length - 2; i >= 0; i -= 2 ) {
 			if ( listeners[ i ] == PreferencesEventListener.class ) {
 				( (PreferencesEventListener) listeners[ i + 1 ] ).preferencesEventFired( preferencesEvent );
+			}
+		}
+	}
+
+	protected void fireRunItineraryEvent( RunItineraryEvent runItineraryEvent ) {
+		Object[] listeners = listenerList.getListenerList();
+
+		for ( int i = listeners.length - 2; i >= 0; i -= 2 ) {
+			if ( listeners[ i ] == RunItineraryEventListener.class ) {
+				( (RunItineraryEventListener) listeners[ i + 1 ] ).runItineraryEventFired( runItineraryEvent );
 			}
 		}
 	}

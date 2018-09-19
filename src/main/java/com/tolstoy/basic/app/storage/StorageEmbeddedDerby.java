@@ -112,7 +112,10 @@ public class StorageEmbeddedDerby implements IStorage {
 			rs = ps.executeQuery();
 
 			while ( rs.next() ) {
-				ret.add( readRecord( rs ) );
+				IStorable storable = readRecord( rs );
+				if ( storable != null ) {
+					ret.add( storable );
+				}
 			}
 		}
 		finally {
@@ -230,7 +233,14 @@ public class StorageEmbeddedDerby implements IStorage {
 
 	protected IStorable readRecord( ResultSet rs ) throws Exception {
 		byte[] bytes = rs.getBytes( "payload" );
-		return (IStorable) Utils.getDefaultObjectMapper().readValue( new String( bytes ), Object.class );
+		try {
+			return (IStorable) Utils.getDefaultObjectMapper().readValue( new String( bytes ), Object.class );
+		}
+		catch ( Exception e ) {
+			logger.error( "can't read record", e );
+			//logger.info( "bytes=" + new String( bytes ) );
+			return null;
+		}
 	}
 
 	protected void createTableInternalIgnoreIfExists( String tablename ) throws Exception {
@@ -313,4 +323,3 @@ public class StorageEmbeddedDerby implements IStorage {
 		return inst != null ? Timestamp.from( inst ) : Timestamp.from( Instant.now() );
 	}
 }
-

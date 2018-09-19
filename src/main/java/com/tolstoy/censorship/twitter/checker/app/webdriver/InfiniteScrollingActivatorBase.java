@@ -97,6 +97,8 @@ abstract class InfiniteScrollingActivatorBase implements IInfiniteScrollingActiv
 			curHeight = tempHeight;
 			max--;
 		}
+
+		logger.info( "finished scrolling" );
 	}
 
 	private int getOverlayHeight( WebDriver driver, String script ) {
@@ -105,3 +107,4 @@ abstract class InfiniteScrollingActivatorBase implements IInfiniteScrollingActiv
 		return Utils.numberObjectToInteger( javascriptExecutor.executeScript( script ) );
 	}
 }
+

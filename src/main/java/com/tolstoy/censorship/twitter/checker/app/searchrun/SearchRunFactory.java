@@ -19,12 +19,16 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import com.tolstoy.censorship.twitter.checker.api.searchrun.*;
 import com.tolstoy.censorship.twitter.checker.api.snapshot.*;
-import com.tolstoy.basic.api.tweet.ITweetUser;
+import com.tolstoy.basic.api.tweet.*;
+import com.tolstoy.basic.app.utils.Utils;
 
 public class SearchRunFactory implements ISearchRunFactory {
 	private static final Logger logger = LogManager.getLogger( SearchRunFactory.class );
 
-	public SearchRunFactory() {
+	private ITweetFactory tweetFactory;
+
+	public SearchRunFactory( ITweetFactory tweetFactory ) {
+		this.tweetFactory = tweetFactory;
 	}
 
 	@Override
@@ -77,5 +81,43 @@ public class SearchRunFactory implements ISearchRunFactory {
 											Map<Long,ISnapshotUserPageIndividualTweet> replies,
 											Map<String,String> attributes ) {
 		return new SearchRunTimeline( id, user, startTime, endTime, timeline, replies, attributes );
+	}
+
+	private static class TemporaryItinerary {
+		public Map<String,String> meta;
+		public List<Map<String,String>> data;
+	}
+
+	@Override
+	public ISearchRunItinerary makeSearchRunItineraryFromJSON( String jsonData ) throws Exception {
+		TemporaryItinerary tempItinerary = (TemporaryItinerary) Utils.getPlainObjectMapper().readValue( jsonData, TemporaryItinerary.class );
+
+		if ( !"checkreplies".equals( tempItinerary.meta.get( "action" ) ) ) {
+			throw new IllegalArgumentException( "File type not known" );
+		}
+
+		if ( tempItinerary.data == null || tempItinerary.data.size() < 1 ) {
+			throw new IllegalArgumentException( "No tweets" );
+		}
+
+		ITweetUser initiatingUser = tweetFactory.makeTweetUser( tempItinerary.meta, "originating_user_" );
+		logger.info( "loading jsonData for " + initiatingUser );
+
+		List<ITweet> tweets = new ArrayList<ITweet>( tempItinerary.data.size() );
+
+		for ( Map<String,String> map : tempItinerary.data ) {
+			tweets.add( tweetFactory.makeTweet( map, "tweetkey_", "attrkey_", "userkey_" ) );
+		}
+
+		logger.info( "loading " + tweets.size() + " tweets" );
+
+		Instant retrievalTime = Instant.ofEpochSecond( Long.valueOf( tempItinerary.meta.get( "collection_date" ) ) );
+		Map<String,String> attributes = new HashMap<String,String>();
+
+		ITweetCollection tweetCollection = tweetFactory.makeTweetCollection( tweets, retrievalTime, attributes );
+
+		ISearchRunItinerary obj = new SearchRunRepliesItinerary( initiatingUser, tweetCollection );
+
+		return obj;
 	}
 }

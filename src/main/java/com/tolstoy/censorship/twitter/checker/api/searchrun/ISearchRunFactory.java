@@ -42,4 +42,6 @@ public interface ISearchRunFactory {
 												ISnapshotUserPageTimeline timeline,
 												Map<Long,ISnapshotUserPageIndividualTweet> replies,
 												Map<String,String> attributes );
+
+	ISearchRunItinerary makeSearchRunItineraryFromJSON( String jsonData ) throws Exception;
 }

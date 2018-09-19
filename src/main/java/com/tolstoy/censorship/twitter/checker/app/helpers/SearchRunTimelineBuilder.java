@@ -88,7 +88,9 @@ public class SearchRunTimelineBuilder {
 
 		try {
 			webDriver = webDriverFactory.makeWebDriver();
-			webDriver.manage().window().setPosition( new Point( -5000, 0 ) );
+			int positionX = Utils.parseIntDefault( prefs.getValue( "prefs.firefox_screen_position_x" ) );
+			int positionY = Utils.parseIntDefault( prefs.getValue( "prefs.firefox_screen_position_y" ) );
+			webDriver.manage().window().setPosition( new Point( positionX, positionY ) );
 		}
 		catch ( Exception e ) {
 			logger.error( "cannot create webDriver", e );
