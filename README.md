@@ -81,9 +81,11 @@ Using the application
 ------
 1. (Optional) You can create a throwaway Twitter account just for use by this application. If provided, the app will first login to Twitter using that account. This is the better way to check since most people viewing Twitter replies are probably logged in. As discussed below, the tweets that you see when logged out might be different from those you see when logged in. **Only use a throwaway Twitter account, not one you want to keep. Nothing bad should happen but you never know.** To set up the throwaway account, use a new email address and fill out the Twitter account's name, bio, etc. Follow a few people (preferably not the ones Twitter suggests) and tweet once or twice. You can leave Twitter's Settings:Notifications screen with the defaults, or change those settings to see what happens. You can also create multiple testing accounts with different settings and following different users to see if that changes what Twitter does.
 
-2. To check replies **from** the handle you entered in the preferences screen, click the *Check replies* button. Firefox should open and navigate to the timeline for the handle you entered. It should be located just off the screen. Try not to interact with that window since doing so will interfere with what the application is doing. Currently it will take a long time to load the pages but future versions will increase the speed. You might be able to speed things up by installing a flash blocker plugin in the browser that's being used (don't install NoScript since the application requires Javascript to be enabled).
+2. To check replies **from** a user (i.e, is that user shadowbanned), first visit [this page](https://tolstoy.com/get-my-replies). On that page, enter the handle of the account you want to check and download that file. Then, in the application, click the *Check itinerary* button and select the file you downloaded. Firefox should open and navigate to the timeline for the handle you entered. It should be located just off the screen. Try not to interact with that window since doing so will interfere with what the application is doing. Currently it will take a long time to load the pages but future versions will increase the speed. You might be able to speed things up by installing a flash blocker plugin in the browser that's being used (don't install NoScript since the application requires Javascript to be enabled).
 
-3. To check replies **to** the handle you entered in the preferences screen, click the *Check timeline* button. The same process as above will occur.
+3. An alternative way to check replies **from** a user is to just enter enter the handle to check in the preferences screen and click the *Check replies* button. This only works if your replies are visible in your timeline and you see "Replying to" or similar in the tweet.
+
+4. To check replies **to** a user (i.e., to see how heavily Twitter censors replies to newsmakers), enter the user's handle in the preferences screen and click the *Check timeline* button. The same process as above will occur.
 
 4. When the app finishes, the Firefox window should close and the app will indicate the name of the report that it produced. The reports are stored in the `reports` directory and are self-contained HTML files that can be opened with any browser. They also contain debug data showing the raw tweets and computations that were performed.
 
@@ -112,6 +114,8 @@ Options
 * The app looks for a firefox profile directory in these locations: `firefox/ffprof` and `firefox/Data/profile`. If it finds a directory there, that is used as the Firefox profile. The `firefox` directory should be next to the app (on the same level as `reports`). The `ffprof` or `profile` directory should contain the standard profile files like `prefs.js`.
 
 * The app looks for a Firefox executable in the following locations: `firefox/ffbin/firefox.exe`, `firefox/ffbin/firefox.bat`, `firefox/ffbin/firefox.sh`, `firefox/ffbin/firefox`, and `firefox/FirefoxPortable.exe`. As above, he `firefox` directory should be next to the app.
+
+* To see what the application does, set the *Firefox screen location* values in the preferences screen to 0. Otherwise, you can set them to large positive or negative values to try to hide the Firefox window offscreen.
 
 Troubleshooting
 ------
@@ -169,4 +173,3 @@ No. Some of those who try to make it a partisan issue seem to support censorship
 
 -----
 (1) arstechnica.com/tech-policy/2018/01/activist-says-twitter-shadow-bans-conservatives-dont-believe-it/2/
-
