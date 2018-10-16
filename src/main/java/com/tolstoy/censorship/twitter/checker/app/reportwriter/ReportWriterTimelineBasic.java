@@ -90,7 +90,7 @@ public class ReportWriterTimelineBasic {
 
 		filename = String.format( "report_%s_%s_%s.html", report.getSearchRun().getInitiatingUser().getHandle(),
 															filenameDateFormat.format( new Date() ),
-															( bLoggedIn ? "LI" : "NLI" ) );
+															( bLoggedIn ? "li" : "nli" ) );
 
 		FileOutputStream fos = null;
 
