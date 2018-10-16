@@ -26,6 +26,7 @@
 		<selenium.java.version>3.0.1</selenium.java.version>							<!-- 3.9.0 -->
 		<selenium.firefox.driver.version>2.53.1</selenium.firefox.driver.version>		<!-- 3.9.0 -->
 		<log4j.version>2.10.0</log4j.version>
+		<jackson.version>2.9.7</jackson.version>
 	</properties>
 
 	<repositories>
@@ -62,12 +63,12 @@
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
-			<version>2.9.0</version>
+			<version>${jackson.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.datatype</groupId>
 			<artifactId>jackson-datatype-jsr310</artifactId>
-			<version>2.9.0</version>
+			<version>${jackson.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.nibor.autolink</groupId>
