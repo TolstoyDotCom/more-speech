@@ -1,5 +1,7 @@
 # more-speech
 
+[![CodeFactor](https://www.codefactor.io/repository/github/TolstoyDotCom/more-speech/badge)](https://www.codefactor.io/repository/github/TolstoyDotCom/more-speech)
+
 ## Table of Contents
 
 - [Features](#features)
