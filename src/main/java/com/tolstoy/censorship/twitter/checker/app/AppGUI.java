@@ -39,7 +39,6 @@ import com.tolstoy.censorship.twitter.checker.app.helpers.IAppDirectories;
 import com.tolstoy.censorship.twitter.checker.api.analyzer.IAnalysisReportFactory;
 import com.tolstoy.censorship.twitter.checker.app.storage.StorageTable;
 import com.tolstoy.basic.gui.ElementDescriptor;
-import com.seaglasslookandfeel.*;
 
 public class AppGUI implements RunEventListener, PreferencesEventListener, RunItineraryEventListener, WindowClosingEventListener {
 	private static final Logger logger = LogManager.getLogger( AppGUI.class );
@@ -288,9 +287,8 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 	public void run() throws Exception {
 		try {
 			//UIManager.setLookAndFeel( UIManager.getSystemLookAndFeelClassName() );
-			//UIManager.setLookAndFeel( "javax.swing.plaf.nimbus.NimbusLookAndFeel" );
+			UIManager.setLookAndFeel( "javax.swing.plaf.nimbus.NimbusLookAndFeel" );
 			//UIManager.setLookAndFeel( "com.pagosoft.plaf.PgsLookAndFeel" );
-			UIManager.setLookAndFeel( "com.seaglasslookandfeel.SeaGlassLookAndFeel" );
 		}
 		catch ( Exception e ) {
 			e.printStackTrace();
