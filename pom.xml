@@ -26,7 +26,7 @@
 		<selenium.java.version>3.0.1</selenium.java.version>							<!-- 3.9.0 -->
 		<selenium.firefox.driver.version>2.53.1</selenium.firefox.driver.version>		<!-- 3.9.0 -->
 		<log4j.version>2.10.0</log4j.version>
-		<jackson.version>2.9.7</jackson.version>
+		<jackson.version>[2.9.9.1,)</jackson.version>
 	</properties>
 
 	<repositories>
