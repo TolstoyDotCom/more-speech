@@ -13,10 +13,6 @@
  */
 package com.tolstoy.basic.api.statusmessage;
 
-import java.io.*;
-import java.net.*;
-import java.util.*;
-
 public enum StatusMessageSeverity {
 	DEBUG,
 	INFO,

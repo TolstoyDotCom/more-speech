@@ -13,20 +13,26 @@
  */
 package com.tolstoy.basic.app.tweet;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.fasterxml.jackson.annotation.JsonProperty;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import org.apache.commons.lang3.StringUtils;
-import com.tolstoy.basic.api.tweet.ITweetCollection;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.tolstoy.basic.api.tweet.ITweet;
+import com.tolstoy.basic.api.tweet.ITweetUser;
+import com.tolstoy.basic.api.tweet.ITweetCollection;
+import com.tolstoy.basic.app.utils.Utils;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
 class TweetCollection implements ITweetCollection {
@@ -48,15 +54,16 @@ class TweetCollection implements ITweetCollection {
 		this.attributes = new HashMap<String,String>();
 	}
 
-	TweetCollection( List<ITweet> tweets, Instant retrievalTime, Map<String,String> attributes ) {
+	TweetCollection( final List<ITweet> tweets, final Instant retrievalTime, final Map<String,String> attributes ) {
 		this.tweets = tweets;
 		this.retrievalTime = retrievalTime;
 		this.attributes = attributes;
 	}
 
+	@JsonIgnore
 	@Override
-	public ITweet getTweetByID( long id ) {
-		for ( ITweet tweet : tweets ) {
+	public ITweet getTweetByID( final long id ) {
+		for ( final ITweet tweet : getTweets() ) {
 			if ( tweet.getID() == id ) {
 				return tweet;
 			}
@@ -65,10 +72,11 @@ class TweetCollection implements ITweetCollection {
 		return null;
 	}
 
+	@JsonIgnore
 	@Override
-	public int getTweetOrderByID( long id ) {
+	public int getTweetOrderByID( final long id ) {
 		int order = 1;
-		for ( ITweet tweet : tweets ) {
+		for ( final ITweet tweet : getTweets() ) {
 			if ( tweet.getID() == id ) {
 				return order;
 			}
@@ -84,26 +92,70 @@ class TweetCollection implements ITweetCollection {
 	}
 
 	@Override
-	public void setTweets( List<ITweet> tweets ) {
+	public void setTweets( final List<ITweet> tweets ) {
 		this.tweets = tweets;
 	}
 
+	@JsonIgnore
 	@Override
-	public void addTweet( ITweet tweet ) {
+	public List<ITweetUser> getTweetUsers() {
+		final Set<ITweetUser> set = new HashSet<ITweetUser>( getTweets().size() );
+
+		for ( final ITweet tweet : getTweets() ) {
+			if ( tweet.getUser() != null ) {
+				set.add( tweet.getUser() );
+			}
+		}
+
+		return new ArrayList<ITweetUser>( set );
+	}
+
+	@JsonIgnore
+	@Override
+	public void addTweet( final ITweet tweet ) {
 		tweets.add( tweet );
 	}
 
+	@JsonIgnore
 	@Override
-	public void removeTweetByID( long id ) {
-		Iterator<ITweet> iter = tweets.iterator();
+	public void removeTweetByID( final long id ) {
+		final Iterator<ITweet> iter = getTweets().iterator();
 
 		while ( iter.hasNext() ) {
-			ITweet tweet = iter.next();
+			final ITweet tweet = iter.next();
 
 			if ( tweet.getID() == id ) {
 				iter.remove();
 			}
 		}
+	}
+
+	@JsonIgnore
+	@Override
+	public List<String> supplementFrom( final ITweetCollection otherCollection ) {
+		if ( otherCollection == null || otherCollection.getTweets() == null || otherCollection.getTweets().isEmpty() ) {
+			return new ArrayList<String>( 1 );
+		}
+
+		List<String> ret = new ArrayList<String>( 5 * otherCollection.getTweets().size() );
+
+		for ( final ITweet tweet : getTweets() ) {
+			long tweetID = tweet.getID();
+			if ( tweetID == 0 ) {
+				continue;
+			}
+
+			ITweet otherTweet = otherCollection.getTweetByID( tweetID );
+			if ( otherTweet == null ) {
+				continue;
+			}
+
+			List<String> messages = tweet.supplementFrom( otherTweet );
+
+			ret.addAll( messages );
+		}
+
+		return ret;
 	}
 
 	@Override
@@ -112,7 +164,7 @@ class TweetCollection implements ITweetCollection {
 	}
 
 	@Override
-	public void setRetrievalTime( Instant retrievalTime ) {
+	public void setRetrievalTime( final Instant retrievalTime ) {
 		this.retrievalTime = retrievalTime;
 	}
 
@@ -122,29 +174,44 @@ class TweetCollection implements ITweetCollection {
 	}
 
 	@Override
-	public void setAttributes( Map<String,String> attributes ) {
+	public void setAttributes( final Map<String,String> attributes ) {
 		this.attributes = attributes;
 	}
 
 	@JsonIgnore
 	@Override
-	public String getAttribute( String key ) {
+	public String getAttribute( final String key ) {
 		return attributes.get( key );
 	}
 
 	@JsonIgnore
 	@Override
-	public void setAttribute( String key, String value ) {
+	public void setAttribute( final String key, final String value ) {
 		attributes.put( key, value );
 	}
 
+	@JsonIgnore
+	@Override
+	public String toDebugString( String indent ) {
+		final List<String> temp = new ArrayList<String>( tweets.size() + 1 );
+
+		temp.add( indent + "retrievalTime=" + retrievalTime + ", tweets:" );
+
+		for ( final ITweet tweet : getTweets() ) {
+			temp.add( tweet.toDebugString( indent + "  " ) );
+		}
+
+		return StringUtils.join( temp, "\n" );
+	}
+
+	@JsonIgnore
 	@Override
 	public String toString() {
-		List<String> temp = new ArrayList<String>( tweets.size() + 1 );
+		final List<String> temp = new ArrayList<String>( getTweets().size() + 1 );
 
 		temp.add( "TweetCollection: retrievalTime=" + retrievalTime + ", attributes=" + attributes + ", tweets:" );
 
-		for ( ITweet tweet : getTweets() ) {
+		for ( final ITweet tweet : getTweets() ) {
 			temp.add( "  " + tweet );
 		}
 

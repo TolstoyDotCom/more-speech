@@ -13,10 +13,6 @@
  */
 package com.tolstoy.basic.api.utils;
 
-import java.io.*;
-import java.net.*;
-import java.util.*;
-
 public interface IResourceBundleWithFormatting {
-	String getString( String key, Object... replacements );
+	String getString( final String key, final Object... replacements );
 }

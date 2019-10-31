@@ -13,25 +13,32 @@
  */
 package com.tolstoy.basic.api.tweet;
 
-import java.util.Comparator;
 import java.io.Serializable;
+import java.util.Comparator;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import com.tolstoy.basic.app.utils.Utils;
 
 public class TweetDateComparator implements Comparator<ITweet>, Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3843540037282075212L;
+
 	private static final Logger logger = LogManager.getLogger( TweetDateComparator.class );
 
-	private TweetComparatorDirection direction;
+	private final TweetComparatorDirection direction;
 
-	public TweetDateComparator( TweetComparatorDirection direction ) {
+	public TweetDateComparator( final TweetComparatorDirection direction ) {
 		this.direction = direction;
 	}
 
 	@Override
-	public int compare( ITweet a, ITweet b ) {
-		int dateA = Utils.parseIntDefault( a.getAttribute( "time" ) );
-		int dateB = Utils.parseIntDefault( b.getAttribute( "time" ) );
+	public int compare( final ITweet a, final ITweet b ) {
+		final int dateA = Utils.parseIntDefault( a.getAttribute( "time" ) );
+		final int dateB = Utils.parseIntDefault( b.getAttribute( "time" ) );
 
 		return direction == TweetComparatorDirection.DESC ? dateB - dateA : dateA - dateB;
 	}

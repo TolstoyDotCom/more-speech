@@ -13,28 +13,38 @@
  */
 package com.tolstoy.censorship.twitter.checker.app.analyzer;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.Collections;
-import java.time.Instant;
-import java.time.format.DateTimeFormatter;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.tolstoy.basic.api.tweet.*;
+
+import com.tolstoy.basic.api.tweet.ITweet;
+import com.tolstoy.basic.api.tweet.ITweetCollection;
+import com.tolstoy.basic.api.tweet.ITweetFactory;
+import com.tolstoy.basic.api.tweet.TweetComparatorDirection;
+import com.tolstoy.basic.api.tweet.TweetDateComparator;
+import com.tolstoy.basic.api.tweet.TweetInteractionComparator;
+import com.tolstoy.basic.api.tweet.TweetSupposedQuality;
 import com.tolstoy.basic.api.utils.IResourceBundleWithFormatting;
 import com.tolstoy.basic.app.utils.Utils;
+import com.tolstoy.censorship.twitter.checker.api.analyzer.AnalysisReportItemBasicTweetStatus;
+import com.tolstoy.censorship.twitter.checker.api.analyzer.IAnalysisReportFactory;
+import com.tolstoy.censorship.twitter.checker.api.analyzer.IAnalysisReportRepliesBasic;
+import com.tolstoy.censorship.twitter.checker.api.analyzer.IAnalysisReportRepliesItemBasic;
+import com.tolstoy.censorship.twitter.checker.api.analyzer.ITweetRanker;
 import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
-import com.tolstoy.censorship.twitter.checker.api.analyzer.*;
 import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunReplies;
-import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageIndividualTweet;
 import com.tolstoy.censorship.twitter.checker.api.snapshot.IReplyThread;
+import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageIndividualTweet;
 import com.tolstoy.censorship.twitter.checker.api.snapshot.ReplyThreadType;
 
 class AnalysisReportRepliesBasic extends AnalysisReportBasicBase implements IAnalysisReportRepliesBasic {
@@ -47,11 +57,11 @@ class AnalysisReportRepliesBasic extends AnalysisReportBasicBase implements IAna
 	private final ISearchRunReplies searchRun;
 	private final ITweetRanker tweetRanker;
 	private final List<IAnalysisReportRepliesItemBasic> reportItems;
-	private Map<String,String> attributes;
-	private DateTimeFormatter nameDateFormatter;
+	private final Map<String,String> attributes;
+	private final DateTimeFormatter nameDateFormatter;
 
-	AnalysisReportRepliesBasic( ISearchRunReplies searchRun, ITweetRanker tweetRanker, IAnalysisReportFactory analysisReportFactory,
-								ITweetFactory tweetFactory, IPreferences prefs, IResourceBundleWithFormatting bundle ) {
+	AnalysisReportRepliesBasic( final ISearchRunReplies searchRun, final ITweetRanker tweetRanker, final IAnalysisReportFactory analysisReportFactory,
+								final ITweetFactory tweetFactory, final IPreferences prefs, final IResourceBundleWithFormatting bundle ) {
 		super( analysisReportFactory, tweetFactory, prefs, bundle );
 
 		this.searchRun = searchRun;
@@ -65,13 +75,13 @@ class AnalysisReportRepliesBasic extends AnalysisReportBasicBase implements IAna
 	public void run() throws Exception {
 		reportItems.clear();
 
-		ITweetCollection tweetColTimeline = searchRun.getTimeline().getTweetCollection();
+		final ITweetCollection tweetColTimeline = searchRun.getTimeline().getTweetCollection();
 
-		Set<Long> sourceTweetIDs = searchRun.getSourceTweetIDs();
+		final Set<Long> sourceTweetIDs = searchRun.getSourceTweetIDs();
 
-		for ( Long sourceTweetID : sourceTweetIDs ) {
-			ITweet sourceTweet = tweetColTimeline.getTweetByID( sourceTweetID );
-			IReplyThread replyThread = searchRun.getReplyThreadBySourceTweetID( sourceTweetID );
+		for ( final Long sourceTweetID : sourceTweetIDs ) {
+			final ITweet sourceTweet = tweetColTimeline.getTweetByID( sourceTweetID );
+			final IReplyThread replyThread = searchRun.getReplyThreadBySourceTweetID( sourceTweetID );
 
 			//logger.info( "sourceTweet=" + sourceTweet.getSummary() );
 			//logger.info( "replyThread=" + replyThread );
@@ -82,14 +92,14 @@ class AnalysisReportRepliesBasic extends AnalysisReportBasicBase implements IAna
 		}
 	}
 
-	protected IAnalysisReportRepliesItemBasic createReportItem( ITweet sourceTweet, IReplyThread replyThread ) {
-		AnalysisReportRepliesItemBasic ret = new AnalysisReportRepliesItemBasic( getTweetFactory(), sourceTweet, replyThread );
+	protected IAnalysisReportRepliesItemBasic createReportItem( final ITweet sourceTweet, final IReplyThread replyThread ) {
+		final AnalysisReportRepliesItemBasic ret = new AnalysisReportRepliesItemBasic( getTweetFactory(), sourceTweet, replyThread );
 
-		ISnapshotUserPageIndividualTweet replyPage = replyThread.getReplyPage();
+		final ISnapshotUserPageIndividualTweet replyPage = replyThread.getReplyPage();
 
 		if ( replyThread.getReplyThreadType() == ReplyThreadType.INDIRECT &&
 				replyThread.getConversationTweetCollection() != null &&
-				replyThread.getConversationTweetCollection().getTweets().size() > 0 ) {
+				!replyThread.getConversationTweetCollection().getTweets().isEmpty() ) {
 			ret.setAttribute( "initial conversation", summarizeTweetList( replyThread.getConversationTweetCollection().getTweets() ) );
 			ret.setAttribute( "initial conversation id", "" + replyThread.getSourceTweet().getRepliedToTweetID() );
 		}
@@ -100,18 +110,18 @@ class AnalysisReportRepliesBasic extends AnalysisReportBasicBase implements IAna
 		ret.setAttribute( "totalReplies", "" + ret.getTotalReplies() );
 		ret.setAttribute( "totalRepliesActual", "" + ret.getTotalRepliesActual() );
 
-		List<ITweet> tweets = replyPage.getTweetCollection().getTweets();
+		final List<ITweet> tweets = replyPage.getTweetCollection().getTweets();
 		ret.setAttribute( "_sourcetweets", summarizeTweetList( tweets ) );
 
-		int numNewerTweets = countNewerTweets( sourceTweet, tweets );
-		int percentNewerTweets = Utils.makePercentInt( numNewerTweets, replyPage.getNumReplies() );
-		int percentComplete = Utils.makePercentInt( tweets.size(), replyPage.getNumReplies() );
+		final int numNewerTweets = countNewerTweets( sourceTweet, tweets );
+		final int percentNewerTweets = Utils.makePercentInt( numNewerTweets, replyPage.getNumReplies() );
+		final int percentComplete = Utils.makePercentInt( tweets.size(), replyPage.getNumReplies() );
 
 		ret.setAttribute( "numNewerTweets", "" + numNewerTweets );
 		ret.setAttribute( "percentNewerTweets", "" + percentNewerTweets );
 		ret.setAttribute( "percentComplete", "" + percentComplete );
 
-		ITweet foundSourceTweet = replyPage.getTweetCollection().getTweetByID( sourceTweet.getID() );
+		final ITweet foundSourceTweet = replyPage.getTweetCollection().getTweetByID( sourceTweet.getID() );
 
 		ret.setAttribute( "foundSourceTweet", ( foundSourceTweet != null ? foundSourceTweet.getSummary() : " IS NULL" ) );
 
@@ -123,12 +133,12 @@ class AnalysisReportRepliesBasic extends AnalysisReportBasicBase implements IAna
 			return ret;
 		}
 
-		int pageOrder = replyPage.getTweetCollection().getTweetOrderByID( sourceTweet.getID() );
-		int interactionOrder = getTweetInteractionOrder( ret, tweets, sourceTweet.getID() );
-		int dateOrder = getTweetDateOrder( ret, tweets, sourceTweet.getID() );
+		final int pageOrder = replyPage.getTweetCollection().getTweetOrderByID( sourceTweet.getID() );
+		final int interactionOrder = getTweetInteractionOrder( ret, tweets, sourceTweet.getID() );
+		final int dateOrder = getTweetDateOrder( ret, tweets, sourceTweet.getID() );
 
-		int percentComparedToInteractionOrder = Utils.makePercentInt( interactionOrder - pageOrder, replyPage.getNumReplies() );
-		int percentComparedToDateOrder = Utils.makePercentInt( dateOrder - pageOrder, replyPage.getNumReplies() );
+		final int percentComparedToInteractionOrder = Utils.makePercentInt( interactionOrder - pageOrder, replyPage.getNumReplies() );
+		final int percentComparedToDateOrder = Utils.makePercentInt( dateOrder - pageOrder, replyPage.getNumReplies() );
 
 		ret.setAttribute( "pageOrder", "" + pageOrder );
 		ret.setAttribute( "interactionOrder", "" + interactionOrder );
@@ -174,8 +184,8 @@ class AnalysisReportRepliesBasic extends AnalysisReportBasicBase implements IAna
 		return ret;
 	}
 
-	protected AnalysisReportItemBasicTweetStatus getTweetNotFoundStatus( ITweet sourceTweet, int percentNewerTweets, int percentComplete,
-																			ISnapshotUserPageIndividualTweet replyPage ) {
+	protected AnalysisReportItemBasicTweetStatus getTweetNotFoundStatus( final ITweet sourceTweet, final int percentNewerTweets, final int percentComplete,
+																			final ISnapshotUserPageIndividualTweet replyPage ) {
 		if ( replyPage.getComplete() ) {
 				//	tweet isn't there and replyPage is complete
 			return AnalysisReportItemBasicTweetStatus.CENSORED_NOTFOUND;
@@ -191,8 +201,8 @@ class AnalysisReportRepliesBasic extends AnalysisReportBasicBase implements IAna
 		}
 	}
 
-	protected int getTweetDateOrder( AnalysisReportRepliesItemBasic ret, List<ITweet> tweets, long tweetID ) {
-		List<ITweet> tempList = new ArrayList<ITweet>( tweets );
+	protected int getTweetDateOrder( final AnalysisReportRepliesItemBasic ret, final List<ITweet> tweets, final long tweetID ) {
+		final List<ITweet> tempList = new ArrayList<ITweet>( tweets );
 
 		Collections.sort( tempList, new TweetDateComparator( TweetComparatorDirection.ASC ) );
 
@@ -201,8 +211,8 @@ class AnalysisReportRepliesBasic extends AnalysisReportBasicBase implements IAna
 		return getTweetOrder( tempList, tweetID );
 	}
 
-	protected int getTweetInteractionOrder( AnalysisReportRepliesItemBasic ret, List<ITweet> tweets, long tweetID ) {
-		List<ITweet> tempList = new ArrayList<ITweet>( tweets );
+	protected int getTweetInteractionOrder( final AnalysisReportRepliesItemBasic ret, final List<ITweet> tweets, final long tweetID ) {
+		final List<ITweet> tempList = new ArrayList<ITweet>( tweets );
 
 		Collections.sort( tempList, new TweetInteractionComparator( BOOST_REPLIES, BOOST_RETWEETS, BOOST_FAVORITES, TweetComparatorDirection.DESC ) );
 
@@ -218,13 +228,13 @@ class AnalysisReportRepliesBasic extends AnalysisReportBasicBase implements IAna
 
 	@Override
 	public String getName() {
-		ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant( searchRun.getStartTime(), ZoneId.systemDefault() );
+		final ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant( searchRun.getStartTime(), ZoneId.systemDefault() );
 		return getBundle().getString( "arb_name", searchRun.getInitiatingUser().getHandle(), zonedDateTime.format( nameDateFormatter ) );
 	}
 
 	@Override
 	public String getDescription() {
-		ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant( searchRun.getStartTime(), ZoneId.systemDefault() );
+		final ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant( searchRun.getStartTime(), ZoneId.systemDefault() );
 		return getBundle().getString( "arb_description", searchRun.getInitiatingUser().getHandle(), zonedDateTime.format( nameDateFormatter ) );
 	}
 

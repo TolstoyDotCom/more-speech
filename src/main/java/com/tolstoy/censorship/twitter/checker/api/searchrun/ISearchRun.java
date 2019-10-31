@@ -13,30 +13,31 @@
  */
 package com.tolstoy.censorship.twitter.checker.api.searchrun;
 
-import java.util.Map;
 import java.time.Instant;
+import java.util.Map;
+
 import com.tolstoy.basic.api.tweet.ITweetUser;
 
 public interface ISearchRun {
 	long getID();
-	void setID( long id );
+	void setID( final long id );
 
 	ITweetUser getInitiatingUser();
-	void setInitiatingUser( ITweetUser user );
+	void setInitiatingUser( final ITweetUser user );
 
 	Instant getStartTime();
-	void setStartTime( Instant startTime );
+	void setStartTime( final Instant startTime );
 
 	Instant getEndTime();
-	void setEndTime( Instant endTime );
+	void setEndTime( final Instant endTime );
 
 	/**
 	 * Optional, free-form metadata such as "loggedin", etc.
 	 * Don't rely on any of those being available.
 	 */
 	Map<String,String> getAttributes();
-	void setAttributes( Map<String,String> attributes );
+	void setAttributes( final Map<String,String> attributes );
 
-	String getAttribute( String key );
-	void setAttribute( String key, String value );
+	String getAttribute( final String key );
+	void setAttribute( final String key, final String value );
 }

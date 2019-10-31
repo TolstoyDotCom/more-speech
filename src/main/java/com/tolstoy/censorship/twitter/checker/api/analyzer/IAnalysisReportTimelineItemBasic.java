@@ -13,8 +13,9 @@
  */
 package com.tolstoy.censorship.twitter.checker.api.analyzer;
 
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
+
 import com.tolstoy.basic.api.tweet.ITweet;
 import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageIndividualTweet;
 
@@ -23,35 +24,35 @@ public interface IAnalysisReportTimelineItemBasic {
 	ISnapshotUserPageIndividualTweet getIndividualPage();
 
 	AnalysisReportItemBasicTimelineRepliesStatus getTimelineRepliesStatus();
-	void setTimelineRepliesStatus( AnalysisReportItemBasicTimelineRepliesStatus status );
+	void setTimelineRepliesStatus( final AnalysisReportItemBasicTimelineRepliesStatus status );
 
 	int getTotalReplies();
 	int getTotalRepliesActual();
 	boolean getListIsComplete();
 
 	int getNumSuppressed();
-	void setNumSuppressed( int numSuppressed );
+	void setNumSuppressed( final int numSuppressed );
 
 	int getNumHidden();
-	void setNumHidden( int numHidden );
+	void setNumHidden( final int numHidden );
 
 	List<IAnalyzedTweet> getAnomalousElevatedTweets();
-	void setAnomalousElevatedTweets( List<IAnalyzedTweet> anomalousElevatedTweets );
+	void setAnomalousElevatedTweets( final List<IAnalyzedTweet> anomalousElevatedTweets );
 
 	List<IAnalyzedTweet> getAnomalousSuppressedOrHiddenTweets();
-	void setAnomalousSuppressedOrHiddenTweets( List<IAnalyzedTweet> anomalousSuppressedOrHiddenTweets );
+	void setAnomalousSuppressedOrHiddenTweets( final List<IAnalyzedTweet> anomalousSuppressedOrHiddenTweets );
 
 	List<IAnalyzedTweet> getHiddenTweets();
-	void setHiddenTweets( List<IAnalyzedTweet> hiddenTweets );
+	void setHiddenTweets( final List<IAnalyzedTweet> hiddenTweets );
 
 	/**
 	 * Optional, free-form metadata such as related to the the computations, etc.
 	 * Don't rely on any of those being available.
 	 */
 	Map<String,String> getAttributes();
-	void setAttributes( Map<String,String> attributes );
+	void setAttributes( final Map<String,String> attributes );
 
-	String getAttribute( String key );
-	void setAttribute( String key, String value );
+	String getAttribute( final String key );
+	void setAttribute( final String key, final String value );
 }
 

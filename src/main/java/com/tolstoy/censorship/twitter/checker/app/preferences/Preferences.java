@@ -13,17 +13,21 @@
  */
 package com.tolstoy.censorship.twitter.checker.app.preferences;
 
-import java.util.*;
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.fasterxml.jackson.annotation.JsonProperty;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
-import com.tolstoy.basic.api.storage.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.tolstoy.basic.api.storage.IStorable;
+import com.tolstoy.basic.api.storage.IStorage;
 import com.tolstoy.basic.app.utils.Utils;
+import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
 import com.tolstoy.censorship.twitter.checker.app.storage.StorageTable;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
@@ -32,19 +36,19 @@ class Preferences implements IPreferences, IStorable {
 	private static final Logger logger = LogManager.getLogger( Preferences.class );
 
 	@JsonProperty
-	private Map<String,String> map;
+	private final Map<String,String> map;
 
 	@JsonProperty
 	private long id;
 
 	@JsonProperty
-	private Instant createTime;
+	private final Instant createTime;
 
 	@JsonProperty
 	private Instant modifyTime;
 
 	@JsonIgnore
-	private IStorage storage;
+	private final IStorage storage;
 
 	Preferences() {
 		this.map = new HashMap<String,String>( 50 );
@@ -54,7 +58,7 @@ class Preferences implements IPreferences, IStorable {
 		this.createTime = this.modifyTime = Instant.now();
 	}
 
-	Preferences( Map<String,String> defaults ) {
+	Preferences( final Map<String,String> defaults ) {
 		this.map = new HashMap<String,String>( defaults );
 		this.storage = null;
 
@@ -62,7 +66,7 @@ class Preferences implements IPreferences, IStorable {
 		this.createTime = this.modifyTime = Instant.now();
 	}
 
-	Preferences( IStorage storage, Map<String,String> defaults ) throws Exception {
+	Preferences( final IStorage storage, final Map<String,String> defaults ) throws Exception {
 		this.storage = storage;
 
 		this.map = new HashMap<String,String>( defaults );
@@ -71,8 +75,8 @@ class Preferences implements IPreferences, IStorable {
 		this.createTime = this.modifyTime = Instant.now();
 	}
 
-	Preferences( IStorage storage, long id, Instant createTime, Instant modifyTime,
-						Map<String,String> overrides, Map<String,String> defaults ) throws Exception {
+	Preferences( final IStorage storage, final long id, final Instant createTime, final Instant modifyTime,
+						final Map<String,String> overrides, final Map<String,String> defaults ) throws Exception {
 		this.storage = storage;
 
 		this.map = new HashMap<String,String>( defaults );
@@ -103,19 +107,19 @@ class Preferences implements IPreferences, IStorable {
 
 	@JsonIgnore
 	@Override
-	public String getValue( String key ) {
+	public String getValue( final String key ) {
 		return map.get( key );
 	}
 
 	@JsonIgnore
 	@Override
-	public boolean isEmpty( String key ) {
+	public boolean isEmpty( final String key ) {
 		return Utils.isEmpty( map.get( key ) );
 	}
 
 	@JsonIgnore
 	@Override
-	public void setValue( String key, String value ) {
+	public void setValue( final String key, final String value ) {
 		map.put( key, value );
 	}
 
@@ -125,7 +129,7 @@ class Preferences implements IPreferences, IStorable {
 	}
 
 	@Override
-	public void setID( long id ) {
+	public void setID( final long id ) {
 		this.id = id;
 	}
 
@@ -144,7 +148,7 @@ class Preferences implements IPreferences, IStorable {
 		return "prefs";
 	}
 
-	public void setSearchKey( String s ) {
+	public void setSearchKey( final String s ) {
 	}
 
 	@Override

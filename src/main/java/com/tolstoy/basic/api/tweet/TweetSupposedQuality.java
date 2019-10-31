@@ -19,18 +19,18 @@ public enum TweetSupposedQuality {
 	ABUSIVE( "abusive_quality", "AbusiveQuality", "abusive", true ),
 	UNKNOWN( "unknown_quality", "UnknownQuality", "unknown", true );
 
-	private String key, htmlName, matchSubstring;
-	private boolean censored;
+	private final String key, htmlName, matchSubstring;
+	private final boolean censored;
 
-	public static TweetSupposedQuality getMatching( String quality ) {
+	public static TweetSupposedQuality getMatching( final String quality ) {
 		if ( quality == null || quality.length() < 1 ) {
 			return UNKNOWN;
 		}
 
-		quality = quality.toLowerCase();
+		final String qualityLowercase = quality.toLowerCase();
 
-		for( TweetSupposedQuality tweetSupposedQuality : values() ) {
-			if ( quality.indexOf( tweetSupposedQuality.getMatchSubstring() ) > -1 ) {
+		for ( final TweetSupposedQuality tweetSupposedQuality : values() ) {
+			if ( qualityLowercase.indexOf( tweetSupposedQuality.getMatchSubstring() ) > -1 ) {
 				return tweetSupposedQuality;
 			}
 		}
@@ -38,7 +38,7 @@ public enum TweetSupposedQuality {
 		return UNKNOWN;
 	}
 
-	TweetSupposedQuality( String key, String htmlName, String matchSubstring, boolean censored ) {
+	TweetSupposedQuality( final String key, final String htmlName, final String matchSubstring, final boolean censored ) {
 		this.key = key;
 		this.htmlName = htmlName;
 		this.matchSubstring = matchSubstring;

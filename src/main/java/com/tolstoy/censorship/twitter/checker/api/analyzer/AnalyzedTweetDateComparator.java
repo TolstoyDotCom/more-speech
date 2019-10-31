@@ -13,25 +13,32 @@
  */
 package com.tolstoy.censorship.twitter.checker.api.analyzer;
 
-import java.util.Comparator;
 import java.io.Serializable;
+import java.util.Comparator;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import com.tolstoy.basic.app.utils.Utils;
 
 public class AnalyzedTweetDateComparator implements Comparator<IAnalyzedTweet>, Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7302056076095931759L;
+
 	private static final Logger logger = LogManager.getLogger( AnalyzedTweetDateComparator.class );
 
-	private AnalyzedTweetComparatorDirection direction;
+	private final AnalyzedTweetComparatorDirection direction;
 
-	public AnalyzedTweetDateComparator( AnalyzedTweetComparatorDirection direction ) {
+	public AnalyzedTweetDateComparator( final AnalyzedTweetComparatorDirection direction ) {
 		this.direction = direction;
 	}
 
 	@Override
-	public int compare( IAnalyzedTweet a, IAnalyzedTweet b ) {
-		int dateA = Utils.parseIntDefault( a.getTweet().getAttribute( "time" ) );
-		int dateB = Utils.parseIntDefault( b.getTweet().getAttribute( "time" ) );
+	public int compare( final IAnalyzedTweet a, final IAnalyzedTweet b ) {
+		final int dateA = Utils.parseIntDefault( a.getTweet().getAttribute( "time" ) );
+		final int dateB = Utils.parseIntDefault( b.getTweet().getAttribute( "time" ) );
 
 		return direction == AnalyzedTweetComparatorDirection.DESC ? dateB - dateA : dateA - dateB;
 	}

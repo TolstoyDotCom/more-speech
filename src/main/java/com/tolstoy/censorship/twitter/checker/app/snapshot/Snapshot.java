@@ -13,14 +13,15 @@
  */
 package com.tolstoy.censorship.twitter.checker.app.snapshot;
 
-import java.util.*;
 import java.time.Instant;
+
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.fasterxml.jackson.annotation.JsonProperty;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshot;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
@@ -40,7 +41,7 @@ class Snapshot implements ISnapshot {
 	@JsonProperty
 	private boolean complete;
 
-	Snapshot( String url, Instant retrievalTime ) {
+	Snapshot( final String url, final Instant retrievalTime ) {
 		this.url = url;
 		this.retrievalTime = retrievalTime;
 	}
@@ -66,22 +67,22 @@ class Snapshot implements ISnapshot {
 	}
 
 	@Override
-	public void setURL( String url ) {
+	public void setURL( final String url ) {
 		this.url = url;
 	}
 
 	@Override
-	public void setTitle( String title ) {
+	public void setTitle( final String title ) {
 		this.title = title;
 	}
 
 	@Override
-	public void setRetrievalTime( Instant retrievalTime ) {
+	public void setRetrievalTime( final Instant retrievalTime ) {
 		this.retrievalTime = retrievalTime;
 	}
 
 	@Override
-	public void setComplete( boolean complete ) {
+	public void setComplete( final boolean complete ) {
 		this.complete = complete;
 	}
 

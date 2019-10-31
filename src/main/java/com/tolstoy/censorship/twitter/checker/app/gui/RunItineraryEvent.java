@@ -13,13 +13,17 @@
  */
 package com.tolstoy.censorship.twitter.checker.app.gui;
 
-import java.util.*;
 import java.io.File;
+import java.util.EventObject;
 
 public class RunItineraryEvent extends EventObject {
-	private File itineraryFile;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7248172622748134409L;
+	private final File itineraryFile;
 
-	public RunItineraryEvent( Object source, File itineraryFile ) {
+	public RunItineraryEvent( final Object source, final File itineraryFile ) {
 		super( source );
 		this.itineraryFile = itineraryFile;
 	}

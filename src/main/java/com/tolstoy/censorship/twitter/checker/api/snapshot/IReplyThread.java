@@ -14,22 +14,21 @@
 package com.tolstoy.censorship.twitter.checker.api.snapshot;
 
 import com.tolstoy.basic.api.tweet.ITweet;
-import com.tolstoy.basic.api.tweet.ITweetUser;
 import com.tolstoy.basic.api.tweet.ITweetCollection;
 
 public interface IReplyThread {
 	ReplyThreadType getReplyThreadType();
-	void setReplyThreadType( ReplyThreadType replyThreadType );
+	void setReplyThreadType( final ReplyThreadType replyThreadType );
 
 	ISnapshotUserPageIndividualTweet getReplyPage();
-	void setReplyPage( ISnapshotUserPageIndividualTweet replyPage );
+	void setReplyPage( final ISnapshotUserPageIndividualTweet replyPage );
 
 	ITweet getSourceTweet();
-	void setSourceTweet( ITweet sourceTweet );
+	void setSourceTweet( final ITweet sourceTweet );
 
 	ITweet getRepliedToTweet();
-	void setRepliedToTweet( ITweet repliedToTweet );
+	void setRepliedToTweet( final ITweet repliedToTweet );
 
 	ITweetCollection getConversationTweetCollection();
-	void setConversationTweetCollection( ITweetCollection conversationTweetCollection );
+	void setConversationTweetCollection( final ITweetCollection conversationTweetCollection );
 }

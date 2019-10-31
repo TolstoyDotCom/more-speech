@@ -13,9 +13,6 @@
  */
 package com.tolstoy.censorship.twitter.checker.app.storage;
 
-import java.io.*;
-import java.net.*;
-import java.util.*;
 import com.tolstoy.basic.api.storage.IStorageTable;
 
 public enum StorageTable implements IStorageTable {
@@ -24,10 +21,11 @@ public enum StorageTable implements IStorageTable {
 
 	private String tablename;
 
-	StorageTable( String tablename ) {
+	StorageTable( final String tablename ) {
 		this.tablename = tablename;
 	}
 
+	@Override
 	public String getTablename() {
 		return tablename;
 	}

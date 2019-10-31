@@ -13,80 +13,93 @@
  */
 package com.tolstoy.censorship.twitter.checker.app;
 
-import java.io.File;
-import java.util.Properties;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Arrays;
-import javax.swing.JFrame;
-import javax.swing.JDialog;
-import javax.swing.JOptionPane;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.WindowConstants;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.scijava.util.ClassUtils;
-import org.scijava.util.FileUtils;
+import org.dizitart.jbus.JBus;
+
+import com.tolstoy.basic.api.installation.DebugLevel;
 import com.tolstoy.basic.api.storage.IStorage;
 import com.tolstoy.basic.api.tweet.ITweetFactory;
-import com.tolstoy.basic.api.utils.*;
-import com.tolstoy.basic.app.utils.*;
-import com.tolstoy.basic.app.tweet.TweetFactory;
+import com.tolstoy.basic.api.utils.IResourceBundleWithFormatting;
 import com.tolstoy.basic.app.storage.StorageEmbeddedDerby;
-import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferencesFactory;
+import com.tolstoy.basic.app.tweet.TweetFactory;
+import com.tolstoy.basic.app.utils.Utils;
+import com.tolstoy.basic.app.utils.ResourceBundleWithFormatting;
+import com.tolstoy.censorship.twitter.checker.api.analyzer.IAnalysisReportFactory;
+import com.tolstoy.censorship.twitter.checker.api.browserproxy.IBrowserProxyFactory;
+import com.tolstoy.censorship.twitter.checker.api.browserproxy.IBrowserProxy;
 import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
-import com.tolstoy.censorship.twitter.checker.api.webdriver.IWebDriverFactory;
-import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotFactory;
+import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferencesFactory;
 import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunFactory;
 import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunProcessor;
-import com.tolstoy.censorship.twitter.checker.api.analyzer.*;
-import com.tolstoy.censorship.twitter.checker.app.preferences.PreferencesFactory;
-import com.tolstoy.censorship.twitter.checker.app.webdriver.WebDriverFactoryJS;
-import com.tolstoy.censorship.twitter.checker.app.snapshot.SnapshotFactory;
+import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotFactory;
+import com.tolstoy.censorship.twitter.checker.api.webdriver.IWebDriverFactoryFactory;
 import com.tolstoy.censorship.twitter.checker.app.analyzer.AnalysisReportFactory;
-import com.tolstoy.censorship.twitter.checker.app.searchrun.*;
-import com.tolstoy.censorship.twitter.checker.app.gui.*;
-import com.tolstoy.censorship.twitter.checker.app.helpers.*;
+import com.tolstoy.censorship.twitter.checker.app.browserproxy.BrowserProxyFactory;
+import com.tolstoy.censorship.twitter.checker.app.helpers.AppDirectories;
+import com.tolstoy.censorship.twitter.checker.api.installation.IAppDirectories;
+import com.tolstoy.censorship.twitter.checker.api.installation.IBrowserScriptFactory;
+import com.tolstoy.censorship.twitter.checker.app.helpers.IOverridePreferences;
+import com.tolstoy.censorship.twitter.checker.app.helpers.OverridePreferencesFromEmbedPathsLinux;
+import com.tolstoy.censorship.twitter.checker.app.helpers.OverridePreferencesFromEmbedPathsWindows;
+import com.tolstoy.censorship.twitter.checker.app.helpers.OverridePreferencesFromSystemProperties;
+import com.tolstoy.censorship.twitter.checker.app.helpers.SearchRunProcessorInsertNewToStorage;
+import com.tolstoy.censorship.twitter.checker.app.helpers.SearchRunProcessorUploadDataJson;
+import com.tolstoy.censorship.twitter.checker.app.helpers.SearchRunProcessorWriteReport;
+import com.tolstoy.censorship.twitter.checker.app.installation.BrowserScriptFactory;
+import com.tolstoy.censorship.twitter.checker.app.preferences.PreferencesFactory;
+import com.tolstoy.censorship.twitter.checker.app.searchrun.SearchRunFactory;
+import com.tolstoy.censorship.twitter.checker.app.snapshot.SnapshotFactory;
+import com.tolstoy.censorship.twitter.checker.app.webdriver.WebDriverFactoryFactory;
 
 public final class Start {
 	private static final Logger logger = LogManager.getLogger( Start.class );
-
-		//	NOTE: if running via Maven, make this 2 otherwise the database
-		//	and the reports will be deleted when you do a 'mvn clean'
-	private static final int DIRECTORIES_LEVEL_UP = 1;
 
 	private static final String[] TABLE_NAMES = { "searchrun", "preferences" };
 
 	private static final String[] PREFERENCES_OVERRIDEABLE_BY_SYSTEM_PROPERTIES = { "prefs.firefox_path_app", "prefs.firefox_path_profile" };
 
-	private static final boolean DEBUG_MODE = true;
-
 	private IResourceBundleWithFormatting bundle = null;
 
+	@SuppressWarnings("unused")
 	private Start() {
 		Properties props = null;
 		Map<String,String> defaultAppPrefs = null;
 		IStorage storage = null;
 		IPreferencesFactory prefsFactory = null;
 		IPreferences prefs = null;
-		IWebDriverFactory webDriverFactory = null;
+		IWebDriverFactoryFactory webDriverFactoryFactory = null;
 		ISearchRunFactory searchRunFactory = null;
 		ISnapshotFactory snapshotFactory = null;
 		ITweetFactory tweetFactory = null;
 		IAnalysisReportFactory analysisReportFactory = null;
 		List<ISearchRunProcessor> searchRunProcessors = null;
 		IAppDirectories appDirectories = null;
+		IBrowserScriptFactory browserScriptFactory = null;
+		IBrowserProxyFactory browserProxyFactory = null;
+		IBrowserProxy browserProxy = null;
 		String databaseConnectionString = null;
 
 		try {
 			props = new Properties();
 			props.load( getClass().getClassLoader().getResourceAsStream( "app.properties" ) );
 			defaultAppPrefs = new HashMap<String,String>();
-			for ( Object key : props.keySet() ) {
-				String keyString = String.valueOf( key );
+			for ( final Object key : props.keySet() ) {
+				final String keyString = String.valueOf( key );
 				defaultAppPrefs.put( keyString, String.valueOf( props.getProperty( keyString ) ) );
 			}
 
@@ -94,25 +107,22 @@ public final class Start {
 
 			bundle = new ResourceBundleWithFormatting( "GUI" );
 		}
-		catch ( Exception e ) {
+		catch ( final Exception e ) {
 			handleError( true, "Could not initialize properties", e );
 		}
 
 		try {
-			appDirectories = new AppDirectories( DIRECTORIES_LEVEL_UP,
-													defaultAppPrefs.get( "storage.derby.dir_name" ),
+			appDirectories = new AppDirectories( defaultAppPrefs.get( "storage.derby.dir_name" ),
 													defaultAppPrefs.get( "storage.derby.db_name" ),
 													defaultAppPrefs.get( "reports.dir_name" ) );
-
-			if ( appDirectories.getDatabaseParentDirectory() == null || appDirectories.getReportsDirectory() == null || appDirectories.getDatabaseDirectory() == null ) {
-				handleError( true, bundle.getString( "exc_db_dir", appDirectories.getInstallDirectory() ) );
-			}
 
 			databaseConnectionString = defaultAppPrefs.get( "storage.derby.connstring.start" ) +
 										appDirectories.getDatabaseDirectory() +
 										defaultAppPrefs.get( "storage.derby.connstring.end" );
+
+			browserScriptFactory = new BrowserScriptFactory( appDirectories.getSubdirectory( "stockscripts" ) );
 		}
-		catch ( Exception e ) {
+		catch ( final Exception e ) {
 			handleError( true, bundle.getString( "exc_install_loc" ), e );
 		}
 
@@ -122,7 +132,7 @@ public final class Start {
 			storage.connect();
 			storage.ensureTables();
 		}
-		catch ( Exception e ) {
+		catch ( final Exception e ) {
 			handleError( true, bundle.getString( "exc_db_init", databaseConnectionString ), e );
 		}
 
@@ -130,7 +140,7 @@ public final class Start {
 			prefsFactory = new PreferencesFactory( storage, defaultAppPrefs );
 			prefs = prefsFactory.getAppPreferences();
 
-			IOverridePreferences[] overrides = {
+			final IOverridePreferences[] overrides = {
 				new OverridePreferencesFromSystemProperties( PREFERENCES_OVERRIDEABLE_BY_SYSTEM_PROPERTIES ),
 				new OverridePreferencesFromEmbedPathsLinux( appDirectories ),
 				new OverridePreferencesFromEmbedPathsWindows( appDirectories )
@@ -148,9 +158,9 @@ public final class Start {
 				prefs.save();
 			}
 
-			//logger.info( "prefs=" + Utils.sanitizeMap( prefs.getValues() ) );
+			logger.info( "prefs=" + Utils.sanitizeMap( prefs.getValues() ) );
 		}
-		catch ( Exception e ) {
+		catch ( final Exception e ) {
 			handleError( true, bundle.getString( "exc_prefs_init" ), e );
 		}
 
@@ -160,27 +170,36 @@ public final class Start {
 			searchRunFactory = new SearchRunFactory( tweetFactory );
 			analysisReportFactory = new AnalysisReportFactory( tweetFactory, appDirectories, prefs, bundle );
 		}
-		catch ( Exception e ) {
+		catch ( final Exception e ) {
 			handleError( false, bundle.getString( "exc_tweetsnapshotfactory_init" ), e );
 		}
 
 		try {
-			searchRunProcessors = new ArrayList<ISearchRunProcessor>( 2 );
+			searchRunProcessors = new ArrayList<ISearchRunProcessor>( 3 );
 
 			searchRunProcessors.add( new SearchRunProcessorInsertNewToStorage( bundle, prefs, storage ) );
 
 			searchRunProcessors.add( new SearchRunProcessorUploadDataJson( bundle, prefs ) );
 
-			searchRunProcessors.add( new SearchRunProcessorWriteReport( bundle, prefs, appDirectories, analysisReportFactory, DEBUG_MODE ) );
+			searchRunProcessors.add( new SearchRunProcessorWriteReport( bundle, prefs, appDirectories, analysisReportFactory, DebugLevel.VERBOSE ) );
 		}
-		catch ( Exception e ) {
+		catch ( final Exception e ) {
 			handleError( false, bundle.getString( "exc_searchrunprocessors_init" ), e );
 		}
 
 		try {
-			webDriverFactory = new WebDriverFactoryJS( snapshotFactory, tweetFactory, prefs, bundle );
+			//	@todo: put all mentions of jbus into an interface
+			browserProxyFactory = new BrowserProxyFactory( prefs, bundle, new JBus() );
+
+			webDriverFactoryFactory = new WebDriverFactoryFactory( snapshotFactory,
+																	tweetFactory,
+																	appDirectories,
+																	browserScriptFactory,
+																	prefs,
+																	bundle,
+																	DebugLevel.VERBOSE );
 		}
-		catch ( Exception e ) {
+		catch ( final Exception e ) {
 			handleError( false, bundle.getString( "exc_webdriver_init" ), e );
 		}
 
@@ -189,31 +208,32 @@ public final class Start {
 		}
 		else {
 			try {
-				AppGUI app = new AppGUI( bundle,
+				final AppGUI app = new AppGUI( bundle,
 											storage,
 											prefsFactory,
 											prefs,
-											webDriverFactory,
+											webDriverFactoryFactory,
 											searchRunFactory,
 											snapshotFactory,
 											tweetFactory,
 											analysisReportFactory,
+											browserProxyFactory,
 											appDirectories,
 											searchRunProcessors );
 				app.run();
 			}
-			catch ( Exception e ) {
+			catch ( final Exception e ) {
 				handleError( false, bundle.getString( "exc_start", e.getMessage() ), e );
 			}
 		}
 	}
 
-	private void handleError( boolean closeOnExit, String msg, Exception e ) {
+	private void handleError( final boolean closeOnExit, final String msg, final Exception e ) {
 		logger.error( msg, e );
 		showErrorMessage( closeOnExit, msg );
 	}
 
-	private void handleError( boolean closeOnExit, String msg ) {
+	private void handleError( final boolean closeOnExit, final String msg ) {
 		logger.error( msg );
 		showErrorMessage( closeOnExit, msg );
 	}
@@ -230,10 +250,11 @@ public final class Start {
 			dialogTitle = "An error occurred";
 		}
 
-		JFrame frame = new JFrame();
-		JOptionPane optionPane = new JOptionPane( msg, JOptionPane.ERROR_MESSAGE );
+		final JFrame frame = new JFrame();
+		final JOptionPane optionPane = new JOptionPane( msg, JOptionPane.ERROR_MESSAGE );
 		optionPane.addPropertyChangeListener( new PropertyChangeListener() {
-			public void propertyChange( PropertyChangeEvent propertyChangeEvent ) {
+			@Override
+			public void propertyChange( final PropertyChangeEvent propertyChangeEvent ) {
 				if ( JOptionPane.VALUE_PROPERTY.equals( propertyChangeEvent.getPropertyName() ) ) {
 					if ( closeOnExit ) {
 						System.exit( -1 );
@@ -242,14 +263,14 @@ public final class Start {
 			}
 		});
 
-		JDialog dialog = new JDialog( frame, dialogTitle, true );
-		dialog.setDefaultCloseOperation( JDialog.DISPOSE_ON_CLOSE );
+		final JDialog dialog = new JDialog( frame, dialogTitle, true );
+		dialog.setDefaultCloseOperation( WindowConstants.DISPOSE_ON_CLOSE );
 		dialog.setContentPane( optionPane );
 		dialog.pack();
 		dialog.setVisible( true );
 	}
 
-	public static void main(String[] args) {
+	public static void main(final String[] args) {
 		new Start();
 	}
 }

@@ -13,13 +13,13 @@
  */
 package com.tolstoy.basic.gui;
 
-import javax.swing.JPanel;
 import javax.swing.JCheckBox;
+import javax.swing.JPanel;
 
 public class GUIComponentCheckBox extends GUIComponent {
 	private final JCheckBox field;
 
-	public GUIComponentCheckBox( ElementDescriptor desc, boolean selected, JPanel panel, int row ) {
+	public GUIComponentCheckBox( final ElementDescriptor desc, final boolean selected, final JPanel panel, final int row ) {
 		super( desc );
 
 		field = new JCheckBox( desc.label, selected );

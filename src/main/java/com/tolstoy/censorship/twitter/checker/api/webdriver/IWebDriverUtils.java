@@ -16,9 +16,9 @@ package com.tolstoy.censorship.twitter.checker.api.webdriver;
 import org.openqa.selenium.WebElement;
 
 public interface IWebDriverUtils {
-	String makeByXPathClassString( String clz );
-	WebElement safeFindByClass( WebElement parent, String clz, String subcontainer );
-	WebElement safeFindByClass( WebElement parent, String clz );
-	String getWebElementText( WebElement elem );
-	String dumpWebElement( WebElement elem );
+	String makeByXPathClassString( final String clz );
+	WebElement safeFindByClass( final WebElement parent, final String clz, final String subcontainer );
+	WebElement safeFindByClass( final WebElement parent, final String clz );
+	String getWebElementText( final WebElement elem );
+	String dumpWebElement( final WebElement elem );
 }

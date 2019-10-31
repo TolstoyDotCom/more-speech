@@ -13,19 +13,22 @@
  */
 package com.tolstoy.basic.gui;
 
-import java.util.*;
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
+import java.awt.GridBagConstraints;
+import java.awt.Insets;
+import java.util.Map;
+
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 
 public abstract class GUIComponent {
-	private ElementDescriptor desc;
-	private JLabel label;
+	private final ElementDescriptor desc;
+	private final JLabel label;
 
 	public abstract String getValue();
 	public abstract boolean hasLabel();
 
-	public GUIComponent( ElementDescriptor desc ) {
+	public GUIComponent( final ElementDescriptor desc ) {
 		this.desc = desc;
 
 		if ( desc.label != null && desc.label.length() > 0 ) {
@@ -36,12 +39,12 @@ public abstract class GUIComponent {
 		}
 	}
 
-	public void add( JComponent component, JPanel panel, int row ) {
+	public void add( final JComponent component, final JPanel panel, final int row ) {
 		if ( desc.help != null && desc.help.length() > 0 ) {
 			component.setToolTipText( desc.help );
 		}
 
-		GridBagConstraints constraints = new GridBagConstraints();
+		final GridBagConstraints constraints = new GridBagConstraints();
 
 		if ( hasLabel() ) {
 			constraints.gridx = 0;
@@ -76,7 +79,7 @@ public abstract class GUIComponent {
 		return desc;
 	}
 
-	public void storeValue( Map<String,String> map ) {
+	public void storeValue( final Map<String,String> map ) {
 		map.put( desc.key, getValue() );
 	}
 }

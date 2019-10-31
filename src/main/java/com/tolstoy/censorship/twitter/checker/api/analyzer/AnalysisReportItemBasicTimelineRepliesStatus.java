@@ -34,9 +34,9 @@ public enum AnalysisReportItemBasicTimelineRepliesStatus {
 	 */
 	UNKNOWN( "timeline_replies_status_unknown" );
 
-	private String key;
+	private final String key;
 
-	AnalysisReportItemBasicTimelineRepliesStatus( String key ) {
+	AnalysisReportItemBasicTimelineRepliesStatus( final String key ) {
 		this.key = key;
 	}
 

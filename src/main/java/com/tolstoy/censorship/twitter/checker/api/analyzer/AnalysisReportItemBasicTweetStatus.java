@@ -58,9 +58,9 @@ public enum AnalysisReportItemBasicTweetStatus {
 	 */
 	UNKNOWN( "tweet_status_unknown" );
 
-	private String key;
+	private final String key;
 
-	AnalysisReportItemBasicTweetStatus( String key ) {
+	AnalysisReportItemBasicTweetStatus( final String key ) {
 		this.key = key;
 	}
 

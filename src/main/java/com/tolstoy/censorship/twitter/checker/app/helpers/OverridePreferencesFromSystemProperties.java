@@ -15,25 +15,27 @@ package com.tolstoy.censorship.twitter.checker.app.helpers;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.tolstoy.basic.app.utils.Utils;
+
 import com.tolstoy.basic.api.utils.IResourceBundleWithFormatting;
+import com.tolstoy.basic.app.utils.Utils;
 import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
 
 public class OverridePreferencesFromSystemProperties implements IOverridePreferences {
 	private static final Logger logger = LogManager.getLogger( OverridePreferencesFromSystemProperties.class );
 
-	private String[] overrideable;
+	private final String[] overrideable;
 
-	public OverridePreferencesFromSystemProperties( String[] overrideable ) {
+	public OverridePreferencesFromSystemProperties( final String[] overrideable ) {
 		this.overrideable = overrideable;
 	}
 
-	public boolean override( IPreferences prefs, IResourceBundleWithFormatting bundle ) {
+	@Override
+	public boolean override( final IPreferences prefs, final IResourceBundleWithFormatting bundle ) {
 		boolean bChanged = false;
 
 		if ( overrideable.length > 0 ) {
 			for ( int i = 0; i < overrideable.length; i++ ) {
-				String key = overrideable[ i ];
+				final String key = overrideable[ i ];
 
 				if ( !Utils.isEmpty( System.getProperty( key ) ) ) {
 					logger.info( bundle.getString( "preferences_overrideable_by_system_properties", key ) );

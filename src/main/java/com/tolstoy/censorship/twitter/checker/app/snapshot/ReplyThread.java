@@ -16,13 +16,14 @@ package com.tolstoy.censorship.twitter.checker.app.snapshot;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.fasterxml.jackson.annotation.JsonProperty;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.tolstoy.basic.api.tweet.ITweet;
 import com.tolstoy.basic.api.tweet.ITweetCollection;
-import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageIndividualTweet;
 import com.tolstoy.censorship.twitter.checker.api.snapshot.IReplyThread;
+import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageIndividualTweet;
 import com.tolstoy.censorship.twitter.checker.api.snapshot.ReplyThreadType;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
@@ -53,11 +54,11 @@ class ReplyThread implements IReplyThread {
 		this.conversationTweetCollection = null;
 	}
 
-	ReplyThread( ReplyThreadType replyThreadType,
-					ITweet sourceTweet,
-					ITweet repliedToTweet,
-					ISnapshotUserPageIndividualTweet replyPage,
-					ITweetCollection conversationTweetCollection ) {
+	ReplyThread( final ReplyThreadType replyThreadType,
+					final ITweet sourceTweet,
+					final ITweet repliedToTweet,
+					final ISnapshotUserPageIndividualTweet replyPage,
+					final ITweetCollection conversationTweetCollection ) {
 		this.replyThreadType = replyThreadType;
 		this.sourceTweet = sourceTweet;
 		this.repliedToTweet = repliedToTweet;
@@ -71,7 +72,7 @@ class ReplyThread implements IReplyThread {
 	}
 
 	@Override
-	public void setReplyThreadType( ReplyThreadType replyThreadType ) {
+	public void setReplyThreadType( final ReplyThreadType replyThreadType ) {
 		this.replyThreadType = replyThreadType;
 	}
 
@@ -81,7 +82,7 @@ class ReplyThread implements IReplyThread {
 	}
 
 	@Override
-	public void setReplyPage( ISnapshotUserPageIndividualTweet replyPage ) {
+	public void setReplyPage( final ISnapshotUserPageIndividualTweet replyPage ) {
 		this.replyPage = replyPage;
 	}
 
@@ -91,7 +92,7 @@ class ReplyThread implements IReplyThread {
 	}
 
 	@Override
-	public void setSourceTweet( ITweet sourceTweet ) {
+	public void setSourceTweet( final ITweet sourceTweet ) {
 		this.sourceTweet = sourceTweet;
 	}
 
@@ -101,7 +102,7 @@ class ReplyThread implements IReplyThread {
 	}
 
 	@Override
-	public void setRepliedToTweet( ITweet repliedToTweet ) {
+	public void setRepliedToTweet( final ITweet repliedToTweet ) {
 		this.repliedToTweet = repliedToTweet;
 	}
 
@@ -111,8 +112,8 @@ class ReplyThread implements IReplyThread {
 	}
 
 	@Override
-	public void setConversationTweetCollection( ITweetCollection conversationTweetCollection ) {
-		conversationTweetCollection = conversationTweetCollection;
+	public void setConversationTweetCollection( final ITweetCollection conversationTweetCollection ) {
+		this.conversationTweetCollection = conversationTweetCollection;
 	}
 
 	@Override

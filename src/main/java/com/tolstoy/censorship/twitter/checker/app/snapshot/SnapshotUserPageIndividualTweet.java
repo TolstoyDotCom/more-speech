@@ -13,14 +13,15 @@
  */
 package com.tolstoy.censorship.twitter.checker.app.snapshot;
 
-import java.util.*;
 import java.time.Instant;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.tolstoy.basic.api.tweet.*;
-import com.fasterxml.jackson.annotation.JsonProperty;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.tolstoy.basic.api.tweet.ITweet;
 import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageIndividualTweet;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
@@ -47,7 +48,7 @@ class SnapshotUserPageIndividualTweet extends SnapshotUserPage implements ISnaps
 		super( "", Instant.now() );
 	}
 
-	SnapshotUserPageIndividualTweet( String url, Instant retrievalTime ) {
+	SnapshotUserPageIndividualTweet( final String url, final Instant retrievalTime ) {
 		super( url, retrievalTime );
 	}
 
@@ -77,27 +78,27 @@ class SnapshotUserPageIndividualTweet extends SnapshotUserPage implements ISnaps
 	}
 
 	@Override
-	public void setIndividualTweet( ITweet individualTweet ) {
+	public void setIndividualTweet( final ITweet individualTweet ) {
 		this.individualTweet = individualTweet;
 	}
 
 	@Override
-	public void setTweetID( long tweetID ) {
+	public void setTweetID( final long tweetID ) {
 		this.tweetID = tweetID;
 	}
 
 	@Override
-	public void setNumRetweets( int numRetweets ) {
+	public void setNumRetweets( final int numRetweets ) {
 		this.numRetweets = numRetweets;
 	}
 
 	@Override
-	public void setNumLikes( int numLikes ) {
+	public void setNumLikes( final int numLikes ) {
 		this.numLikes = numLikes;
 	}
 
 	@Override
-	public void setNumReplies( int numReplies ) {
+	public void setNumReplies( final int numReplies ) {
 		this.numReplies = numReplies;
 	}
 }

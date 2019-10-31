@@ -13,32 +13,20 @@
  */
 package com.tolstoy.censorship.twitter.checker.app.analyzer;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.Collections;
-import java.time.Instant;
 import java.time.format.DateTimeFormatter;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import org.apache.commons.lang3.builder.ToStringBuilder;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.tolstoy.basic.api.tweet.*;
+
+import com.tolstoy.basic.api.tweet.ITweet;
+import com.tolstoy.basic.api.tweet.ITweetFactory;
 import com.tolstoy.basic.api.utils.IResourceBundleWithFormatting;
 import com.tolstoy.basic.app.utils.Utils;
-import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
 import com.tolstoy.censorship.twitter.checker.api.analyzer.IAnalysisReportFactory;
-import com.tolstoy.censorship.twitter.checker.api.analyzer.IAnalysisReportRepliesBasic;
-import com.tolstoy.censorship.twitter.checker.api.analyzer.IAnalysisReportRepliesItemBasic;
-import com.tolstoy.censorship.twitter.checker.api.analyzer.AnalysisReportItemBasicTweetStatus;
-import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunReplies;
-import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageIndividualTweet;
-import com.tolstoy.censorship.twitter.checker.api.snapshot.IReplyThread;
-import com.tolstoy.censorship.twitter.checker.api.snapshot.ReplyThreadType;
+import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
 
 class AnalysisReportBasicBase {
 	private static final Logger logger = LogManager.getLogger( AnalysisReportBasicBase.class );
@@ -47,10 +35,10 @@ class AnalysisReportBasicBase {
 	private final ITweetFactory tweetFactory;
 	private final IPreferences prefs;
 	private final IResourceBundleWithFormatting bundle;
-	private DateTimeFormatter nameDateFormatter;
+	private final DateTimeFormatter nameDateFormatter;
 
-	AnalysisReportBasicBase( IAnalysisReportFactory analysisReportFactory, ITweetFactory tweetFactory,
-								IPreferences prefs, IResourceBundleWithFormatting bundle ) {
+	AnalysisReportBasicBase( final IAnalysisReportFactory analysisReportFactory, final ITweetFactory tweetFactory,
+								final IPreferences prefs, final IResourceBundleWithFormatting bundle ) {
 		this.analysisReportFactory = analysisReportFactory;
 		this.tweetFactory = tweetFactory;
 		this.prefs = prefs;
@@ -78,9 +66,9 @@ class AnalysisReportBasicBase {
 		return nameDateFormatter;
 	}
 
-	protected int getTweetOrder( List<ITweet> tweets, long tweetID ) {
+	protected int getTweetOrder( final List<ITweet> tweets, final long tweetID ) {
 		int order = 1;
-		for ( ITweet tweet : tweets ) {
+		for ( final ITweet tweet : tweets ) {
 			if ( tweet.getID() == tweetID ) {
 				return order;
 			}
@@ -90,22 +78,22 @@ class AnalysisReportBasicBase {
 		return 0;
 	}
 
-	protected String summarizeTweetList( List<ITweet> tweets ) {
-		List<String> temp = new ArrayList<String>( tweets.size() );
+	protected String summarizeTweetList( final List<ITweet> tweets ) {
+		final List<String> temp = new ArrayList<String>( tweets.size() );
 
-		for ( ITweet tweet : tweets ) {
+		for ( final ITweet tweet : tweets ) {
 			temp.add( tweet.getSummary() );
 		}
 
 		return "\n" + StringUtils.join( temp, "\n" );
 	}
 
-	protected int countNewerTweets( ITweet testTweet, List<ITweet> tweets ) {
-		int time = Utils.parseIntDefault( testTweet.getAttribute( "time" ) );
+	protected int countNewerTweets( final ITweet testTweet, final List<ITweet> tweets ) {
+		final int time = Utils.parseIntDefault( testTweet.getAttribute( "time" ) );
 		int count = 0;
 
-		for ( ITweet tweet : tweets ) {
-			int tempTime = Utils.parseIntDefault( tweet.getAttribute( "time" ) );
+		for ( final ITweet tweet : tweets ) {
+			final int tempTime = Utils.parseIntDefault( tweet.getAttribute( "time" ) );
 			if ( tempTime > time ) {
 				count++;
 			}

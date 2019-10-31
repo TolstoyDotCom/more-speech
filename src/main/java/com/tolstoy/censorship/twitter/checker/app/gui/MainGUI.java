@@ -13,35 +13,50 @@
  */
 package com.tolstoy.censorship.twitter.checker.app.gui;
 
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
-import javax.swing.border.*;
-import javax.swing.text.Document;
-import javax.swing.text.html.*;
+
+import javax.swing.JButton;
+import javax.swing.JEditorPane;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.ScrollPaneConstants;
+import javax.swing.WindowConstants;
+import javax.swing.border.BevelBorder;
 import javax.swing.event.EventListenerList;
+import javax.swing.text.html.HTMLDocument;
+import javax.swing.text.html.HTMLEditorKit;
+
+import com.tolstoy.basic.api.statusmessage.IStatusMessageReceiver;
+import com.tolstoy.basic.api.statusmessage.StatusMessage;
+import com.tolstoy.basic.api.statusmessage.StatusMessageSeverity;
+import com.tolstoy.basic.api.utils.IResourceBundleWithFormatting;
 import com.tolstoy.basic.gui.ElementDescriptor;
-import com.tolstoy.basic.api.utils.*;
-import com.tolstoy.basic.app.utils.Utils;
 import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
-import com.tolstoy.basic.api.statusmessage.*;
 
 public class MainGUI implements ActionListener, IStatusMessageReceiver {
 	public static final String ACTION_REPLIES = "replies";
 	public static final String ACTION_TIMELINE = "timeline";
 	public static final String ACTION_REWRITE_LAST_REPORT = "rewrite";
 
-	private EventListenerList listenerList = new EventListenerList();
-	private IPreferences prefs;
-	private IResourceBundleWithFormatting bundle;
-	private java.util.List<ElementDescriptor> descriptors;
+	private final EventListenerList listenerList = new EventListenerList();
+	private final IPreferences prefs;
+	private final IResourceBundleWithFormatting bundle;
+	private final java.util.List<ElementDescriptor> descriptors;
 	private JFrame frame;
 	private JButton btnPreferences, btnRewriteLastReport, btnRunItinerary, btnCheckReplies, btnCheckTimeline;
 	private JEditorPane editorPaneStatusMessage;
 
 	@Override
-	public void addMessage( StatusMessage message ) {
+	public void addMessage( final StatusMessage message ) {
 		String color, html;
 
 		if ( message.getSeverity().equals( StatusMessageSeverity.ERROR ) ) {
@@ -57,14 +72,14 @@ public class MainGUI implements ActionListener, IStatusMessageReceiver {
 		html = "<span style=\"color:" + color + "\">" + message.getMessage() + "</span><br/>";
 
 		try {
-			HTMLDocument document = (HTMLDocument) editorPaneStatusMessage.getDocument();
-			HTMLEditorKit editorKit = (HTMLEditorKit) editorPaneStatusMessage.getEditorKit();
+			final HTMLDocument document = (HTMLDocument) editorPaneStatusMessage.getDocument();
+			final HTMLEditorKit editorKit = (HTMLEditorKit) editorPaneStatusMessage.getEditorKit();
 			editorKit.insertHTML( document, document.getLength(), html, 0, 0, null );
 			//document.insertString( document.getLength(), html, null );
 
 			editorPaneStatusMessage.setCaretPosition( document.getLength() );
 		}
-		catch ( Exception e ) {
+		catch ( final Exception e ) {
 		}
 	}
 
@@ -73,7 +88,7 @@ public class MainGUI implements ActionListener, IStatusMessageReceiver {
 		editorPaneStatusMessage.setText( "" );
 	}
 
-	public MainGUI( IResourceBundleWithFormatting bundle, IPreferences prefs, java.util.List<ElementDescriptor> descriptors ) {
+	public MainGUI( final IResourceBundleWithFormatting bundle, final IPreferences prefs, final java.util.List<ElementDescriptor> descriptors ) {
 		this.bundle = bundle;
 		this.prefs = prefs;
 		this.descriptors = descriptors;
@@ -81,9 +96,9 @@ public class MainGUI implements ActionListener, IStatusMessageReceiver {
 
 	public void showGUI() {
 		frame = new JFrame( bundle.getString( "main_title" ) );
-		frame.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
+		frame.setDefaultCloseOperation( WindowConstants.EXIT_ON_CLOSE );
 
-		JPanel buttonPanel = new JPanel();
+		final JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout( new FlowLayout() );
 
 		btnPreferences = new JButton( bundle.getString( "main_prefs_button" ) );
@@ -113,16 +128,16 @@ public class MainGUI implements ActionListener, IStatusMessageReceiver {
 		editorPaneStatusMessage.setContentType( "text/html" );
 		editorPaneStatusMessage.setEditable( false );
 
-		JScrollPane scrollPane = new JScrollPane( editorPaneStatusMessage );
+		final JScrollPane scrollPane = new JScrollPane( editorPaneStatusMessage );
 		scrollPane.setPreferredSize( new Dimension( 480, 350 ) );
-		scrollPane.setVerticalScrollBarPolicy( JScrollPane.VERTICAL_SCROLLBAR_ALWAYS );
+		scrollPane.setVerticalScrollBarPolicy( ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS );
 		scrollPane.setBorder( new BevelBorder( BevelBorder.LOWERED ) );
 
 		frame.getContentPane().add( scrollPane, BorderLayout.CENTER );
 
 		frame.addWindowListener( new WindowAdapter() {
 			@Override
-			public void windowClosing( WindowEvent windowEvent ) {
+			public void windowClosing( final WindowEvent windowEvent ) {
 				fireWindowClosingEvent( new WindowClosingEvent( this, windowEvent.getWindow() ) );
 			}
 		});
@@ -131,23 +146,23 @@ public class MainGUI implements ActionListener, IStatusMessageReceiver {
 		frame.setVisible( true );
 	}
 
-	public void enableRunFunction( boolean state ) {
+	public void enableRunFunction( final boolean state ) {
 		btnCheckReplies.setEnabled( state );
 		btnCheckTimeline.setEnabled( state );
 		btnRewriteLastReport.setEnabled( state );
 		btnRunItinerary.setEnabled( state );
 	}
 
-	public void enablePreferencesFunction( boolean state ) {
+	public void enablePreferencesFunction( final boolean state ) {
 		btnPreferences.setEnabled( state );
 	}
 
 	@Override
-	public void actionPerformed( ActionEvent actionEvent ) {
+	public void actionPerformed( final ActionEvent actionEvent ) {
 		if ( actionEvent.getSource() == btnPreferences ) {
-			PreferencesDialog preferencesDialog = new PreferencesDialog( frame, bundle, descriptors, prefs.getValues() );
+			final PreferencesDialog preferencesDialog = new PreferencesDialog( frame, bundle, descriptors, prefs.getValues() );
 			preferencesDialog.setVisible( true );
-			java.util.Map<String,String> userdata = preferencesDialog.getUserdata();
+			final java.util.Map<String,String> userdata = preferencesDialog.getUserdata();
 			if ( userdata != null ) {
 				firePreferencesEvent( new PreferencesEvent( this, userdata ) );
 			}
@@ -162,7 +177,7 @@ public class MainGUI implements ActionListener, IStatusMessageReceiver {
 			fireRunEvent( new RunEvent( this, ACTION_REWRITE_LAST_REPORT ) );
 		}
 		else if ( actionEvent.getSource() == btnRunItinerary ) {
-			JFileChooser fileChooser = new JFileChooser();
+			final JFileChooser fileChooser = new JFileChooser();
 			fileChooser.setCurrentDirectory( new File( System.getProperty( "user.home" ) ) );
 			if ( fileChooser.showOpenDialog( frame ) == JFileChooser.APPROVE_OPTION ) {
 				fireRunItineraryEvent( new RunItineraryEvent( this, fileChooser.getSelectedFile() ) );
@@ -170,40 +185,40 @@ public class MainGUI implements ActionListener, IStatusMessageReceiver {
 		}
 	}
 
-	public void addRunEventListener( RunEventListener l ) {
+	public void addRunEventListener( final RunEventListener l ) {
 		listenerList.add( RunEventListener.class, l );
 	}
 
-	public void removeRunEventListener( RunEventListener l ) {
+	public void removeRunEventListener( final RunEventListener l ) {
 		listenerList.remove( RunEventListener.class, l );
 	}
 
-	public void addPreferencesEventListener( PreferencesEventListener l ) {
+	public void addPreferencesEventListener( final PreferencesEventListener l ) {
 		listenerList.add( PreferencesEventListener.class, l );
 	}
 
-	public void removePreferencesEventListener( PreferencesEventListener l ) {
+	public void removePreferencesEventListener( final PreferencesEventListener l ) {
 		listenerList.remove( PreferencesEventListener.class, l );
 	}
 
-	public void addRunItineraryEventListener( RunItineraryEventListener l ) {
+	public void addRunItineraryEventListener( final RunItineraryEventListener l ) {
 		listenerList.add( RunItineraryEventListener.class, l );
 	}
 
-	public void removeItineraryRunEventListener( RunItineraryEventListener l ) {
+	public void removeItineraryRunEventListener( final RunItineraryEventListener l ) {
 		listenerList.remove( RunItineraryEventListener.class, l );
 	}
 
-	public void addWindowClosingEventListener( WindowClosingEventListener l ) {
+	public void addWindowClosingEventListener( final WindowClosingEventListener l ) {
 		listenerList.add( WindowClosingEventListener.class, l );
 	}
 
-	public void removeWindowClosingEventListener( WindowClosingEventListener l ) {
+	public void removeWindowClosingEventListener( final WindowClosingEventListener l ) {
 		listenerList.remove( WindowClosingEventListener.class, l );
 	}
 
-	protected void fireRunEvent( RunEvent runEvent ) {
-		Object[] listeners = listenerList.getListenerList();
+	protected void fireRunEvent( final RunEvent runEvent ) {
+		final Object[] listeners = listenerList.getListenerList();
 
 		for ( int i = listeners.length - 2; i >= 0; i -= 2 ) {
 			if ( listeners[ i ] == RunEventListener.class ) {
@@ -212,8 +227,8 @@ public class MainGUI implements ActionListener, IStatusMessageReceiver {
 		}
 	}
 
-	protected void firePreferencesEvent( PreferencesEvent preferencesEvent ) {
-		Object[] listeners = listenerList.getListenerList();
+	protected void firePreferencesEvent( final PreferencesEvent preferencesEvent ) {
+		final Object[] listeners = listenerList.getListenerList();
 
 		for ( int i = listeners.length - 2; i >= 0; i -= 2 ) {
 			if ( listeners[ i ] == PreferencesEventListener.class ) {
@@ -222,8 +237,8 @@ public class MainGUI implements ActionListener, IStatusMessageReceiver {
 		}
 	}
 
-	protected void fireRunItineraryEvent( RunItineraryEvent runItineraryEvent ) {
-		Object[] listeners = listenerList.getListenerList();
+	protected void fireRunItineraryEvent( final RunItineraryEvent runItineraryEvent ) {
+		final Object[] listeners = listenerList.getListenerList();
 
 		for ( int i = listeners.length - 2; i >= 0; i -= 2 ) {
 			if ( listeners[ i ] == RunItineraryEventListener.class ) {
@@ -232,8 +247,8 @@ public class MainGUI implements ActionListener, IStatusMessageReceiver {
 		}
 	}
 
-	protected void fireWindowClosingEvent( WindowClosingEvent windowClosingEvent ) {
-		Object[] listeners = listenerList.getListenerList();
+	protected void fireWindowClosingEvent( final WindowClosingEvent windowClosingEvent ) {
+		final Object[] listeners = listenerList.getListenerList();
 
 		for ( int i = listeners.length - 2; i >= 0; i -= 2 ) {
 			if ( listeners[ i ] == WindowClosingEventListener.class ) {

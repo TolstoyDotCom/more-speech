@@ -13,14 +13,18 @@
  */
 package com.tolstoy.censorship.twitter.checker.app.webdriver;
 
-import java.util.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openqa.selenium.*;
-import org.openqa.selenium.interactions.*;
-import org.openqa.selenium.support.ui.*;
-import com.tolstoy.censorship.twitter.checker.api.webdriver.*;
-import com.tolstoy.basic.app.utils.*;
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.Keys;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.interactions.Actions;
+
+import com.tolstoy.basic.app.utils.Utils;
+import com.tolstoy.censorship.twitter.checker.api.webdriver.IInfiniteScrollingActivator;
+import com.tolstoy.censorship.twitter.checker.api.webdriver.IWebDriverUtils;
 
 abstract class InfiniteScrollingActivatorBase implements IInfiniteScrollingActivator {
 	private static final Logger logger = LogManager.getLogger( InfiniteScrollingActivatorBase.class );
@@ -28,11 +32,11 @@ abstract class InfiniteScrollingActivatorBase implements IInfiniteScrollingActiv
 	private static final int MAX_LIMIT = 1000;
 	private static final int DELAY_PER_SCREEN_MILLIS = 3000;
 
-	private WebDriver driver;
-	private IWebDriverUtils driverutils;
+	private final WebDriver driver;
+	private final IWebDriverUtils driverutils;
 	private boolean complete;
 
-	InfiniteScrollingActivatorBase( WebDriver driver, IWebDriverUtils driverutils ) {
+	InfiniteScrollingActivatorBase( final WebDriver driver, final IWebDriverUtils driverutils ) {
 		this.driver = driver;
 		this.driverutils = driverutils;
 		this.complete = false;
@@ -58,9 +62,9 @@ abstract class InfiniteScrollingActivatorBase implements IInfiniteScrollingActiv
 	public void activate( int max ) {
 		Actions actions;
 
-		JavascriptExecutor javascriptExecutor = (JavascriptExecutor) driver;
+		final JavascriptExecutor javascriptExecutor = (JavascriptExecutor) driver;
 
-		WebElement element = driver.findElement( getHitPlateBy() );
+		final WebElement element = driver.findElement( getHitPlateBy() );
 
 		int curHeight = getOverlayHeight( driver, getHeightScript() );
 		int tempHeight;
@@ -71,12 +75,12 @@ abstract class InfiniteScrollingActivatorBase implements IInfiniteScrollingActiv
 				actions.sendKeys( element, Keys.PAGE_DOWN );
 				actions.perform();
 			}
-			catch ( Exception e ) {
+			catch ( final Exception e ) {
 				try {
 					actions = new Actions( driver );
 					actions.keyDown( Keys.CONTROL ).sendKeys( Keys.END ).keyUp( Keys.CONTROL ).perform();
 				}
-				catch ( Exception e2 ) {
+				catch ( final Exception e2 ) {
 					javascriptExecutor.executeScript( "window.scrollBy( 0,5000 );" );
 					logger.info( "can't send page down2" );
 				}
@@ -101,8 +105,8 @@ abstract class InfiniteScrollingActivatorBase implements IInfiniteScrollingActiv
 		logger.info( "finished scrolling" );
 	}
 
-	private int getOverlayHeight( WebDriver driver, String script ) {
-		JavascriptExecutor javascriptExecutor = (JavascriptExecutor) driver;
+	private int getOverlayHeight( final WebDriver driver, final String script ) {
+		final JavascriptExecutor javascriptExecutor = (JavascriptExecutor) driver;
 
 		return Utils.numberObjectToInteger( javascriptExecutor.executeScript( script ) );
 	}

@@ -13,11 +13,7 @@
  */
 package com.tolstoy.basic.api.statusmessage;
 
-import java.io.*;
-import java.net.*;
-import java.util.*;
-
 public interface IStatusMessageReceiver {
-	void addMessage( StatusMessage message );
+	void addMessage( final StatusMessage message );
 	void clearMessages();
 }

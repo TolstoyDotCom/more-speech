@@ -13,13 +13,10 @@
  */
 package com.tolstoy.censorship.twitter.checker.app.helpers;
 
-import java.io.*;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.time.Instant;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.http.HttpEntity;
+
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -27,26 +24,31 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
-import com.tolstoy.basic.api.statusmessage.*;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import com.tolstoy.basic.api.statusmessage.IStatusMessageReceiver;
+import com.tolstoy.basic.api.statusmessage.StatusMessage;
+import com.tolstoy.basic.api.statusmessage.StatusMessageSeverity;
 import com.tolstoy.basic.api.utils.IResourceBundleWithFormatting;
 import com.tolstoy.basic.app.utils.Utils;
+import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
 import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRun;
 import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunProcessor;
-import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
 
 public class SearchRunProcessorUploadDataJson implements ISearchRunProcessor {
 	private static final Logger logger = LogManager.getLogger( SearchRunProcessorUploadDataJson.class );
 
-	private IResourceBundleWithFormatting bundle;
-	private IPreferences prefs;
+	private final IResourceBundleWithFormatting bundle;
+	private final IPreferences prefs;
 
-	public SearchRunProcessorUploadDataJson( IResourceBundleWithFormatting bundle, IPreferences prefs ) {
+	public SearchRunProcessorUploadDataJson( final IResourceBundleWithFormatting bundle, final IPreferences prefs ) {
 		this.bundle = bundle;
 		this.prefs = prefs;
 	}
 
 	@Override
-	public ISearchRun process( ISearchRun searchRun, IStatusMessageReceiver statusMessageReceiver ) throws Exception {
+	public ISearchRun process( final ISearchRun searchRun, final IStatusMessageReceiver statusMessageReceiver ) throws Exception {
 		if ( !Utils.isStringTrue( prefs.getValue( "prefs.upload_results" ) ) ) {
 			return searchRun;
 		}
@@ -55,11 +57,11 @@ public class SearchRunProcessorUploadDataJson implements ISearchRunProcessor {
 
 		try {
 			client = HttpClients.createDefault();
-			HttpPost httpPost = new HttpPost( prefs.getValue( "search_run_upload_data.upload_url" ) );
+			final HttpPost httpPost = new HttpPost( prefs.getValue( "search_run_upload_data.upload_url" ) );
 
-			String json = Utils.getDefaultObjectMapper().writeValueAsString( searchRun );
+			final String json = Utils.getDefaultObjectMapper().writeValueAsString( searchRun );
 
-			List <NameValuePair> nameValuePairs = new ArrayList <NameValuePair>();
+			final List <NameValuePair> nameValuePairs = new ArrayList <NameValuePair>();
 
 			nameValuePairs.add( new BasicNameValuePair( "json", json ) );
 			nameValuePairs.add( new BasicNameValuePair( "upload_results", prefs.getValue( "prefs.upload_results" ) ) );
@@ -68,9 +70,9 @@ public class SearchRunProcessorUploadDataJson implements ISearchRunProcessor {
 
 			httpPost.setEntity( new UrlEncodedFormEntity( nameValuePairs ) );
 
-			CloseableHttpResponse response = client.execute( httpPost );
+			final CloseableHttpResponse response = client.execute( httpPost );
 
-			int status = response.getStatusLine().getStatusCode();
+			final int status = response.getStatusLine().getStatusCode();
 
 			if ( status != 200 ) {
 				throw new IOException( bundle.getString( "search_run_upload_data_error" ) );

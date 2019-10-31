@@ -14,10 +14,10 @@
 package com.tolstoy.basic.gui;
 
 public class ElementDescriptor {
-	public String type, key, label, help;
-	public int width;
+	public final String type, key, label, help;
+	public final int width;
 
-	public ElementDescriptor( String type, String key, String label, String help, int width ) {
+	public ElementDescriptor( final String type, final String key, final String label, final String help, final int width ) {
 		this.type = type;
 		this.key = key;
 		this.label = label;

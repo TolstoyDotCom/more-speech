@@ -13,9 +13,9 @@
  */
 package com.tolstoy.basic.api.tweet;
 
-import java.io.*;
-import java.net.*;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+
 import com.tolstoy.basic.app.utils.StringList;
 
 /**
@@ -61,6 +61,11 @@ import com.tolstoy.basic.app.utils.StringList;
  * </ul>
  */
 public interface ITweet {
+	/** Get a definition of this object's possible attributes.
+	 * @return a set of IEntityAttributeDescriptor
+	*/
+	IEntityAttributeDescriptorSet getAttributeDescriptorSet();
+
 	/** Get the tweet ID
 	 * @return the tweet ID
 	*/
@@ -69,7 +74,7 @@ public interface ITweet {
 	/** Set the tweet ID
 	 * @param id the tweet ID
 	*/
-	void setID( long id );
+	void setID( final long id );
 
 	/** Get a brief summary of this tweet.
 	 * @return a brief summary
@@ -80,6 +85,10 @@ public interface ITweet {
 	 * @return a brief summary
 	*/
 	Map<String,String> getAsMapBasic();
+
+	/** Load the attributes of this tweet from a map.
+	*/
+	void loadFromMap( Map<String,String> map );
 
 	/** Get whether this tweet is valid or not.
 	 * A tweet is considered invalid if it isn't from a user (for instance,
@@ -97,7 +106,7 @@ public interface ITweet {
 	/** Set the user associated with this tweet.
 	 * @param user the user
 	*/
-	void setUser( ITweetUser user );
+	void setUser( final ITweetUser user );
 
 	/** If this is a reply to another tweet, return the tweet ID of
 	 * the other tweet.
@@ -122,6 +131,10 @@ public interface ITweet {
 	*/
 	TweetSupposedQuality getSupposedQuality();
 
+	/** Set the supposed quality.
+	*/
+	void setSupposedQuality( TweetSupposedQuality supposedQuality );
+
 	/** Get all the attributes.
 	 * @return a map of attributes
 	*/
@@ -130,19 +143,19 @@ public interface ITweet {
 	/** Set all the attributes.
 	 * @param attributes a map of attributes
 	*/
-	void setAttributes( Map<String,String> attributes );
+	void setAttributes( final Map<String,String> attributes );
 
 	/** Get a single attribute.
 	 * @param key the name of the attribute
 	 * @return the attribute value or null
 	*/
-	String getAttribute( String key );
+	String getAttribute( final String key );
 
 	/** Set a single attribute.
 	 * @param key the name of the attribute
 	 * @param value the value of the attribute
 	*/
-	void setAttribute( String key, String value );
+	void setAttribute( final String key, final String value );
 
 	/** Get the set of classes from the .tweet element in the HTML
 	 * A pinned tweet has "user-pinned"
@@ -153,7 +166,7 @@ public interface ITweet {
 	/** Set the classes from the .tweet element in the HTML
 	 * @param classes the classes
 	*/
-	void setClasses( StringList classes );
+	void setClasses( final StringList classes );
 
 	/** Get the mentions from the HTML
 	 * @return the mentions
@@ -163,5 +176,27 @@ public interface ITweet {
 	/** Set the mentions from the HTML
 	 * @param mentions the mentions
 	*/
-	void setMentions( StringList mentions );
+	void setMentions( final StringList mentions );
+
+	/** Fill in any missing data in this tweet from the given other
+	 * tweet.
+	 *
+	 * Generally, information is only replaced in this tweet
+	 * if it doesn't exist or exists in a fuller form in the other
+	 * tweet.
+	 *
+	 * E.g., if this tweet's ID is 123, it won't be replaced.
+	 * But, if this tweet's ID is 0 and the other tweet's ID is
+	 * 789, this tweet's ID will become 789.
+	 * 
+	 * This user of this tweet isn't affected.
+	 * 
+	 * @return a list of any warning messages.
+	 * E.g., if both IDs aren't empty and aren't equal.
+	*/
+	List<String> supplementFrom( ITweet other );
+
+	/** Return a debug string.
+	*/
+	String toDebugString( String indent );
 }

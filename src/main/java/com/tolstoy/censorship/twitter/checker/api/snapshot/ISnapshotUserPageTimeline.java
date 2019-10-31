@@ -18,7 +18,7 @@ public interface ISnapshotUserPageTimeline extends ISnapshotUserPage {
 	int getNumFollowers();
 	int getNumFollowing();
 
-	void setNumTotalTweets( int numTotalTweets );
-	void setNumFollowers( int numFollowers );
-	void setNumFollowing( int numFollowing );
+	void setNumTotalTweets( final int numTotalTweets );
+	void setNumFollowers( final int numFollowers );
+	void setNumFollowing( final int numFollowing );
 }

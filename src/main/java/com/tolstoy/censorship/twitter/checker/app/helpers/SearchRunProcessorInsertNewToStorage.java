@@ -13,12 +13,14 @@
  */
 package com.tolstoy.censorship.twitter.checker.app.helpers;
 
-import java.util.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.tolstoy.basic.api.statusmessage.*;
-import com.tolstoy.basic.api.storage.*;
-import com.tolstoy.basic.app.utils.Utils;
+
+import com.tolstoy.basic.api.statusmessage.IStatusMessageReceiver;
+import com.tolstoy.basic.api.statusmessage.StatusMessage;
+import com.tolstoy.basic.api.statusmessage.StatusMessageSeverity;
+import com.tolstoy.basic.api.storage.IStorable;
+import com.tolstoy.basic.api.storage.IStorage;
 import com.tolstoy.basic.api.utils.IResourceBundleWithFormatting;
 import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
 import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRun;
@@ -28,21 +30,23 @@ import com.tolstoy.censorship.twitter.checker.app.storage.StorageTable;
 public class SearchRunProcessorInsertNewToStorage implements ISearchRunProcessor {
 	private static final Logger logger = LogManager.getLogger( SearchRunProcessorInsertNewToStorage.class );
 
-	private IResourceBundleWithFormatting bundle;
-	private IPreferences prefs;
-	private IStorage storage;
+	private final IResourceBundleWithFormatting bundle;
+	private final IPreferences prefs;
+	private final IStorage storage;
 
-	public SearchRunProcessorInsertNewToStorage( IResourceBundleWithFormatting bundle, IPreferences prefs, IStorage storage ) {
+	public SearchRunProcessorInsertNewToStorage( final IResourceBundleWithFormatting bundle, final IPreferences prefs, final IStorage storage ) {
 		this.bundle = bundle;
 		this.prefs = prefs;
 		this.storage = storage;
 	}
 
 	@Override
-	public ISearchRun process( ISearchRun searchRun, IStatusMessageReceiver statusMessageReceiver ) throws Exception {
+	public ISearchRun process( final ISearchRun searchRun, final IStatusMessageReceiver statusMessageReceiver ) throws Exception {
 		storage.saveRecord( StorageTable.SEARCHRUN, (IStorable) searchRun );
 
 		statusMessageReceiver.addMessage( new StatusMessage( "Wrote search run to storage", StatusMessageSeverity.INFO ) );
+
+		logger.info( "Wrote search run to storage" );
 
 		return searchRun;
 	}

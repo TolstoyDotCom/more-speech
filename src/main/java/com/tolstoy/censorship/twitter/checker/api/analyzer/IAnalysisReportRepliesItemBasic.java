@@ -14,6 +14,7 @@
 package com.tolstoy.censorship.twitter.checker.api.analyzer;
 
 import java.util.Map;
+
 import com.tolstoy.basic.api.tweet.ITweet;
 import com.tolstoy.basic.api.tweet.ITweetCollection;
 import com.tolstoy.censorship.twitter.checker.api.snapshot.IReplyThread;
@@ -28,37 +29,37 @@ public interface IAnalysisReportRepliesItemBasic {
 	boolean getListIsComplete();
 
 	int getRank();
-	void setRank( int rank );
+	void setRank( final int rank );
 
 	int getExpectedRankByInteraction();
-	void setExpectedRankByInteraction( int expectedRankByInteraction );
+	void setExpectedRankByInteraction( final int expectedRankByInteraction );
 
 	int getExpectedRankByDate();
-	void setExpectedRankByDate( int expectedRankByDate );
+	void setExpectedRankByDate( final int expectedRankByDate );
 
 	int getExpectedRankByOverallRanking();
-	void setExpectedRankByOverallRanking( int expectedRankByOverallRanking );
+	void setExpectedRankByOverallRanking( final int expectedRankByOverallRanking );
 
 	AnalysisReportItemBasicTweetStatus getTweetStatus();
-	void setTweetStatus( AnalysisReportItemBasicTweetStatus status );
+	void setTweetStatus( final AnalysisReportItemBasicTweetStatus status );
 
 	ITweetCollection getAnomalousHigherTweets();
-	void setAnomalousHigherTweets( ITweetCollection anomalousHigherTweets );
+	void setAnomalousHigherTweets( final ITweetCollection anomalousHigherTweets );
 
 	ITweetCollection getAnomalousLowerTweets();
-	void setAnomalousLowerTweets( ITweetCollection anomalousLowerTweets );
+	void setAnomalousLowerTweets( final ITweetCollection anomalousLowerTweets );
 
 	ITweetCollection getSuppressedOrHiddenTweets();
-	void setSuppressedOrHiddenTweets( ITweetCollection suppressedOrHiddenTweets );
+	void setSuppressedOrHiddenTweets( final ITweetCollection suppressedOrHiddenTweets );
 
 	/**
 	 * Optional, free-form metadata such as related to the the computations, etc.
 	 * Don't rely on any of those being available.
 	 */
 	Map<String,String> getAttributes();
-	void setAttributes( Map<String,String> attributes );
+	void setAttributes( final Map<String,String> attributes );
 
-	String getAttribute( String key );
-	void setAttribute( String key, String value );
+	String getAttribute( final String key );
+	void setAttribute( final String key, final String value );
 }
 

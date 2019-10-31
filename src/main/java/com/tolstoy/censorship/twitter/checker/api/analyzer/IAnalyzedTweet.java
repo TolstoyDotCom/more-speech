@@ -15,6 +15,7 @@ package com.tolstoy.censorship.twitter.checker.api.analyzer;
 
 import java.util.List;
 import java.util.Map;
+
 import com.tolstoy.basic.api.tweet.ITweet;
 
 public interface IAnalyzedTweet {
@@ -30,14 +31,14 @@ public interface IAnalyzedTweet {
 	String getTextContentPlain();
 	String getRankingFunction();
 	String getSummary();
-	void setRankingFunction( String rankingFunction );
+	void setRankingFunction( final String rankingFunction );
 	double getToReferenceTweetCosineDistance();
 	double getToReferenceTweetJaccardSimilarity();
 	double getToReferenceTweetJaroWinklerDistance();
 	int getToReferenceTweetFuzzyScore();
 	int getToReferenceTweetLevenshteinDistance();
 	double getRanking();
-	void setRanking( double ranking );
+	void setRanking( final double ranking );
 	double getReadabilityFlesch();
 	double getReadabilityFog();
 	double getReadabilityKincaid();
@@ -49,9 +50,9 @@ public interface IAnalyzedTweet {
 	int getNumWords();
 	int getOriginalOrder();
 	int getDateOrder();
-	void setDateOrder( int dateOrder );
+	void setDateOrder( final int dateOrder );
 	int getRankingOrder();
-	void setRankingOrder( int rankingOrder );
+	void setRankingOrder( final int rankingOrder );
 	boolean getHasPic();
 	boolean getHasCard();
 	boolean getMostlyCaps();
@@ -64,17 +65,17 @@ public interface IAnalyzedTweet {
 	/** Set all the attributes.
 	 * @param attributes a map of attributes
 	*/
-	void setAttributes( Map<String,String> attributes );
+	void setAttributes( final Map<String,String> attributes );
 
 	/** Get a single attribute.
 	 * @param key the name of the attribute
 	 * @return the attribute value or null
 	*/
-	String getAttribute( String key );
+	String getAttribute( final String key );
 
 	/** Set a single attribute.
 	 * @param key the name of the attribute
 	 * @param value the value of the attribute
 	*/
-	void setAttribute( String key, String value );
+	void setAttribute( final String key, final String value );
 }

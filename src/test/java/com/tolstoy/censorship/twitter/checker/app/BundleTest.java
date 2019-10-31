@@ -13,26 +13,10 @@
  */
 package com.tolstoy.censorship.twitter.checker.app;
 
-import java.util.*;
-import java.sql.*;
-import java.time.Instant;
-import org.openqa.selenium.*;
-import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.support.ui.Select;
-import org.openqa.selenium.interactions.*;
-import org.openqa.selenium.support.ui.*;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.tolstoy.basic.api.storage.*;
-import com.tolstoy.basic.api.tweet.*;
 import com.tolstoy.basic.api.utils.*;
 import com.tolstoy.basic.app.utils.*;
-import com.tolstoy.basic.app.tweet.TweetFactory;
-import com.tolstoy.censorship.twitter.checker.api.preferences.*;
-import com.tolstoy.censorship.twitter.checker.app.preferences.PreferencesFactory;
-import com.tolstoy.basic.app.storage.StorageEmbeddedDerby;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import junit.framework.Test;
 import junit.framework.TestCase;

@@ -24,11 +24,11 @@ public interface ISnapshotUserPageIndividualTweet extends ISnapshotUserPage {
 	int getNumLikes();
 	int getNumReplies();
 
-	void setIndividualTweet( ITweet individualTweet );
+	void setIndividualTweet( final ITweet individualTweet );
 
-	void setTweetID( long tweetID );
+	void setTweetID( final long tweetID );
 
-	void setNumRetweets( int numRetweets );
-	void setNumLikes( int numLikes );
-	void setNumReplies( int numReplies );
+	void setNumRetweets( final int numRetweets );
+	void setNumLikes( final int numLikes );
+	void setNumReplies( final int numReplies );
 }

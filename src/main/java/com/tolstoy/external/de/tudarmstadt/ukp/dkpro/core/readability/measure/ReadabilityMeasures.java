@@ -54,13 +54,13 @@ public class ReadabilityMeasures
         this("en");
     }
 
-    public ReadabilityMeasures(String language)
+    public ReadabilityMeasures(final String language)
     {
         this.language = language;
         this.syllableCounter = new WordSyllableCounter(language);
     }
 
-    public double getReadabilityScore(Measures measure, List<String> words, int nrofSentences) {
+    public double getReadabilityScore(final Measures measure, final List<String> words, final int nrofSentences) {
         if (measure.equals(Measures.ari)) {
             return ari(words, nrofSentences);
         }
@@ -91,10 +91,10 @@ public class ReadabilityMeasures
      * only the strings consist of numbers or letters
      * are considered as words.
      */
-    private boolean isWord(String strWord)
+    private boolean isWord(final String strWord)
     {
         for (int i = 0; i < strWord.length(); ++i) {
-            char ch = strWord.charAt(i);
+            final char ch = strWord.charAt(i);
             if (!Character.isLetterOrDigit(ch)) {
                 return false;
             }
@@ -102,10 +102,10 @@ public class ReadabilityMeasures
         return true;
     }
     
-    private List<String> filterWords(List<String> words)
+    private List<String> filterWords(final List<String> words)
     {
-        List<String> newWords = new ArrayList<String>();
-        for (String word : words) {
+        final List<String> newWords = new ArrayList<String>();
+        for (final String word : words) {
             if (isWord(word)) {
                 newWords.add(word);
             }
@@ -121,14 +121,14 @@ public class ReadabilityMeasures
      * @return score.
      * 
      */
-    public double kincaid(List<String> words, int nrofSentences)
+    public double kincaid(List<String> words, final int nrofSentences)
     {
         words = filterWords(words);
-        int nrofSyllables = this.syllableCounter.countSyllables(words);
+        final int nrofSyllables = this.syllableCounter.countSyllables(words);
         return kincaid(words.size(), nrofSyllables, nrofSentences);
     }
     
-    private double kincaid(Integer nrofWords, Integer nrofSyllables, Integer nrofSentences)
+    private double kincaid(final Integer nrofWords, final Integer nrofSyllables, final Integer nrofSentences)
     {
         return 11.8 * (((double) nrofSyllables) / nrofWords)
                 + 0.39 * (((double) nrofWords) / nrofSentences) - 15.59;
@@ -141,14 +141,14 @@ public class ReadabilityMeasures
      * @param nrofSentences number of sentences.
      * @return score.
      */
-    public double ari(List<String> words, int nrofSentences)
+    public double ari(List<String> words, final int nrofSentences)
     {
         words = filterWords(words);
-        int nrofLetters = this.getNrofLetters(words);
+        final int nrofLetters = this.getNrofLetters(words);
         return ari(nrofLetters, words.size(), nrofSentences);
     }
     
-    private double ari(Integer nrofLetters, Integer nrofWords, Integer nrofSentences)
+    private double ari(final Integer nrofLetters, final Integer nrofWords, final Integer nrofSentences)
     {
         return 4.71 * (((double) nrofLetters) / nrofWords)
                 + 0.5 * (((double) nrofWords) / nrofSentences) - 21.43;
@@ -162,13 +162,13 @@ public class ReadabilityMeasures
      * @return score.
      * 
      */
-    public double coleman_liau(List<String> words, int nrofSentences)
+    public double coleman_liau(List<String> words, final int nrofSentences)
     {
         words = filterWords(words);
-        int nrofLetters = this.getNrofLetters(words);
+        final int nrofLetters = this.getNrofLetters(words);
         return coleman_liau(nrofLetters, words.size(), nrofSentences);
     }
-    private double coleman_liau(Integer nrofLetters, Integer nrofWords, Integer nrofSentences)
+    private double coleman_liau(final Integer nrofLetters, final Integer nrofWords, final Integer nrofSentences)
     {
         return 5.89 * (((double) nrofLetters) / nrofWords)
                 - 0.3 * (((double) nrofSentences) / (100 * nrofWords)) - 15.8;
@@ -181,13 +181,13 @@ public class ReadabilityMeasures
      * @param nrofSentences number of sentences.
      * @return score.
      */
-    public double flesch(List<String> words, int nrofSentences)
+    public double flesch(List<String> words, final int nrofSentences)
     {
         words = filterWords(words);
-        int nrofSyllables = this.syllableCounter.countSyllables(words);
+        final int nrofSyllables = this.syllableCounter.countSyllables(words);
         return flesch(nrofSyllables, words.size(), nrofSentences);
     }
-    private double flesch(Integer nrofSyllables, Integer nrofWords, Integer nrofSentences)
+    private double flesch(final Integer nrofSyllables, final Integer nrofWords, final Integer nrofSentences)
     {
         return 206.835 - 84.6 * (((double) nrofSyllables) / nrofWords) - 1.015
                 * (((double) nrofWords) / nrofSentences);
@@ -203,13 +203,13 @@ public class ReadabilityMeasures
      * @param nrofSentences number of sentences.
      * @return score.
      */
-    public double fog(List<String> words, int nrofSentences)
+    public double fog(List<String> words, final int nrofSentences)
     {
         words = filterWords(words);
-        int nrofBigwords = getNrofBigwords(words);
+        final int nrofBigwords = getNrofBigwords(words);
         return fog(words.size(), nrofBigwords, nrofSentences);
     }
-    private double fog(Integer nrofWords, Integer nrofBigwords, Integer nrofSentences)
+    private double fog(final Integer nrofWords, final Integer nrofBigwords, final Integer nrofSentences)
     {
         return ((((double) nrofWords) / nrofSentences + (100.0 * nrofBigwords) / nrofWords) * 0.4);
     }
@@ -223,15 +223,15 @@ public class ReadabilityMeasures
      *          If grade is 0, the index is lower than any grade, if the index
      *          is 99, it is higher than any grade.
      */
-    public double lix(List<String> words, int nrofSentences)
+    public double lix(List<String> words, final int nrofSentences)
     {
         words = filterWords(words);
-        int nrofLongWords = this.getNrofLongwords(words);
+        final int nrofLongWords = this.getNrofLongwords(words);
         return lix(words.size(), nrofLongWords, nrofSentences);
     }
-    private double lix(Integer nrofWords, Integer nrofLongWords, Integer nrofSentences)
+    private double lix(final Integer nrofWords, final Integer nrofLongWords, final Integer nrofSentences)
     {
-        double idx = ((double) nrofWords) / nrofSentences + 100.0 * (nrofLongWords) / nrofWords;
+        final double idx = ((double) nrofWords) / nrofSentences + 100.0 * (nrofLongWords) / nrofWords;
         if (idx < 34) {
             return 0;
         }
@@ -268,13 +268,13 @@ public class ReadabilityMeasures
      * @param nrofSentences number of sentences.
      * @return score.
      */
-    public double smog(List<String> words, int nrofSentences)
+    public double smog(List<String> words, final int nrofSentences)
     {
         words = filterWords(words);
-        int nrofBigwords = this.getNrofBigwords(words);
+        final int nrofBigwords = this.getNrofBigwords(words);
         return smog(nrofBigwords, nrofSentences);
     } 
-    private double smog(Integer nrofBigWords, Integer nrofSentences)
+    private double smog(final Integer nrofBigWords, final Integer nrofSentences)
     {
         return Math.sqrt((((double) nrofBigWords) / ((double) nrofSentences)) * 30.0) + 3.0;
     }
@@ -285,15 +285,15 @@ public class ReadabilityMeasures
         return language;
     }
 
-    public void setLanguage(String language)
+    public void setLanguage(final String language)
     {
         this.language = language;
     }
 
-    private int getNrofLetters(Iterable<String> words)
+    private int getNrofLetters(final Iterable<String> words)
     {
         int count = 0;
-        for (String word : words) {
+        for (final String word : words) {
             count = count + word.length();
         }
         return count;
@@ -304,10 +304,10 @@ public class ReadabilityMeasures
      *            An iterable over words.
      * @return The number of words with more than 3 syllables.
      */
-    private int getNrofBigwords(Iterable<String> words)
+    private int getNrofBigwords(final Iterable<String> words)
     {
         int count = 0;
-        for (String word : words) {
+        for (final String word : words) {
             if (this.syllableCounter.countSyllables(word) >= 3) {
                 count++;
             }
@@ -320,10 +320,10 @@ public class ReadabilityMeasures
      *            An iterable over words.
      * @return The number of words with more than 6 letters.
      */
-    private int getNrofLongwords(Iterable<String> words)
+    private int getNrofLongwords(final Iterable<String> words)
     {
         int count = 0;
-        for (String word : words) {
+        for (final String word : words) {
             if (word.length() > 6) {
                 count++;
             }

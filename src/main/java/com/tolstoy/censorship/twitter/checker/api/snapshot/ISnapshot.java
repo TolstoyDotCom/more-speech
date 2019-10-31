@@ -21,8 +21,8 @@ public interface ISnapshot {
 	Instant getRetrievalTime();
 	boolean getComplete();
 
-	void setURL( String url );
-	void setTitle( String title );
-	void setRetrievalTime( Instant retrievalTime );
-	void setComplete( boolean isComplete );
+	void setURL( final String url );
+	void setTitle( final String title );
+	void setRetrievalTime( final Instant retrievalTime );
+	void setComplete( final boolean isComplete );
 }

@@ -13,17 +13,22 @@
  */
 package com.tolstoy.censorship.twitter.checker.app.searchrun;
 
-import java.util.*;
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.fasterxml.jackson.annotation.JsonProperty;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.tolstoy.censorship.twitter.checker.api.searchrun.*;
-import com.tolstoy.censorship.twitter.checker.api.snapshot.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.tolstoy.basic.api.tweet.ITweetUser;
+import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunTimeline;
+import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageIndividualTweet;
+import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageTimeline;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
 class SearchRunTimeline extends SearchRun implements ISearchRunTimeline {
@@ -40,40 +45,40 @@ class SearchRunTimeline extends SearchRun implements ISearchRunTimeline {
 		super( 0, null );
 	}
 
-	SearchRunTimeline( long id, ITweetUser user ) {
+	SearchRunTimeline( final long id, final ITweetUser user ) {
 		super( id, user );
 
 		this.timeline = null;
 		this.individualPages = new HashMap<Long,ISnapshotUserPageIndividualTweet>();
 	}
 
-	SearchRunTimeline( long id, ITweetUser user, Instant startTime, Instant endTime ) {
+	SearchRunTimeline( final long id, final ITweetUser user, final Instant startTime, final Instant endTime ) {
 		super( id, user, startTime, endTime );
 
 		this.timeline = null;
 		this.individualPages = new HashMap<Long,ISnapshotUserPageIndividualTweet>();
 	}
 
-	SearchRunTimeline( long id, ITweetUser user, Instant startTime, Instant endTime, Map<String,String> attributes ) {
+	SearchRunTimeline( final long id, final ITweetUser user, final Instant startTime, final Instant endTime, final Map<String,String> attributes ) {
 		super( id, user, startTime, endTime, attributes );
 
 		this.timeline = null;
 		this.individualPages = new HashMap<Long,ISnapshotUserPageIndividualTweet>();
 	}
 
-	SearchRunTimeline( long id, ITweetUser user, Instant startTime, Instant endTime,
-								ISnapshotUserPageTimeline timeline,
-								Map<Long,ISnapshotUserPageIndividualTweet> individualPages ) {
+	SearchRunTimeline( final long id, final ITweetUser user, final Instant startTime, final Instant endTime,
+								final ISnapshotUserPageTimeline timeline,
+								final Map<Long,ISnapshotUserPageIndividualTweet> individualPages ) {
 		super( id, user, startTime, endTime );
 
 		this.timeline = timeline;
 		this.individualPages = individualPages;
 	}
 
-	SearchRunTimeline( long id, ITweetUser user, Instant startTime, Instant endTime,
-								ISnapshotUserPageTimeline timeline,
-								Map<Long,ISnapshotUserPageIndividualTweet> individualPages,
-								Map<String,String> attributes ) {
+	SearchRunTimeline( final long id, final ITweetUser user, final Instant startTime, final Instant endTime,
+								final ISnapshotUserPageTimeline timeline,
+								final Map<Long,ISnapshotUserPageIndividualTweet> individualPages,
+								final Map<String,String> attributes ) {
 		super( id, user, startTime, endTime, attributes );
 
 		this.timeline = timeline;
@@ -86,7 +91,7 @@ class SearchRunTimeline extends SearchRun implements ISearchRunTimeline {
 	}
 
 	@Override
-	public void setSnapshotUserPageTimeline( ISnapshotUserPageTimeline timeline ) {
+	public void setSnapshotUserPageTimeline( final ISnapshotUserPageTimeline timeline ) {
 		this.timeline = timeline;
 	}
 
@@ -96,13 +101,13 @@ class SearchRunTimeline extends SearchRun implements ISearchRunTimeline {
 	}
 
 	@Override
-	public void setReplies( Map<Long,ISnapshotUserPageIndividualTweet> individualPages ) {
+	public void setReplies( final Map<Long,ISnapshotUserPageIndividualTweet> individualPages ) {
 		this.individualPages = individualPages;
 	}
 
 	@JsonIgnore
 	@Override
-	public void setReply( long sourceTweetID, ISnapshotUserPageIndividualTweet individualPage ) {
+	public void setReply( final long sourceTweetID, final ISnapshotUserPageIndividualTweet individualPage ) {
 		individualPages.put( sourceTweetID, individualPage );
 	}
 
@@ -114,7 +119,7 @@ class SearchRunTimeline extends SearchRun implements ISearchRunTimeline {
 
 	@JsonIgnore
 	@Override
-	public ISnapshotUserPageIndividualTweet getIndividualPageBySourceTweetID( long sourceTweetID ) {
+	public ISnapshotUserPageIndividualTweet getIndividualPageBySourceTweetID( final long sourceTweetID ) {
 		return individualPages.get( sourceTweetID );
 	}
 

@@ -13,35 +13,36 @@
  */
 package com.tolstoy.censorship.twitter.checker.api.searchrun;
 
-import java.util.Map;
 import java.time.Instant;
+import java.util.Map;
+
 import com.tolstoy.basic.api.tweet.ITweetUser;
 import com.tolstoy.censorship.twitter.checker.api.snapshot.IReplyThread;
-import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageTimeline;
 import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageIndividualTweet;
+import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageTimeline;
 
 public interface ISearchRunFactory {
-	ISearchRunReplies makeSearchRunReplies( long id, ITweetUser user, Instant startTime, Instant endTime );
-	ISearchRunReplies makeSearchRunReplies( long id, ITweetUser user, Instant startTime, Instant endTime,
-											ISnapshotUserPageTimeline timeline,
-											Map<Long,IReplyThread> replies );
-	ISearchRunReplies makeSearchRunReplies( long id, ITweetUser user, Instant startTime, Instant endTime,
-											Map<String,String> attributes );
-	ISearchRunReplies makeSearchRunReplies( long id, ITweetUser user, Instant startTime, Instant endTime,
-											ISnapshotUserPageTimeline timeline,
-											Map<Long,IReplyThread> replies,
-											Map<String,String> attributes );
+	ISearchRunReplies makeSearchRunReplies( final long id, final ITweetUser user, final Instant startTime, final Instant endTime );
+	ISearchRunReplies makeSearchRunReplies( final long id, final ITweetUser user, final Instant startTime, final Instant endTime,
+											final ISnapshotUserPageTimeline timeline,
+											final Map<Long,IReplyThread> replies );
+	ISearchRunReplies makeSearchRunReplies( final long id, final ITweetUser user, final Instant startTime, final Instant endTime,
+											final Map<String,String> attributes );
+	ISearchRunReplies makeSearchRunReplies( final long id, final ITweetUser user, final Instant startTime, final Instant endTime,
+											final ISnapshotUserPageTimeline timeline,
+											final Map<Long,IReplyThread> replies,
+											final Map<String,String> attributes );
 
-	ISearchRunTimeline makeSearchRunTimeline( long id, ITweetUser user, Instant startTime, Instant endTime );
-	ISearchRunTimeline makeSearchRunTimeline( long id, ITweetUser user, Instant startTime, Instant endTime,
-												ISnapshotUserPageTimeline timeline,
-												Map<Long,ISnapshotUserPageIndividualTweet> replies );
-	ISearchRunTimeline makeSearchRunTimeline( long id, ITweetUser user, Instant startTime, Instant endTime,
-												Map<String,String> attributes );
-	ISearchRunTimeline makeSearchRunTimeline( long id, ITweetUser user, Instant startTime, Instant endTime,
-												ISnapshotUserPageTimeline timeline,
-												Map<Long,ISnapshotUserPageIndividualTweet> replies,
-												Map<String,String> attributes );
+	ISearchRunTimeline makeSearchRunTimeline( final long id, final ITweetUser user, final Instant startTime, final Instant endTime );
+	ISearchRunTimeline makeSearchRunTimeline( final long id, final ITweetUser user, final Instant startTime, final Instant endTime,
+												final ISnapshotUserPageTimeline timeline,
+												final Map<Long,ISnapshotUserPageIndividualTweet> replies );
+	ISearchRunTimeline makeSearchRunTimeline( final long id, final ITweetUser user, final Instant startTime, final Instant endTime,
+												final Map<String,String> attributes );
+	ISearchRunTimeline makeSearchRunTimeline( final long id, final ITweetUser user, final Instant startTime, final Instant endTime,
+												final ISnapshotUserPageTimeline timeline,
+												final Map<Long,ISnapshotUserPageIndividualTweet> replies,
+												final Map<String,String> attributes );
 
-	ISearchRunItinerary makeSearchRunItineraryFromJSON( String jsonData ) throws Exception;
+	ISearchRunItinerary makeSearchRunItineraryFromJSON( final String jsonData ) throws Exception;
 }

@@ -13,22 +13,33 @@
  */
 package com.tolstoy.censorship.twitter.checker.app.analyzer;
 
-import java.util.*;
-import org.apache.commons.text.similarity.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.similarity.CosineDistance;
+import org.apache.commons.text.similarity.FuzzyScore;
+import org.apache.commons.text.similarity.JaccardSimilarity;
+import org.apache.commons.text.similarity.JaroWinklerDistance;
+import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.fasterxml.jackson.annotation.JsonProperty;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import cue.lang.*;
-import cue.lang.unicode.*;
-import cue.lang.stop.*;
-import com.twitter.twittertext.*;
-import com.tolstoy.basic.app.utils.Utils;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.tolstoy.basic.api.tweet.ITweet;
 import com.tolstoy.censorship.twitter.checker.api.analyzer.IAnalyzedTweet;
-import com.tolstoy.external.de.tudarmstadt.ukp.dkpro.core.readability.measure.*;
+import com.tolstoy.external.de.tudarmstadt.ukp.dkpro.core.readability.measure.ReadabilityMeasures;
+import com.twitter.twittertext.Extractor;
+
+import cue.lang.SentenceIterator;
+import cue.lang.WordIterator;
+import cue.lang.stop.StopWords;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
 class AnalyzedTweet implements IAnalyzedTweet {
@@ -54,37 +65,37 @@ class AnalyzedTweet implements IAnalyzedTweet {
 	private static final JaroWinklerDistance comparerJaroWinklerDistance = new JaroWinklerDistance();
 
 	@JsonProperty
-	private ITweet tweet;
+	private final ITweet tweet;
 
 	@JsonProperty
-	private Map<String,String> tweetMap;
+	private final Map<String,String> tweetMap;
 
 	@JsonProperty
 	private Map<String,String> attributes;
 
 	@JsonProperty
-	private List<String> sentences;
+	private final List<String> sentences;
 
 	@JsonProperty
-	private List<String> words;
+	private final List<String> words;
 
 	@JsonProperty
-	private List<String> wordsWithoutStopWordsLowercase;
+	private final List<String> wordsWithoutStopWordsLowercase;
 
 	@JsonProperty
-	private List<String> urls;
+	private final List<String> urls;
 
 	@JsonProperty
-	private List<String> hashtags;
+	private final List<String> hashtags;
 
 	@JsonProperty
-	private List<String> mentions;
+	private final List<String> mentions;
 
 	@JsonProperty
-	private String textContentRaw;
+	private final String textContentRaw;
 
 	@JsonProperty
-	private String textContentPlain;
+	private final String textContentPlain;
 
 	@JsonProperty
 	private Double toReferenceTweetCosineDistance;
@@ -129,13 +140,13 @@ class AnalyzedTweet implements IAnalyzedTweet {
 	private double readabilitySmog;
 
 	@JsonProperty
-	private int numSentences;
+	private final int numSentences;
 
 	@JsonProperty
-	private int numWords;
+	private final int numWords;
 
 	@JsonProperty
-	private int originalOrder;
+	private final int originalOrder;
 
 	@JsonProperty
 	private int dateOrder;
@@ -152,7 +163,7 @@ class AnalyzedTweet implements IAnalyzedTweet {
 	@JsonProperty
 	private boolean mostlyCaps;
 
-	AnalyzedTweet( ITweet tweet, int order, IAnalyzedTweet referenceTweet ) {
+	AnalyzedTweet( final ITweet tweet, final int order, final IAnalyzedTweet referenceTweet ) {
 		this.attributes = new HashMap<String,String>();
 
 		this.sentences = new ArrayList<String>();
@@ -192,15 +203,15 @@ class AnalyzedTweet implements IAnalyzedTweet {
 
 		this.textContentPlain = extractPlainTextHashtagsURLsMentionsHasPicHasCards( this.textContentRaw );
 
-		for ( String sentence : new SentenceIterator( this.textContentPlain, Locale.ENGLISH ) ) {
+		for ( final String sentence : new SentenceIterator( this.textContentPlain, Locale.ENGLISH ) ) {
 			sentences.add( sentence );
 		}
 
 		int numAllUpper = 0;
-		for ( String word : new WordIterator( this.textContentPlain ) ) {
+		for ( final String word : new WordIterator( this.textContentPlain ) ) {
 			words.add( word );
 			if ( !StopWords.English.isStopWord( word ) ) {
-				String baseWord = getBaseWord( word );
+				final String baseWord = getBaseWord( word );
 				if ( baseWord != null ) {
 					wordsWithoutStopWordsLowercase.add( baseWord );
 				}
@@ -221,7 +232,7 @@ class AnalyzedTweet implements IAnalyzedTweet {
 		}
 
 		if ( this.numWords > 0 ) {
-			ReadabilityMeasures readability = new ReadabilityMeasures( "en" );
+			final ReadabilityMeasures readability = new ReadabilityMeasures( "en" );
 			this.readabilityFlesch = readability.getReadabilityScore( ReadabilityMeasures.Measures.flesch, words, numSentences );
 			this.readabilityFog = readability.getReadabilityScore( ReadabilityMeasures.Measures.fog, words, numSentences );
 			this.readabilityKincaid = readability.getReadabilityScore( ReadabilityMeasures.Measures.kincaid, words, numSentences );
@@ -232,75 +243,75 @@ class AnalyzedTweet implements IAnalyzedTweet {
 		}
 
 		if ( referenceTweet != null &&
-				wordsWithoutStopWordsLowercase.size() > 0 &&
-				referenceTweet.getWordsWithoutStopWordsLowercase().size() > 0 ) {
+				!wordsWithoutStopWordsLowercase.isEmpty() &&
+				!referenceTweet.getWordsWithoutStopWordsLowercase().isEmpty() ) {
 			List<String> temp = new ArrayList<String>( wordsWithoutStopWordsLowercase );
 			Collections.sort( temp );
-			String thisText = StringUtils.join( temp, " " );
+			final String thisText = StringUtils.join( temp, " " );
 
 			temp = new ArrayList<String>( referenceTweet.getWordsWithoutStopWordsLowercase() );
 			Collections.sort( temp );
-			String referenceText = StringUtils.join( temp, " " );
+			final String referenceText = StringUtils.join( temp, " " );
 
 			try {
 				toReferenceTweetCosineDistance = comparerCosineDistance.apply( referenceText, thisText );
 			}
-			catch ( Exception e ) {
+			catch ( final Exception e ) {
 				logger.error( "bad comparerCosineDistance, referenceText=" + referenceText + ", thisText=" + thisText );
 			}
 
 			try {
 				toReferenceTweetJaccardSimilarity = comparerJaccardSimilarity.apply( referenceText, thisText );
 			}
-			catch ( Exception e ) {
+			catch ( final Exception e ) {
 				logger.error( "bad comparerJaccardSimilarity, referenceText=" + referenceText + ", thisText=" + thisText );
 			}
 
 			try {
 				toReferenceTweetJaroWinklerDistance = comparerJaroWinklerDistance.apply( referenceText, thisText );
 			}
-			catch ( Exception e ) {
+			catch ( final Exception e ) {
 				logger.error( "bad comparerJaroWinklerDistance, referenceText=" + referenceText + ", thisText=" + thisText );
 			}
 
 			try {
 				toReferenceTweetFuzzyScore = comparerFuzzyScore.fuzzyScore( referenceText, thisText );
 			}
-			catch ( Exception e ) {
+			catch ( final Exception e ) {
 				logger.error( "bad comparerFuzzyScore, referenceText=" + referenceText + ", thisText=" + thisText );
 			}
 
 			try {
 				toReferenceTweetLevenshteinDistance = LevenshteinDistance.getDefaultInstance().apply( referenceText, thisText );
 			}
-			catch ( Exception e ) {
+			catch ( final Exception e ) {
 				logger.error( "bad LevenshteinDistance, referenceText=" + referenceText + ", thisText=" + thisText );
 			}
 		}
 	}
 
-	protected String getBaseWord( String input ) {
+	protected String getBaseWord( final String input ) {
 		if ( input == null || input.length() < 1 ) {
 			return null;
 		}
-		int len = input.length();
-		StringBuffer sb = new StringBuffer( len );
+		final int len = input.length();
+		final StringBuffer sb = new StringBuffer( len );
 		for ( int i = 0; i < len; i++ ) {
 			if ( Character.isLetterOrDigit( input.charAt( i ) ) ) {
 				sb.append( input.charAt( i ) );
 			}
 		}
 
-		String output = sb.toString().trim().toLowerCase();
+		final String output = sb.toString().trim().toLowerCase();
 
 		return output.length() > 0 ? output : null;
 	}
 
-	protected boolean isPictureURL( String url ) {
+	protected boolean isPictureURL( final String url ) {
 		return url.toLowerCase().indexOf( "pic.twitter" ) > -1;
 	}
 
-	protected boolean isCardURL( String url ) {
+	protected boolean isCardURL( final String url ) {
 		return url.toLowerCase().indexOf( "cards.twitter" ) > -1;
 	}
 
@@ -311,14 +322,14 @@ class AnalyzedTweet implements IAnalyzedTweet {
 			hasPic = true;
 		}
 
-		List<Extractor.Entity> entities = extractor.extractEntitiesWithIndices( input );
-		if ( entities == null || entities.size() < 1 ) {
+		final List<Extractor.Entity> entities = extractor.extractEntitiesWithIndices( input );
+		if ( entities == null || entities.isEmpty() ) {
 			return input.replace( "#", "" );
 		}
 
-		for ( Extractor.Entity entity : entities ) {
-			Extractor.Entity.Type type = entity.getType();
-			String value = entity.getValue();
+		for ( final Extractor.Entity entity : entities ) {
+			final Extractor.Entity.Type type = entity.getType();
+			final String value = entity.getValue();
 			if ( type == Extractor.Entity.Type.CASHTAG ) {
 				input = input.replace( "$" + value, "" );
 			}
@@ -404,7 +415,7 @@ class AnalyzedTweet implements IAnalyzedTweet {
 	}
 
 	@Override
-	public void setRankingFunction( String rankingFunction ) {
+	public void setRankingFunction( final String rankingFunction ) {
 		this.rankingFunction = rankingFunction;
 	}
 
@@ -439,7 +450,7 @@ class AnalyzedTweet implements IAnalyzedTweet {
 	}
 
 	@Override
-	public void setRanking( double ranking ) {
+	public void setRanking( final double ranking ) {
 		this.ranking = ranking;
 	}
 
@@ -499,7 +510,7 @@ class AnalyzedTweet implements IAnalyzedTweet {
 	}
 
 	@Override
-	public void setDateOrder( int dateOrder ) {
+	public void setDateOrder( final int dateOrder ) {
 		this.dateOrder = dateOrder;
 	}
 
@@ -509,7 +520,7 @@ class AnalyzedTweet implements IAnalyzedTweet {
 	}
 
 	@Override
-	public void setRankingOrder( int rankingOrder ) {
+	public void setRankingOrder( final int rankingOrder ) {
 		this.rankingOrder = rankingOrder;
 	}
 
@@ -529,12 +540,12 @@ class AnalyzedTweet implements IAnalyzedTweet {
 	}
 
 	@Override
-	public String getAttribute( String key ) {
+	public String getAttribute( final String key ) {
 		return attributes.get( key );
 	}
 
 	@Override
-	public void setAttribute( String key, String value ) {
+	public void setAttribute( final String key, final String value ) {
 		attributes.put( key, value );
 	}
 
@@ -544,27 +555,27 @@ class AnalyzedTweet implements IAnalyzedTweet {
 	}
 
 	@Override
-	public void setAttributes( Map<String,String> attributes ) {
+	public void setAttributes( final Map<String,String> attributes ) {
 		this.attributes = attributes;
 	}
 
 	@Override
 	public String getSummary() {
-		Map<String,String> rankAttributes = new HashMap<String,String>();
-		for ( String key : attributes.keySet() ) {
+		final Map<String,String> rankAttributes = new HashMap<String,String>();
+		for ( final String key : attributes.keySet() ) {
 			if ( key.indexOf( "rank_" ) == 0 ) {
 				rankAttributes.put( key.replace( "rank_", "" ), attributes.get( key ) );
 			}
 		}
-		String rankString = "ranking=" + ranking + " from " + rankAttributes;
-		String orderString = "orders: orig=" + originalOrder + ", rank=" + rankingOrder + ", date=" + dateOrder;
+		final String rankString = "ranking=" + ranking + " from " + rankAttributes;
+		final String orderString = "orders: orig=" + originalOrder + ", rank=" + rankingOrder + ", date=" + dateOrder;
 
 		return textContentRaw + "\n " + rankString + "\n " + orderString;
 	}
 
 	@Override
 	public String toString() {
-		List<String> list = new ArrayList<String>();
+		final List<String> list = new ArrayList<String>();
 		list.add( "textContentRaw=" + textContentRaw );
 		list.add( "textContentPlain=" + textContentPlain );
 		list.add( "ranking=" + ranking );

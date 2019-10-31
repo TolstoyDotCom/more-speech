@@ -7,6 +7,8 @@
 # BlueJ files
 *.ctxt
 
+checkstyle.xml
+
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
 
@@ -25,6 +27,7 @@ windows
 linux
 target
 logs
+db
+reports
 dev
 extras
-

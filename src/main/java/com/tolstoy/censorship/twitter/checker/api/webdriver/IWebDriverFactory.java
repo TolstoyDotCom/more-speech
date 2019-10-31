@@ -13,38 +13,54 @@
  */
 package com.tolstoy.censorship.twitter.checker.api.webdriver;
 
+import java.util.List;
+
 import org.openqa.selenium.WebDriver;
+
 import com.tolstoy.basic.api.tweet.ITweetCollection;
-import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageTimeline;
+import com.tolstoy.basic.api.tweet.TargetPageType;
+import com.tolstoy.basic.api.utils.IArchiveDirectory;
+import com.tolstoy.censorship.twitter.checker.api.browserproxy.IBrowserProxy;
 import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageIndividualTweet;
+import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageTimeline;
 
 public interface IWebDriverFactory {
 	WebDriver makeWebDriver() throws Exception;
 
-	IWebDriverUtils makeWebDriverUtils( WebDriver driver );
+	WebDriver makeWebDriver( final IBrowserProxy proxy ) throws Exception;
 
-	IInfiniteScrollingActivator makeInfiniteScrollingActivator( WebDriver driver,
-																IWebDriverUtils driverutils,
-																InfiniteScrollingActivatorType type );
+	IWebDriverUtils makeWebDriverUtils( final WebDriver driver );
 
-	ITweetCollection makeTweetCollectionFromURL( WebDriver driver,
-													IWebDriverUtils driverutils,
-													IInfiniteScrollingActivator infiniteScroller,
-													String url,
-													int numberOfPagesToCheck,
-													int maxTweets ) throws Exception;
+	IInfiniteScrollingActivator makeInfiniteScrollingActivator( final WebDriver driver,
+																final IWebDriverUtils driverutils,
+																final InfiniteScrollingActivatorType type );
 
-	ISnapshotUserPageTimeline makeSnapshotUserPageTimelineFromURL( WebDriver driver,
-																	IWebDriverUtils driverutils,
-																	IInfiniteScrollingActivator infiniteScroller,
-																	String url,
-																	int numberOfPagesToCheck,
-																	int maxTweets ) throws Exception;
+	ITweetCollection makeTweetCollectionFromURL( final WebDriver driver,
+													final IWebDriverUtils driverutils,
+													final IInfiniteScrollingActivator infiniteScroller,
+													final IArchiveDirectory archiveDirectory,
+													final String url,
+													final TargetPageType pageType,
+													final int numberOfPagesToCheck,
+													final int maxTweets ) throws Exception;
 
-	ISnapshotUserPageIndividualTweet makeSnapshotUserPageIndividualTweetFromURL( WebDriver driver,
-																					IWebDriverUtils driverutils,
-																					IInfiniteScrollingActivator infiniteScroller,
-																					String url,
-																					int numberOfPagesToCheck,
-																					int maxTweets ) throws Exception;
+	ISnapshotUserPageTimeline makeSnapshotUserPageTimelineFromURL( final WebDriver driver,
+																	final IWebDriverUtils driverutils,
+																	final IInfiniteScrollingActivator infiniteScroller,
+																	final IBrowserProxy browserProxy,
+																	final IArchiveDirectory archiveDirectory,
+																	final String url,
+																	final int numberOfPagesToCheck,
+																	final int maxTweets ) throws Exception;
+
+	ISnapshotUserPageIndividualTweet makeSnapshotUserPageIndividualTweetFromURL( final WebDriver driver,
+																					final IWebDriverUtils driverutils,
+																					final IInfiniteScrollingActivator infiniteScroller,
+																					final IBrowserProxy browserProxy,
+																					final IArchiveDirectory archiveDirectory,
+																					final String url,
+																					final int numberOfPagesToCheck,
+																					final int maxTweets ) throws Exception;
+
+	List<String> getBrowserLogs( WebDriver driver );
 }

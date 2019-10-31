@@ -13,28 +13,31 @@
  */
 package com.tolstoy.censorship.twitter.checker.app.analyzer;
 
-import java.util.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.tolstoy.basic.api.utils.*;
-import com.tolstoy.basic.app.utils.*;
+
 import com.tolstoy.basic.api.tweet.ITweet;
 import com.tolstoy.basic.api.tweet.ITweetFactory;
-import com.tolstoy.censorship.twitter.checker.api.preferences.*;
-import com.tolstoy.censorship.twitter.checker.api.analyzer.*;
+import com.tolstoy.basic.api.utils.IResourceBundleWithFormatting;
+import com.tolstoy.censorship.twitter.checker.api.analyzer.IAnalysisReportFactory;
+import com.tolstoy.censorship.twitter.checker.api.analyzer.IAnalysisReportRepliesBasic;
+import com.tolstoy.censorship.twitter.checker.api.analyzer.IAnalysisReportTimelineBasic;
+import com.tolstoy.censorship.twitter.checker.api.analyzer.IAnalyzedTweet;
+import com.tolstoy.censorship.twitter.checker.api.analyzer.ITweetRanker;
+import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
 import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunReplies;
 import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunTimeline;
-import com.tolstoy.censorship.twitter.checker.app.helpers.IAppDirectories;
+import com.tolstoy.censorship.twitter.checker.api.installation.IAppDirectories;
 
 public class AnalysisReportFactory implements IAnalysisReportFactory {
 	private static final Logger logger = LogManager.getLogger( AnalysisReportFactory.class );
 
-	private ITweetFactory tweetFactory;
-	private IAppDirectories appDirectories;
-	private IPreferences prefs;
-	private IResourceBundleWithFormatting bundle;
+	private final ITweetFactory tweetFactory;
+	private final IAppDirectories appDirectories;
+	private final IPreferences prefs;
+	private final IResourceBundleWithFormatting bundle;
 
-	public AnalysisReportFactory( ITweetFactory tweetFactory, IAppDirectories appDirectories, IPreferences prefs, IResourceBundleWithFormatting bundle ) {
+	public AnalysisReportFactory( final ITweetFactory tweetFactory, final IAppDirectories appDirectories, final IPreferences prefs, final IResourceBundleWithFormatting bundle ) {
 		this.tweetFactory = tweetFactory;
 		this.appDirectories = appDirectories;
 		this.prefs = prefs;
@@ -42,19 +45,19 @@ public class AnalysisReportFactory implements IAnalysisReportFactory {
 	}
 
 	@Override
-	public IAnalysisReportRepliesBasic makeAnalysisReportRepliesBasic( ISearchRunReplies searchRun, ITweetRanker tweetRanker )
+	public IAnalysisReportRepliesBasic makeAnalysisReportRepliesBasic( final ISearchRunReplies searchRun, final ITweetRanker tweetRanker )
 	throws Exception {
 		return new AnalysisReportRepliesBasic( searchRun, tweetRanker, this, tweetFactory, prefs, bundle );
 	}
 
 	@Override
-	public IAnalysisReportTimelineBasic makeAnalysisReportTimelineBasic( ISearchRunTimeline searchRun, ITweetRanker tweetRanker )
+	public IAnalysisReportTimelineBasic makeAnalysisReportTimelineBasic( final ISearchRunTimeline searchRun, final ITweetRanker tweetRanker )
 	throws Exception {
 		return new AnalysisReportTimelineBasic( searchRun, tweetRanker, this, tweetFactory, prefs, bundle );
 	}
 
 	@Override
-	public IAnalyzedTweet makeAnalyzedTweet( ITweet tweet, int order, IAnalyzedTweet referenceTweet ) {
+	public IAnalyzedTweet makeAnalyzedTweet( final ITweet tweet, final int order, final IAnalyzedTweet referenceTweet ) {
 		return new AnalyzedTweet( tweet, order, referenceTweet );
 	}
 
@@ -68,7 +71,7 @@ public class AnalysisReportFactory implements IAnalysisReportFactory {
 		try {
 			return new TweetRankerJavascript( tweetFactory, appDirectories, prefs, bundle );
 		}
-		catch ( Exception e ) {
+		catch ( final Exception e ) {
 			logger.error( "cannot create TweetRankerJavascript; this can be ignored unless you expected an external script to be used", e );
 			return null;
 		}

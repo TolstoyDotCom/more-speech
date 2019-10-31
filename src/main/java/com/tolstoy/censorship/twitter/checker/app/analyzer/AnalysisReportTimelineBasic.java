@@ -13,28 +13,39 @@
  */
 package com.tolstoy.censorship.twitter.checker.app.analyzer;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.Collections;
-import java.util.Comparator;
 import java.io.Serializable;
-import java.time.Instant;
-import java.time.format.DateTimeFormatter;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import org.apache.commons.lang3.builder.ToStringBuilder;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.tolstoy.basic.api.tweet.*;
+
+import com.tolstoy.basic.api.tweet.ITweet;
+import com.tolstoy.basic.api.tweet.ITweetCollection;
+import com.tolstoy.basic.api.tweet.ITweetFactory;
 import com.tolstoy.basic.api.utils.IResourceBundleWithFormatting;
 import com.tolstoy.basic.app.utils.Utils;
+import com.tolstoy.censorship.twitter.checker.api.analyzer.AnalysisReportItemBasicTimelineRepliesStatus;
+import com.tolstoy.censorship.twitter.checker.api.analyzer.AnalyzedTweetComparatorDirection;
+import com.tolstoy.censorship.twitter.checker.api.analyzer.AnalyzedTweetDateComparator;
+import com.tolstoy.censorship.twitter.checker.api.analyzer.AnalyzedTweetRankingComparator;
+import com.tolstoy.censorship.twitter.checker.api.analyzer.IAnalysisReportFactory;
+import com.tolstoy.censorship.twitter.checker.api.analyzer.IAnalysisReportTimelineBasic;
+import com.tolstoy.censorship.twitter.checker.api.analyzer.IAnalysisReportTimelineItemBasic;
+import com.tolstoy.censorship.twitter.checker.api.analyzer.IAnalyzedTweet;
+import com.tolstoy.censorship.twitter.checker.api.analyzer.ITweetRanker;
 import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
-import com.tolstoy.censorship.twitter.checker.api.analyzer.*;
 import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunTimeline;
 import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageIndividualTweet;
 
@@ -50,22 +61,27 @@ class AnalysisReportTimelineBasic extends AnalysisReportBasicBase implements IAn
 	private final ISearchRunTimeline searchRun;
 	private final ITweetRanker tweetRanker;
 	private final List<IAnalysisReportTimelineItemBasic> reportItems;
-	private Map<String,String> attributes;
-	private DateTimeFormatter nameDateFormatter;
+	private final Map<String,String> attributes;
+	private final DateTimeFormatter nameDateFormatter;
 
 	private static class ReportItemComparator implements Comparator<IAnalysisReportTimelineItemBasic>, Serializable {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 3967298488291325461L;
+
 		@Override
-		public int compare( IAnalysisReportTimelineItemBasic a, IAnalysisReportTimelineItemBasic b ) {
-			int dateA = Utils.parseIntDefault( a.getSourceTweet().getAttribute( "time" ) );
-			int dateB = Utils.parseIntDefault( b.getSourceTweet().getAttribute( "time" ) );
+		public int compare( final IAnalysisReportTimelineItemBasic a, final IAnalysisReportTimelineItemBasic b ) {
+			final int dateA = Utils.parseIntDefault( a.getSourceTweet().getAttribute( "time" ) );
+			final int dateB = Utils.parseIntDefault( b.getSourceTweet().getAttribute( "time" ) );
 
 			return dateB - dateA;
 		}
 	}
 
-	AnalysisReportTimelineBasic( ISearchRunTimeline searchRun, ITweetRanker tweetRanker,
-									IAnalysisReportFactory analysisReportFactory, ITweetFactory tweetFactory,
-									IPreferences prefs, IResourceBundleWithFormatting bundle ) {
+	AnalysisReportTimelineBasic( final ISearchRunTimeline searchRun, final ITweetRanker tweetRanker,
+									final IAnalysisReportFactory analysisReportFactory, final ITweetFactory tweetFactory,
+									final IPreferences prefs, final IResourceBundleWithFormatting bundle ) {
 		super( analysisReportFactory, tweetFactory, prefs, bundle );
 
 		this.searchRun = searchRun;
@@ -79,13 +95,15 @@ class AnalysisReportTimelineBasic extends AnalysisReportBasicBase implements IAn
 	public void run() throws Exception {
 		reportItems.clear();
 
-		ITweetCollection tweetColTimeline = searchRun.getTimeline().getTweetCollection();
+		final ITweetCollection tweetColTimeline = searchRun.getTimeline().getTweetCollection();
 
-		Set<Long> sourceTweetIDs = searchRun.getSourceTweetIDs();
+		logger.info( "AnalysisReportTimelineBasic, timeline=\n" + tweetColTimeline.toDebugString( "  " ) );
 
-		for ( Long sourceTweetID : sourceTweetIDs ) {
-			ITweet sourceTweet = tweetColTimeline.getTweetByID( sourceTweetID );
-			ISnapshotUserPageIndividualTweet individualPage = searchRun.getIndividualPageBySourceTweetID( sourceTweetID );
+		final Set<Long> sourceTweetIDs = searchRun.getSourceTweetIDs();
+
+		for ( final Long sourceTweetID : sourceTweetIDs ) {
+			final ITweet sourceTweet = tweetColTimeline.getTweetByID( sourceTweetID );
+			final ISnapshotUserPageIndividualTweet individualPage = searchRun.getIndividualPageBySourceTweetID( sourceTweetID );
 
 			//logger.info( "sourceTweet=" + sourceTweet.getSummary() );
 			//logger.info( "individualPage=" + individualPage );
@@ -100,18 +118,18 @@ class AnalysisReportTimelineBasic extends AnalysisReportBasicBase implements IAn
 		Collections.sort( reportItems, new ReportItemComparator() );
 	}
 
-	protected IAnalysisReportTimelineItemBasic createReportItem( ITweet sourceTweet, ISnapshotUserPageIndividualTweet individualPage )
+	protected IAnalysisReportTimelineItemBasic createReportItem( final ITweet sourceTweet, final ISnapshotUserPageIndividualTweet individualPage )
 	throws Exception {
-		AnalysisReportTimelineItemBasic ret = new AnalysisReportTimelineItemBasic( getTweetFactory(), sourceTweet, individualPage );
+		final AnalysisReportTimelineItemBasic ret = new AnalysisReportTimelineItemBasic( getTweetFactory(), sourceTweet, individualPage );
 
-		List<ITweet> replyTweets = individualPage.getTweetCollection().getTweets();
+		final List<ITweet> replyTweets = individualPage.getTweetCollection().getTweets();
 		ret.setAttribute( "_sourcetweets", summarizeTweetList( replyTweets ) );
 
-		IAnalyzedTweet analyzedSourceTweet = getAnalysisReportFactory().makeAnalyzedTweet( sourceTweet, 0, null );
+		final IAnalyzedTweet analyzedSourceTweet = getAnalysisReportFactory().makeAnalyzedTweet( sourceTweet, 0, null );
 
 		List<IAnalyzedTweet> analyzedReplies = new ArrayList<IAnalyzedTweet>();
 		int order = 1;
-		for ( ITweet tweet : replyTweets ) {
+		for ( final ITweet tweet : replyTweets ) {
 			analyzedReplies.add( getAnalysisReportFactory().makeAnalyzedTweet( tweet, order, analyzedSourceTweet ) );
 			order++;
 		}
@@ -127,13 +145,13 @@ class AnalysisReportTimelineBasic extends AnalysisReportBasicBase implements IAn
 			//	Now, each IAnalyzedTweet in analyzedReplies has the original order as it appeared in the page,
 			//	plus a date order and a ranking order. They're ordered by ranking in analyzedReplies.
 
-		List<IAnalyzedTweet> anomalousElevatedTweets = new ArrayList<IAnalyzedTweet>();
-		List<IAnalyzedTweet> anomalousSuppressedOrHiddenTweets = new ArrayList<IAnalyzedTweet>();
-		List<IAnalyzedTweet> hiddenTweets = new ArrayList<IAnalyzedTweet>();
+		final List<IAnalyzedTweet> anomalousElevatedTweets = new ArrayList<IAnalyzedTweet>();
+		final List<IAnalyzedTweet> anomalousSuppressedOrHiddenTweets = new ArrayList<IAnalyzedTweet>();
+		final List<IAnalyzedTweet> hiddenTweets = new ArrayList<IAnalyzedTweet>();
 
 			//	 "suppressed" = not hidden, but lower than expected in the list based on date and ranking
 		int numSuppressed = 0;
-		for ( IAnalyzedTweet analyzedReply : analyzedReplies ) {
+		for ( final IAnalyzedTweet analyzedReply : analyzedReplies ) {
 			if ( !analyzedReply.getTweet().getSupposedQuality().getCensored() &&
 					analyzedReply.getOriginalOrder() > analyzedReply.getRankingOrder() &&
 					analyzedReply.getOriginalOrder() > analyzedReply.getDateOrder() ) {
@@ -145,7 +163,7 @@ class AnalysisReportTimelineBasic extends AnalysisReportBasicBase implements IAn
 			//	then, if any hidden tweets are added to anomalousSuppressedOrHiddenTweets they'll
 			//	be removed from this list
 		int numHidden = 0;
-		for ( IAnalyzedTweet analyzedReply : analyzedReplies ) {
+		for ( final IAnalyzedTweet analyzedReply : analyzedReplies ) {
 			if ( analyzedReply.getTweet().getSupposedQuality().getCensored() ) {
 				hiddenTweets.add( analyzedReply );
 				numHidden++;
@@ -155,17 +173,17 @@ class AnalysisReportTimelineBasic extends AnalysisReportBasicBase implements IAn
 			//	Divide the ranked list into NUMBER_OF_SECTIONS sections. The top section is the upper section,
 			//	the bottom section is the lower section.
 		if ( analyzedReplies.size() >= ( 2 * NUMBER_OF_SECTIONS ) ) {
-			int numReplies = analyzedReplies.size();
-			int upperSectionCutoff = (int) numReplies / NUMBER_OF_SECTIONS;
-			int lowerSectionCutoff = ( NUMBER_OF_SECTIONS - 1 ) * upperSectionCutoff;
+			final int numReplies = analyzedReplies.size();
+			final int upperSectionCutoff = numReplies / NUMBER_OF_SECTIONS;
+			final int lowerSectionCutoff = ( NUMBER_OF_SECTIONS - 1 ) * upperSectionCutoff;
 
 				//	Look at each tweet in the upper section of the ranked list, starting at the top and working down.
 				//	Add tweets if they were in the bottom third of the original list or they were hidden
 				//	also, to avoid duplicates in the hiddenTweets list, remove anything we add to
 				//	anomalousSuppressedOrHiddenTweets from the hiddenTweets list.
 			for ( int which = 0; which < upperSectionCutoff; which++ ) {
-				IAnalyzedTweet analyzedReply = analyzedReplies.get( which );
-				boolean bIsLowQuality = analyzedReply.getTweet().getSupposedQuality().getCensored();
+				final IAnalyzedTweet analyzedReply = analyzedReplies.get( which );
+				final boolean bIsLowQuality = analyzedReply.getTweet().getSupposedQuality().getCensored();
 				if ( bIsLowQuality || analyzedReply.getOriginalOrder() >= lowerSectionCutoff ) {
 					anomalousSuppressedOrHiddenTweets.add( analyzedReply );
 
@@ -178,7 +196,7 @@ class AnalysisReportTimelineBasic extends AnalysisReportBasicBase implements IAn
 				//	Look at each tweet in the lower section of the ranked list, starting at the bottom and working up.
 				//	Add tweets if they were in the top third of the original list & they aren't hidden.
 			for ( int which = numReplies - 1; which > lowerSectionCutoff; which-- ) {
-				IAnalyzedTweet analyzedReply = analyzedReplies.get( which );
+				final IAnalyzedTweet analyzedReply = analyzedReplies.get( which );
 				if ( !analyzedReply.getTweet().getSupposedQuality().getCensored() && analyzedReply.getOriginalOrder() <= upperSectionCutoff ) {
 					anomalousElevatedTweets.add( analyzedReply );
 				}
@@ -191,8 +209,8 @@ class AnalysisReportTimelineBasic extends AnalysisReportBasicBase implements IAn
 		ret.setAnomalousSuppressedOrHiddenTweets( anomalousSuppressedOrHiddenTweets );
 		ret.setHiddenTweets( hiddenTweets );
 
-		int percentSuppressed = Utils.makePercentInt( numSuppressed, analyzedReplies.size() );
-		int percenHidden = Utils.makePercentInt( numHidden, analyzedReplies.size() );
+		final int percentSuppressed = Utils.makePercentInt( numSuppressed, analyzedReplies.size() );
+		final int percenHidden = Utils.makePercentInt( numHidden, analyzedReplies.size() );
 
 		if ( percentSuppressed > SUPPRESSED_MANY_SUPPRESSED_CUTOFF || percenHidden > SUPPRESSED_MANY_HIDDEN_CUTOFF ) {
 			ret.setTimelineRepliesStatus( AnalysisReportItemBasicTimelineRepliesStatus.SUPPRESSED_MANY );
@@ -219,13 +237,13 @@ class AnalysisReportTimelineBasic extends AnalysisReportBasicBase implements IAn
 
 	@Override
 	public String getName() {
-		ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant( searchRun.getStartTime(), ZoneId.systemDefault() );
+		final ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant( searchRun.getStartTime(), ZoneId.systemDefault() );
 		return getBundle().getString( "arb_name", searchRun.getInitiatingUser().getHandle(), zonedDateTime.format( nameDateFormatter ) );
 	}
 
 	@Override
 	public String getDescription() {
-		ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant( searchRun.getStartTime(), ZoneId.systemDefault() );
+		final ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant( searchRun.getStartTime(), ZoneId.systemDefault() );
 		return getBundle().getString( "arb_description", searchRun.getInitiatingUser().getHandle(), zonedDateTime.format( nameDateFormatter ) );
 	}
 
@@ -244,11 +262,11 @@ class AnalysisReportTimelineBasic extends AnalysisReportBasicBase implements IAn
 		return reportItems;
 	}
 
-	protected List<IAnalyzedTweet> setDateOrders( List<IAnalyzedTweet> analyzedTweets ) {
-		List<IAnalyzedTweet> temp = new ArrayList<IAnalyzedTweet>( analyzedTweets );
+	protected List<IAnalyzedTweet> setDateOrders( final List<IAnalyzedTweet> analyzedTweets ) {
+		final List<IAnalyzedTweet> temp = new ArrayList<IAnalyzedTweet>( analyzedTweets );
 		Collections.sort( temp, new AnalyzedTweetDateComparator( AnalyzedTweetComparatorDirection.ASC ) );
 		int dateOrder = 1;
-		for ( IAnalyzedTweet analyzedTweet : temp ) {
+		for ( final IAnalyzedTweet analyzedTweet : temp ) {
 			analyzedTweet.setDateOrder( dateOrder );
 			dateOrder++;
 		}
@@ -256,11 +274,11 @@ class AnalysisReportTimelineBasic extends AnalysisReportBasicBase implements IAn
 		return temp;
 	}
 
-	protected List<IAnalyzedTweet> setRankingOrders( List<IAnalyzedTweet> analyzedTweets ) {
-		List<IAnalyzedTweet> temp = new ArrayList<IAnalyzedTweet>( analyzedTweets );
+	protected List<IAnalyzedTweet> setRankingOrders( final List<IAnalyzedTweet> analyzedTweets ) {
+		final List<IAnalyzedTweet> temp = new ArrayList<IAnalyzedTweet>( analyzedTweets );
 		Collections.sort( temp, new AnalyzedTweetRankingComparator( AnalyzedTweetComparatorDirection.DESC ) );
 		int rankingOrder = 1;
-		for ( IAnalyzedTweet analyzedTweet : temp ) {
+		for ( final IAnalyzedTweet analyzedTweet : temp ) {
 			analyzedTweet.setRankingOrder( rankingOrder );
 			rankingOrder++;
 		}
@@ -268,21 +286,21 @@ class AnalysisReportTimelineBasic extends AnalysisReportBasicBase implements IAn
 		return temp;
 	}
 
-	protected String summarizeAnalyzedTweetList( List<IAnalyzedTweet> analyzedTweets ) {
-		List<String> temp = new ArrayList<String>( analyzedTweets.size() );
+	protected String summarizeAnalyzedTweetList( final List<IAnalyzedTweet> analyzedTweets ) {
+		final List<String> temp = new ArrayList<String>( analyzedTweets.size() );
 
-		for ( IAnalyzedTweet analyzedTweet : analyzedTweets ) {
+		for ( final IAnalyzedTweet analyzedTweet : analyzedTweets ) {
 			temp.add( analyzedTweet.getSummary() );
 		}
 
 		return "\n" + StringUtils.join( temp, "\n" );
 	}
 
-	protected void removeAnalyzedTweetFromListByID( List<IAnalyzedTweet> analyzedTweets, long ID ) {
-		Iterator<IAnalyzedTweet> iter = analyzedTweets.iterator();
+	protected void removeAnalyzedTweetFromListByID( final List<IAnalyzedTweet> analyzedTweets, final long ID ) {
+		final Iterator<IAnalyzedTweet> iter = analyzedTweets.iterator();
 
 		while ( iter.hasNext() ) {
-			IAnalyzedTweet analyzedTweet = iter.next();
+			final IAnalyzedTweet analyzedTweet = iter.next();
 
 			if ( analyzedTweet.getTweet().getID() == ID ) {
 				iter.remove();

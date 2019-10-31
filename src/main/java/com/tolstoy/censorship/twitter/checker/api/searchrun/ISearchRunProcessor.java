@@ -16,6 +16,6 @@ package com.tolstoy.censorship.twitter.checker.api.searchrun;
 import com.tolstoy.basic.api.statusmessage.IStatusMessageReceiver;
 
 public interface ISearchRunProcessor {
-	ISearchRun process( ISearchRun searchRun, IStatusMessageReceiver statusMessageReceiver ) throws Exception;
+	ISearchRun process( final ISearchRun searchRun, final IStatusMessageReceiver statusMessageReceiver ) throws Exception;
 	String getDescription();
 }

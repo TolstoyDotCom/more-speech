@@ -14,22 +14,52 @@
 package com.tolstoy.censorship.twitter.checker.app.webdriver;
 
 import java.io.File;
-import java.util.*;
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.logging.Level;
 import java.util.concurrent.TimeUnit;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openqa.selenium.*;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.firefox.FirefoxBinary;
+import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxProfile;
-import org.openqa.selenium.firefox.FirefoxBinary;
-import org.openqa.selenium.interactions.*;
-import com.tolstoy.basic.api.tweet.*;
-import com.tolstoy.basic.api.utils.*;
-import com.tolstoy.basic.app.utils.*;
+import org.openqa.selenium.remote.CapabilityType;
+import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.logging.LogEntry;
+import org.openqa.selenium.logging.LoggingPreferences;
+import org.openqa.selenium.logging.LogType;
+import io.github.bonigarcia.wdm.WebDriverManager;
+
+import com.tolstoy.basic.api.tweet.ITweet;
+import com.tolstoy.basic.api.tweet.TargetPageType;
+import com.tolstoy.basic.api.tweet.ITweetCollection;
+import com.tolstoy.basic.api.tweet.ITweetFactory;
+import com.tolstoy.basic.api.tweet.ITweetUser;
+import com.tolstoy.basic.api.tweet.TweetUserVerifiedStatus;
+import com.tolstoy.basic.api.utils.IResourceBundleWithFormatting;
+import com.tolstoy.basic.api.utils.IArchiveDirectory;
+import com.tolstoy.basic.app.utils.StringList;
+import com.tolstoy.basic.app.utils.Utils;
+import com.tolstoy.censorship.twitter.checker.api.installation.IAppDirectories;
+import com.tolstoy.censorship.twitter.checker.api.browserproxy.IBrowserProxy;
+import com.tolstoy.censorship.twitter.checker.api.browserproxy.IBrowserProxyLogEntry;
+import com.tolstoy.censorship.twitter.checker.api.installation.IBrowserScriptFactory;
 import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
-import com.tolstoy.censorship.twitter.checker.api.webdriver.*;
-import com.tolstoy.censorship.twitter.checker.api.snapshot.*;
+import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotFactory;
+import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageIndividualTweet;
+import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageTimeline;
+import com.tolstoy.censorship.twitter.checker.api.webdriver.IInfiniteScrollingActivator;
+import com.tolstoy.censorship.twitter.checker.api.webdriver.IWebDriverFactory;
+import com.tolstoy.censorship.twitter.checker.api.webdriver.IWebDriverUtils;
+import com.tolstoy.censorship.twitter.checker.api.webdriver.InfiniteScrollingActivatorType;
 
 public class WebDriverFactory implements IWebDriverFactory {
 	private static final Logger logger = LogManager.getLogger( WebDriverFactory.class );
@@ -44,47 +74,57 @@ public class WebDriverFactory implements IWebDriverFactory {
 	private static final int IMPLICITWAIT_PRE_TWEETS = 20;
 	private static final int IMPLICITWAIT_POST_TWEETS = 0;
 
-	private ITweetFactory tweetFactory;
-	private ISnapshotFactory snapshotFactory;
-	private IPreferences prefs;
-	private IResourceBundleWithFormatting bundle;
+	private final ITweetFactory tweetFactory;
+	private final ISnapshotFactory snapshotFactory;
+	private final IAppDirectories appDirectories;
+	private final IBrowserScriptFactory browserScriptFactory;
+	private final IPreferences prefs;
+	private final IResourceBundleWithFormatting bundle;
 
-	public WebDriverFactory( ISnapshotFactory snapshotFactory, ITweetFactory tweetFactory,
-									IPreferences prefs, IResourceBundleWithFormatting bundle ) throws Exception {
+	public WebDriverFactory( final ISnapshotFactory snapshotFactory,
+								final ITweetFactory tweetFactory,
+								final IAppDirectories appDirectories,
+								final IBrowserScriptFactory browserScriptFactory,
+								final IPreferences prefs,
+								final IResourceBundleWithFormatting bundle ) throws Exception {
 		this.tweetFactory = tweetFactory;
 		this.snapshotFactory = snapshotFactory;
+		this.appDirectories = appDirectories;
+		this.browserScriptFactory = browserScriptFactory;
 		this.prefs = prefs;
 		this.bundle = bundle;
 	}
 
 	@Override
-	public ISnapshotUserPageTimeline makeSnapshotUserPageTimelineFromURL( WebDriver driver,
-																			IWebDriverUtils driverutils,
-																			IInfiniteScrollingActivator infiniteScroller,
-																			String url,
-																			int numberOfPagesToCheck,
-																			int maxTweets ) throws Exception {
-		ISnapshotUserPageTimeline ret = snapshotFactory.makeSnapshotUserPageTimeline( url, Instant.now() );
+	public ISnapshotUserPageTimeline makeSnapshotUserPageTimelineFromURL( final WebDriver driver,
+																			final IWebDriverUtils driverutils,
+																			final IInfiniteScrollingActivator infiniteScroller,
+																			final IBrowserProxy browserProxy,
+																			final IArchiveDirectory archiveDirectory,
+																			final String url,
+																			final int numberOfPagesToCheck,
+																			final int maxTweets ) throws Exception {
+		final ISnapshotUserPageTimeline ret = snapshotFactory.makeSnapshotUserPageTimeline( url, Instant.now() );
 
-		ret.setTweetCollection( makeTweetCollectionFromURL( driver, driverutils, infiniteScroller,
-															url, numberOfPagesToCheck, maxTweets ) );
+		ret.setTweetCollection( makeTweetCollectionFromURL( driver, driverutils, infiniteScroller, archiveDirectory,
+															url, TargetPageType.TIMELINE, numberOfPagesToCheck, maxTweets ) );
 		ret.setComplete( infiniteScroller.getComplete() );
 
 		WebElement tempElem;
 
-		Map<String,String> profileMap = new HashMap<String,String>();
-		WebElement profileElem = driver.findElement( By.xpath( driverutils.makeByXPathClassString( "ProfileNav" ) ) );
+		final Map<String,String> profileMap = new HashMap<String,String>();
+		final WebElement profileElem = driver.findElement( By.xpath( driverutils.makeByXPathClassString( "ProfileNav" ) ) );
 		profileMap.put( "userid", profileElem.getAttribute( "data-user-id" ) );
 
-		List<WebElement> profileNavLinks = profileElem.findElements( By.tagName( "a" ) );
-		for ( WebElement profileNavLink : profileNavLinks ) {
+		final List<WebElement> profileNavLinks = profileElem.findElements( By.tagName( "a" ) );
+		for ( final WebElement profileNavLink : profileNavLinks ) {
 			tempElem = driverutils.safeFindByClass( profileNavLink, "ProfileNav-value" );
 			if ( tempElem != null ) {
 				profileMap.put( profileNavLink.getAttribute( "data-nav" ), tempElem.getAttribute( "data-count" ) );
 			}
 		}
 
-		WebElement profileCardMiniElem = driver.findElement( By.xpath( driverutils.makeByXPathClassString( "ProfileCardMini" ) ) );
+		final WebElement profileCardMiniElem = driver.findElement( By.xpath( driverutils.makeByXPathClassString( "ProfileCardMini" ) ) );
 
 		tempElem = driverutils.safeFindByClass( profileCardMiniElem, "fullname" );
 		profileMap.put( "fullname", driverutils.getWebElementText( tempElem ) );
@@ -116,24 +156,27 @@ public class WebDriverFactory implements IWebDriverFactory {
 	}
 
 	@Override
-	public ISnapshotUserPageIndividualTweet makeSnapshotUserPageIndividualTweetFromURL( WebDriver driver,
-																						IWebDriverUtils driverutils,
-																						IInfiniteScrollingActivator infiniteScroller,
-																						String url,
-																						int numberOfPagesToCheck,
-																						int maxTweets ) throws Exception {
-		ISnapshotUserPageIndividualTweet ret = snapshotFactory.makeSnapshotUserPageIndividualTweet( url, Instant.now() );
+	public ISnapshotUserPageIndividualTweet makeSnapshotUserPageIndividualTweetFromURL( final WebDriver driver,
+																						final IWebDriverUtils driverutils,
+																						final IInfiniteScrollingActivator infiniteScroller,
+																						final IBrowserProxy browserProxy,
+																						final IArchiveDirectory archiveDirectory,
+																						final String url,
+																						final int numberOfPagesToCheck,
+																						final int maxTweets ) throws Exception {
 
-		ITweetCollection tweetCollection = makeTweetCollectionFromURL( driver, driverutils, infiniteScroller,
-																		url, numberOfPagesToCheck, maxTweets );
+		final ISnapshotUserPageIndividualTweet ret = snapshotFactory.makeSnapshotUserPageIndividualTweet( url, Instant.now() );
+
+		final ITweetCollection tweetCollection = makeTweetCollectionFromURL( driver, driverutils, infiniteScroller, archiveDirectory,
+																				url, TargetPageType.REPLYPAGE, numberOfPagesToCheck, maxTweets );
 		ret.setComplete( infiniteScroller.getComplete() );
 
-		List<ITweet> tweets = tweetCollection.getTweets();
-		if ( tweets == null || tweets.size() < 1 ) {
+		final List<ITweet> tweets = tweetCollection.getTweets();
+		if ( tweets == null || tweets.isEmpty() ) {
 			throw new RuntimeException( "individual page must have at least one tweet" );
 		}
 
-		ITweet individualTweet = tweets.remove( 0 );
+		final ITweet individualTweet = tweets.remove( 0 );
 		ret.setIndividualTweet( individualTweet );
 		ret.setUser( individualTweet.getUser() );
 		ret.setTweetID( individualTweet.getID() );
@@ -151,22 +194,24 @@ public class WebDriverFactory implements IWebDriverFactory {
 	}
 
 	@Override
-	public ITweetCollection makeTweetCollectionFromURL( WebDriver driver,
-														IWebDriverUtils driverutils,
-														IInfiniteScrollingActivator infiniteScroller,
-														String url,
-														int numberOfPagesToCheck,
-														int maxTweets ) throws Exception {
+	public ITweetCollection makeTweetCollectionFromURL( final WebDriver driver,
+														final IWebDriverUtils driverutils,
+														final IInfiniteScrollingActivator infiniteScroller,
+														final IArchiveDirectory archiveDirectory,
+														final String url,
+														final TargetPageType pageType,
+														final int numberOfPagesToCheck,
+														final int maxTweets ) throws Exception {
 		Utils.delay( DELAY_PRE_TWEETS );
 
 		driver.manage().timeouts().implicitlyWait( IMPLICITWAIT_PRE_ERRORPAGE, TimeUnit.SECONDS );
 
-		List<WebElement> errorPageElems = driver.findElements( By.xpath( driverutils.makeByXPathClassString( "errorpage-body-content" ) ) );
-		if ( errorPageElems.size() > 0 ) {
+		final List<WebElement> errorPageElems = driver.findElements( By.xpath( driverutils.makeByXPathClassString( "errorpage-body-content" ) ) );
+		if ( !errorPageElems.isEmpty() ) {
 			throw new RuntimeException( "page not found: " + url );
 		}
 
-		ITweetCollection collection = tweetFactory.makeTweetCollection();
+		final ITweetCollection collection = tweetFactory.makeTweetCollection();
 		collection.setAttribute( "url", url );
 		collection.setAttribute( "numberOfPagesToCheck", "" + numberOfPagesToCheck );
 		collection.setAttribute( "maxTweets", "" + maxTweets );
@@ -182,16 +227,16 @@ public class WebDriverFactory implements IWebDriverFactory {
 
 			driver.manage().timeouts().implicitlyWait( IMPLICITWAIT_PRE_TWEETS, TimeUnit.SECONDS );
 
-			List<WebElement> lowQualityButtons = driver.findElements( By.xpath( driverutils.makeByXPathClassString( "ThreadedConversation-showMoreThreadsButton" ) ) );
-			if ( lowQualityButtons.size() > 0 ) {
+			final List<WebElement> lowQualityButtons = driver.findElements( By.xpath( driverutils.makeByXPathClassString( "ThreadedConversation-showMoreThreadsButton" ) ) );
+			if ( !lowQualityButtons.isEmpty() ) {
 				logger.info( "found 'low quality' button" );
 				lowQualityButtons.get( 0 ).click();
 				Utils.delay( DELAY_POST_CLICK_LOWQUALITY_BUTTON );
 				bNoMoreButtons = false;
 			}
 
-			List<WebElement> abusiveQualityButtons = driver.findElements( By.xpath( driverutils.makeByXPathClassString( "ThreadedConversation-showMoreThreadsPrompt" ) ) );
-			if ( abusiveQualityButtons.size() > 0 ) {
+			final List<WebElement> abusiveQualityButtons = driver.findElements( By.xpath( driverutils.makeByXPathClassString( "ThreadedConversation-showMoreThreadsPrompt" ) ) );
+			if ( !abusiveQualityButtons.isEmpty() ) {
 				logger.info( "found 'abusive quality' button" );
 				abusiveQualityButtons.get( 0 ).click();
 				Utils.delay( DELAY_POST_CLICK_ABUSIVEQUALITY_BUTTON );
@@ -205,20 +250,20 @@ public class WebDriverFactory implements IWebDriverFactory {
 		}
 
 		logger.info( "looking for tweets..." );
-		List<WebElement> tweetElems = driver.findElements( By.xpath( driverutils.makeByXPathClassString( "tweet" ) ) );
+		final List<WebElement> tweetElems = driver.findElements( By.xpath( driverutils.makeByXPathClassString( "tweet" ) ) );
 		logger.info( "found " + tweetElems.size() + " tweets" );
 
 		driver.manage().timeouts().implicitlyWait( IMPLICITWAIT_POST_TWEETS, TimeUnit.SECONDS );
 
 		int tweetCount = 0;
-		for ( WebElement tweetElem : tweetElems ) {
+		for ( final WebElement tweetElem : tweetElems ) {
 			if ( Utils.isEmpty( tweetElem.getAttribute( "data-tweet-id" ) ) ||
 					Utils.isEmpty( tweetElem.getAttribute( "data-name" ) ) ) {
 				logger.info( "skipping empty tweet, classes:" + tweetElem.getAttribute( "class" ) );
 				continue;
 			}
 
-			ITweet tweet = tweetFactory.makeTweet();
+			final ITweet tweet = tweetFactory.makeTweet();
 
 			loadTweetAttributes( driver, driverutils, tweet, tweetElem );
 
@@ -228,7 +273,7 @@ public class WebDriverFactory implements IWebDriverFactory {
 			try {
 				tweet.setID( Long.parseLong( tweet.getAttribute( "tweetid" ) ) );
 			}
-			catch ( Exception e ) {
+			catch ( final Exception e ) {
 				logger.info( "can't parse tweetid attribute, tweet is " + tweet );
 				throw e;
 			}
@@ -256,9 +301,9 @@ public class WebDriverFactory implements IWebDriverFactory {
 	}
 
 	@Override
-	public IInfiniteScrollingActivator makeInfiniteScrollingActivator( WebDriver driver,
-																		IWebDriverUtils driverutils,
-																		InfiniteScrollingActivatorType type ) {
+	public IInfiniteScrollingActivator makeInfiniteScrollingActivator( final WebDriver driver,
+																		final IWebDriverUtils driverutils,
+																		final InfiniteScrollingActivatorType type ) {
 		if ( type == InfiniteScrollingActivatorType.TIMELINE ) {
 			return new InfiniteScrollingActivatorTimeline( driver, driverutils );
 		}
@@ -271,46 +316,98 @@ public class WebDriverFactory implements IWebDriverFactory {
 	}
 
 	@Override
-	public IWebDriverUtils makeWebDriverUtils( WebDriver driver ) {
+	public IWebDriverUtils makeWebDriverUtils( final WebDriver driver ) {
 		return new WebDriverUtils( driver );
 	}
 
 	@Override
 	public WebDriver makeWebDriver() throws Exception {
-		FirefoxBinary ffBin;
-		FirefoxProfile ffProfile;
+		return makeWebDriver( null );
+	}
 
-		if ( !prefs.isEmpty( "prefs.firefox_path_app" ) && !prefs.isEmpty( "prefs.firefox_path_profile" ) ) {
-			ffBin = new FirefoxBinary( new File( prefs.getValue( "prefs.firefox_path_app" ) ) );
-			ffProfile = new FirefoxProfile( new File( prefs.getValue( "prefs.firefox_path_profile" ) ) );
-			setFirefoxProfilePreferences( ffProfile );
+	@Override
+	public WebDriver makeWebDriver( final IBrowserProxy proxy ) throws Exception {
+		try {
+			//logger.info( "original=" + prefs.getValue( "prefs.firefox_path_geckodriver" ) );
+			//System.setProperty( "webdriver.gecko.driver", prefs.getValue( "prefs.firefox_path_geckodriver" ) );
 
-			logger.info( "making WebDriver from bin and profile" );
+			final DesiredCapabilities capabilities = new DesiredCapabilities();
+			capabilities.setAcceptInsecureCerts( true );
 
-			return new FirefoxDriver( ffBin, ffProfile );
+			final LoggingPreferences loggingPreferences = new LoggingPreferences();
+			loggingPreferences.enable( LogType.BROWSER, Level.INFO );
+			capabilities.setCapability( CapabilityType.LOGGING_PREFS, loggingPreferences );
+
+			if ( proxy != null ) {
+				logger.info( "WebDriverFactory.makeWebDriver: using browser proxy" );
+				capabilities.setCapability( CapabilityType.PROXY, proxy.getSeleniumProxy() );
+			}
+
+			logger.info( "WebDriverFactory.makeWebDriver: webdriver capabilities=" + capabilities );
+
+			final FirefoxOptions firefoxOptions = new FirefoxOptions( capabilities );
+
+			if ( !prefs.isEmpty( "prefs.firefox_path_app" ) ) {
+				String firefoxBinaryPath = prefs.getValue( "prefs.firefox_path_app" );
+
+				logger.info( "WebDriverFactory.makeWebDriver: making WebDriver binary from " + firefoxBinaryPath );
+
+				WebDriverManager.firefoxdriver().browserPath( firefoxBinaryPath ).setup();
+				firefoxOptions.setBinary( new FirefoxBinary( new File( firefoxBinaryPath ) ) );
+
+				return new FirefoxDriver( firefoxOptions );
+			}
+			else {
+				WebDriverManager.firefoxdriver().setup();
+			}
+
+			final FirefoxProfile firefoxProfile;
+
+			if ( !prefs.isEmpty( "prefs.firefox_path_profile" ) ) {
+				String firefoxProfilePath = prefs.getValue( "prefs.firefox_path_app" );
+
+				logger.info( "WebDriverFactory.makeWebDriver: making WebDriver profile from " + firefoxProfilePath );
+
+				firefoxProfile = new FirefoxProfile( new File( firefoxProfilePath ) );
+			}
+			else {
+				logger.info( "WebDriverFactory.makeWebDriver: making empty WebDriver profile" );
+				firefoxProfile = new FirefoxProfile();
+			}
+
+			setFirefoxProfilePreferences( firefoxProfile );
+			addFirefoxExtensions( firefoxProfile );
+
+			logger.info( "WebDriverFactory.makeWebDriver: making WebDriver from profile" );
+
+			firefoxOptions.setProfile( firefoxProfile );
+
+			return new FirefoxDriver( firefoxOptions );
 		}
-		else if ( !prefs.isEmpty( "prefs.firefox_path_profile" ) ) {
-			ffProfile = new FirefoxProfile( new File( prefs.getValue( "prefs.firefox_path_profile" ) ) );
-			setFirefoxProfilePreferences( ffProfile );
-
-			logger.info( "making WebDriver from profile" );
-
-			return new FirefoxDriver( ffProfile );
-		}
-		else {
-			logger.info( "making WebDriver without bin or profile" );
-
-			return new FirefoxDriver();
+		catch ( Exception e ) {
+			logger.error( "FAILED TO CREATE WEBDRIVER", e );
+			throw e;
 		}
 	}
 
-	protected void setFirefoxProfilePreferences( FirefoxProfile ffProfile ) {
+	@Override
+	public List<String> getBrowserLogs( WebDriver driver ) {
+		final List<String> list = new ArrayList<String>( 1000 );
+
+		for ( LogEntry entry : driver.manage().logs().get( LogType.BROWSER ) ) {
+			list.add( "" + entry );
+		}
+
+		return list;
+	}
+
+	protected void setFirefoxProfilePreferences( final FirefoxProfile ffProfile ) {
 		ffProfile.setPreference( "app.update.auto", false );
 		ffProfile.setPreference( "app.update.enabled", false );
 		ffProfile.setPreference( "browser.shell.checkDefaultBrowser", false );
 	}
 
-	protected void loadTweetAttributes( WebDriver driver, IWebDriverUtils driverutils, ITweet tweet, WebElement tweetElem ) {
+	protected void loadTweetAttributes( final WebDriver driver, final IWebDriverUtils driverutils, final ITweet tweet, final WebElement tweetElem ) {
 		WebElement tempElem;
 
 		tweet.setAttribute( "tweetid", tweetElem.getAttribute( "data-tweet-id" ) );
@@ -436,7 +533,10 @@ public class WebDriverFactory implements IWebDriverFactory {
 		}
 	}
 
-	protected ITweetUser makeTweetUser( String handle, String displayName, String userIDString, String verifiedText, String avatarURL ) {
+	protected void addFirefoxExtensions( final FirefoxProfile firefoxProfile ) {
+	}
+
+	protected ITweetUser makeTweetUser( final String handle, final String displayName, final String userIDString, final String verifiedText, String avatarURL ) {
 		if ( Utils.isEmpty( handle ) ) {
 			return tweetFactory.makeTweetUser( TWEETUSER_HANDLE_UNKNOWN );
 		}
@@ -445,7 +545,7 @@ public class WebDriverFactory implements IWebDriverFactory {
 		try {
 			userID = Long.parseLong( userIDString );
 		}
-		catch ( Exception e ) {
+		catch ( final Exception e ) {
 			logger.info( "can't parse userIDString: " + userIDString + ", handle=" + handle + ", displayName=" + displayName );
 			throw e;
 		}
@@ -462,5 +562,20 @@ public class WebDriverFactory implements IWebDriverFactory {
 
 		return tweetFactory.makeTweetUser( handle, userID, displayName, verifiedStatus, avatarURL );
 	}
-}
 
+	protected IAppDirectories getAppDirectories() {
+		return appDirectories;
+	}
+
+	protected IBrowserScriptFactory getBrowserScriptFactory() {
+		return browserScriptFactory;
+	}
+
+	protected IPreferences getPreferences() {
+		return prefs;
+	}
+
+	protected IResourceBundleWithFormatting getResourceBundleWithFormatting() {
+		return bundle;
+	}
+}

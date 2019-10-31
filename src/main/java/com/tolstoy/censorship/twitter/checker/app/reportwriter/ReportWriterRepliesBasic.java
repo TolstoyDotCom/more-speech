@@ -15,42 +15,46 @@ package com.tolstoy.censorship.twitter.checker.app.reportwriter;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.text.Format;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Date;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import java.util.TimeZone;
+import java.util.Locale;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.tolstoy.basic.api.tweet.*;
-import com.tolstoy.basic.app.utils.Utils;
-import com.tolstoy.basic.api.utils.IResourceBundleWithFormatting;
-import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
-import com.tolstoy.censorship.twitter.checker.api.analyzer.*;
-import com.tolstoy.censorship.twitter.checker.app.helpers.IAppDirectories;
-import com.tolstoy.censorship.twitter.checker.api.snapshot.IReplyThread;
-import com.tolstoy.censorship.twitter.checker.api.snapshot.ReplyThreadType;
+import org.apache.commons.lang.time.FastDateFormat;
 import org.jtwig.JtwigModel;
 import org.jtwig.JtwigTemplate;
+
+import com.tolstoy.basic.api.tweet.ITweet;
+import com.tolstoy.basic.api.utils.IResourceBundleWithFormatting;
+import com.tolstoy.basic.app.utils.Utils;
+import com.tolstoy.censorship.twitter.checker.api.analyzer.AnalysisReportItemBasicTweetStatus;
+import com.tolstoy.censorship.twitter.checker.api.analyzer.IAnalysisReportRepliesBasic;
+import com.tolstoy.censorship.twitter.checker.api.analyzer.IAnalysisReportRepliesItemBasic;
+import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
+import com.tolstoy.censorship.twitter.checker.api.installation.IAppDirectories;
 
 //	TODO: escaping: https://github.com/jtwig/jtwig/issues/331
 
 public class ReportWriterRepliesBasic {
 	private static final Logger logger = LogManager.getLogger( ReportWriterRepliesBasic.class );
 
-	private static final DateFormat filenameDateFormat = new SimpleDateFormat( "yyyy_MM_dd_hh_mm_ss" );
+	private static final Format filenameDateFormat = FastDateFormat.getInstance( "yyyy_MM_dd_hh_mm_ss" );
 
-	private IResourceBundleWithFormatting bundle;
-	private IPreferences prefs;
-	private IAppDirectories appDirectories;
-	private JtwigTemplate layoutTemplate, helpAreaTemplate, tableTemplate,
+	private final IResourceBundleWithFormatting bundle;
+	private final IPreferences prefs;
+	private final IAppDirectories appDirectories;
+	private final JtwigTemplate layoutTemplate, helpAreaTemplate, tableTemplate,
 							tweetSourceTemplate, tweetReplyTemplate, rankTemplate, statusTemplate;
-	private DateFormat tweetDateFormat;
+	private final Format tweetDateFormat;
 	private String filename;
-	private boolean debugMode;
+	private final boolean debugMode;
 
-	public ReportWriterRepliesBasic( IPreferences prefs, IResourceBundleWithFormatting bundle, IAppDirectories appDirectories, boolean debugMode ) throws Exception {
+	public ReportWriterRepliesBasic( final IPreferences prefs, final IResourceBundleWithFormatting bundle, final IAppDirectories appDirectories, final boolean debugMode ) throws Exception {
 		this.prefs = prefs;
 		this.bundle = bundle;
 		this.appDirectories = appDirectories;
@@ -65,21 +69,21 @@ public class ReportWriterRepliesBasic {
 		this.rankTemplate = JtwigTemplate.classpathTemplate( "templates/reportrepliesbasic_element_rank.twig" );
 		this.statusTemplate = JtwigTemplate.classpathTemplate( "templates/reportrepliesbasic_element_status.twig" );
 
-		this.tweetDateFormat = new SimpleDateFormat( bundle.getString( "rpt_tweet_dateformat" ) );
+		this.tweetDateFormat = FastDateFormat.getInstance( bundle.getString( "rpt_tweet_dateformat" ) );
 	}
 
-	public void writeReport( IAnalysisReportRepliesBasic report ) throws Exception {
+	public void writeReport( final IAnalysisReportRepliesBasic report ) throws Exception {
 		String htmlItems = "";
 
-		List<IAnalysisReportRepliesItemBasic> items = report.getItems();
+		final List<IAnalysisReportRepliesItemBasic> items = report.getItems();
 
-		for ( IAnalysisReportRepliesItemBasic item : items ) {
+		for ( final IAnalysisReportRepliesItemBasic item : items ) {
 			htmlItems += makeItemHTML( item );
 		}
 
-		boolean bLoggedIn = Utils.isStringTrue( report.getSearchRun().getAttribute( "loggedin" ) );
+		final boolean bLoggedIn = Utils.isStringTrue( report.getSearchRun().getAttribute( "loggedin" ) );
 
-		JtwigModel model = JtwigModel.newModel()
+		final JtwigModel model = JtwigModel.newModel()
 			.with( "reporttype", "replies/" + report.getAnalysisType() )
 			.with( "reporttitle", report.getName() )
 			.with( "helparea", makeHelpArea( report ) )
@@ -107,18 +111,18 @@ public class ReportWriterRepliesBasic {
 		return filename;
 	}
 
-	protected String makeItemHTML( IAnalysisReportRepliesItemBasic item ) {
+	protected String makeItemHTML( final IAnalysisReportRepliesItemBasic item ) {
 		String debugData = "";
 
 		if ( debugMode ) {
-			Map<String,String> attributes = item.getAttributes();
-			Set<String> keys = attributes.keySet();
-			for ( String key : keys ) {
+			final Map<String,String> attributes = item.getAttributes();
+			final Set<String> keys = attributes.keySet();
+			for ( final String key : keys ) {
 				debugData += key + "=" + attributes.get( key ) + "\n\n";
 			}
 		}
 
-		JtwigModel model = JtwigModel.newModel()
+		final JtwigModel model = JtwigModel.newModel()
 			.with( "debugData", debugData )
 			.with( "replytweet", makeTweetReplyElement( item.getRepliedToTweet() ) )
 			.with( "sourcetweet", makeTweetSourceElement( item.getSourceTweet() ) )
@@ -130,8 +134,8 @@ public class ReportWriterRepliesBasic {
 		return tableTemplate.render( model );
 	}
 
-	protected String makeRankElement( int rank, int totalReplies, int totalRepliesActual, boolean isComplete ) {
-		JtwigModel model = JtwigModel.newModel()
+	protected String makeRankElement( final int rank, final int totalReplies, final int totalRepliesActual, final boolean isComplete ) {
+		final JtwigModel model = JtwigModel.newModel()
 			.with( "rank", rank )
 			.with( "totalReplies", totalReplies )
 			.with( "totalRepliesActual", totalRepliesActual )
@@ -140,35 +144,35 @@ public class ReportWriterRepliesBasic {
 		return rankTemplate.render( model );
 	}
 
-	protected String makeTweetReplyElement( ITweet tweet ) {
-		JtwigModel model = getTweetParams( tweet );
+	protected String makeTweetReplyElement( final ITweet tweet ) {
+		final JtwigModel model = getTweetParams( tweet );
 
 		return tweetReplyTemplate.render( model );
 	}
 
-	protected String makeTweetSourceElement( ITweet tweet ) {
-		JtwigModel model = getTweetParams( tweet );
+	protected String makeTweetSourceElement( final ITweet tweet ) {
+		final JtwigModel model = getTweetParams( tweet );
 
 		return tweetSourceTemplate.render( model );
 	}
 
-	protected String makeStatusElement( AnalysisReportItemBasicTweetStatus status ) {
-		JtwigModel model = JtwigModel.newModel()
+	protected String makeStatusElement( final AnalysisReportItemBasicTweetStatus status ) {
+		final JtwigModel model = JtwigModel.newModel()
 			.with( "statusName", bundle.getString( status.getKey() ) )
 			.with( "statusColor", bundle.getString( status.getKey() + "_color" ) );
 
 		return statusTemplate.render( model );
 	}
 
-	protected String makeHelpArea( IAnalysisReportRepliesBasic report ) {
-		JtwigModel model = JtwigModel.newModel()
+	protected String makeHelpArea( final IAnalysisReportRepliesBasic report ) {
+		final JtwigModel model = JtwigModel.newModel()
 			.with( "initiating_user", report.getSearchRun().getInitiatingUser().getHandle() )
 			.with( "ranking_function_name", report.getAttributes().get( "rankingFunctionName" ) );
 
 		return helpAreaTemplate.render( model );
 	}
 
-	protected JtwigModel getTweetParams( ITweet tweet ) {
+	protected JtwigModel getTweetParams( final ITweet tweet ) {
 		return JtwigModel.newModel()
 			.with( "handle", tweet.getUser().getHandle() )
 			.with( "link", String.format( prefs.getValue( "targetsite.pattern.individual" ), tweet.getUser().getHandle(), tweet.getID() ) )

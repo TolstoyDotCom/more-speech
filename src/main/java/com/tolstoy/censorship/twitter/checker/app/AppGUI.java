@@ -13,54 +13,84 @@
  */
 package com.tolstoy.censorship.twitter.checker.app;
 
-import java.util.*;
 import java.io.File;
-import javax.swing.*;
-import java.time.Instant;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
+import javax.swing.UIManager;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.tolstoy.basic.api.storage.*;
-import com.tolstoy.basic.api.tweet.*;
-import com.tolstoy.basic.api.utils.*;
-import com.tolstoy.basic.api.statusmessage.*;
+
+import com.tolstoy.basic.api.installation.DebugLevel;
+import com.tolstoy.basic.api.statusmessage.IStatusMessageReceiver;
+import com.tolstoy.basic.api.statusmessage.StatusMessage;
+import com.tolstoy.basic.api.statusmessage.StatusMessageSeverity;
+import com.tolstoy.basic.api.storage.IStorable;
+import com.tolstoy.basic.api.storage.IStorage;
+import com.tolstoy.basic.api.storage.StorageOrdering;
+import com.tolstoy.basic.api.tweet.ITweetFactory;
+import com.tolstoy.basic.api.utils.IResourceBundleWithFormatting;
+import com.tolstoy.basic.api.utils.IArchiveDirectory;
 import com.tolstoy.basic.app.utils.Utils;
-import com.tolstoy.censorship.twitter.checker.api.preferences.*;
-import com.tolstoy.censorship.twitter.checker.api.webdriver.*;
-import com.tolstoy.censorship.twitter.checker.api.snapshot.*;
-import com.tolstoy.censorship.twitter.checker.api.searchrun.*;
-import com.tolstoy.censorship.twitter.checker.app.gui.*;
-import com.tolstoy.censorship.twitter.checker.app.helpers.SearchRunRepliesBuilder;
-import com.tolstoy.censorship.twitter.checker.app.helpers.SearchRunTimelineBuilder;
-import com.tolstoy.censorship.twitter.checker.app.helpers.SearchRunRepliesFromItineraryBuilder;
-import com.tolstoy.censorship.twitter.checker.app.helpers.SearchRunProcessorWriteReport;
-import com.tolstoy.censorship.twitter.checker.app.helpers.IAppDirectories;
-import com.tolstoy.censorship.twitter.checker.api.analyzer.IAnalysisReportFactory;
-import com.tolstoy.censorship.twitter.checker.app.storage.StorageTable;
+import com.tolstoy.basic.app.utils.ArchiveDirectory;
 import com.tolstoy.basic.gui.ElementDescriptor;
+import com.tolstoy.censorship.twitter.checker.api.analyzer.IAnalysisReportFactory;
+import com.tolstoy.censorship.twitter.checker.api.browserproxy.IBrowserProxyFactory;
+import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
+import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferencesFactory;
+import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRun;
+import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunFactory;
+import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunItinerary;
+import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunProcessor;
+import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunReplies;
+import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunRepliesItinerary;
+import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunTimeline;
+import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotFactory;
+import com.tolstoy.censorship.twitter.checker.api.webdriver.IWebDriverFactoryFactory;
+import com.tolstoy.censorship.twitter.checker.app.gui.MainGUI;
+import com.tolstoy.censorship.twitter.checker.app.gui.PreferencesEvent;
+import com.tolstoy.censorship.twitter.checker.app.gui.PreferencesEventListener;
+import com.tolstoy.censorship.twitter.checker.app.gui.RunEvent;
+import com.tolstoy.censorship.twitter.checker.app.gui.RunEventListener;
+import com.tolstoy.censorship.twitter.checker.app.gui.RunItineraryEvent;
+import com.tolstoy.censorship.twitter.checker.app.gui.RunItineraryEventListener;
+import com.tolstoy.censorship.twitter.checker.app.gui.WindowClosingEvent;
+import com.tolstoy.censorship.twitter.checker.app.gui.WindowClosingEventListener;
+import com.tolstoy.censorship.twitter.checker.api.installation.IAppDirectories;
+import com.tolstoy.censorship.twitter.checker.app.helpers.SearchRunProcessorWriteReport;
+import com.tolstoy.censorship.twitter.checker.app.helpers.SearchRunRepliesBuilder;
+import com.tolstoy.censorship.twitter.checker.app.helpers.SearchRunRepliesFromItineraryBuilder;
+import com.tolstoy.censorship.twitter.checker.app.helpers.SearchRunTimelineBuilder;
+import com.tolstoy.censorship.twitter.checker.app.storage.StorageTable;
 
 public class AppGUI implements RunEventListener, PreferencesEventListener, RunItineraryEventListener, WindowClosingEventListener {
 	private static final Logger logger = LogManager.getLogger( AppGUI.class );
 
-	private IResourceBundleWithFormatting bundle;
-	private IStorage storage;
-	private IPreferencesFactory prefsFactory;
-	private IPreferences prefs;
-	private IWebDriverFactory webDriverFactory;
-	private ISearchRunFactory searchRunFactory;
-	private ISnapshotFactory snapshotFactory;
-	private ITweetFactory tweetFactory;
-	private IAnalysisReportFactory analysisReportFactory;
-	private IAppDirectories appDirectories;
-	private List<ISearchRunProcessor> searchRunProcessors;
+	private final IResourceBundleWithFormatting bundle;
+	private final IStorage storage;
+	private final IPreferencesFactory prefsFactory;
+	private final IPreferences prefs;
+	private final IWebDriverFactoryFactory webDriverFactoryFactory;
+	private final ISearchRunFactory searchRunFactory;
+	private final ISnapshotFactory snapshotFactory;
+	private final ITweetFactory tweetFactory;
+	private final IAnalysisReportFactory analysisReportFactory;
+	private final IBrowserProxyFactory browserProxyFactory;
+	private final IAppDirectories appDirectories;
+	private final List<ISearchRunProcessor> searchRunProcessors;
 	private List<ElementDescriptor> guiElements;
 	private MainGUI gui;
 
 	abstract class WorkerBase<T> extends SwingWorker<T, StatusMessage> implements IStatusMessageReceiver {
 		@Override
-		protected void process( List<StatusMessage> messages ) {
-			for ( StatusMessage message : messages ) {
+		protected void process( final List<StatusMessage> messages ) {
+			for ( final StatusMessage message : messages ) {
 				if ( message == null ) {
 					gui.clearMessages();
 				}
@@ -71,7 +101,7 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 		}
 
 		@Override
-		public void addMessage( StatusMessage message ) {
+		public void addMessage( final StatusMessage message ) {
 			publish( message );
 		}
 
@@ -85,24 +115,25 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 		@Override
 		public void done() {
 			try {
-				T searchRun = get();
+				final T searchRun = get();
 				//logger.info( searchRun );
 
 				if ( searchRun != null ) {
-					for ( ISearchRunProcessor processor : searchRunProcessors ) {
+					for ( final ISearchRunProcessor processor : searchRunProcessors ) {
+						logger.info( "WorkerProcessingBase: calling " + processor );
 						try {
 							processor.process( searchRun, this );
 						}
-						catch ( Exception e ) {
-							String s = bundle.getString( "exc_srp", processor.getDescription(), e.getMessage() );
+						catch ( final Exception e ) {
+							final String s = bundle.getString( "exc_srp", processor.getDescription(), e.getMessage() );
 							logger.error( s, e );
 							gui.addMessage( new StatusMessage( s, StatusMessageSeverity.ERROR ) );
 						}
 					}
 				}
 			}
-			catch ( Exception e ) {
-				String s = bundle.getString( "exc_getresults", e.getMessage() );
+			catch ( final Exception e ) {
+				final String s = bundle.getString( "exc_getresults", e.getMessage() );
 				logger.error( s, e );
 				gui.addMessage( new StatusMessage( s, StatusMessageSeverity.ERROR ) );
 			}
@@ -116,22 +147,26 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 		@Override
 		public ISearchRunReplies doInBackground() {
 			try {
-				SearchRunRepliesBuilder builder = new SearchRunRepliesBuilder( bundle,
+				IArchiveDirectory archiveDirectory = new ArchiveDirectory( appDirectories.getReportsDirectory(), "json-", "", "", ".json" );
+
+				final SearchRunRepliesBuilder builder = new SearchRunRepliesBuilder( bundle,
 												storage,
 												prefsFactory,
 												prefs,
-												webDriverFactory,
+												webDriverFactoryFactory,
 												searchRunFactory,
 												snapshotFactory,
 												tweetFactory,
+												browserProxyFactory,
+												archiveDirectory,
 												this,
 												prefs.getValue( "prefs.handle_to_check" ) );
 
-				int numTimelinePagesToCheck = Utils.parseIntDefault( prefs.getValue( "prefs.num_timeline_pages_to_check" ), 1 );
-				int numIndividualPagesToCheck = Utils.parseIntDefault( prefs.getValue( "prefs.num_individual_pages_to_check" ), 3 );
-				int maxTweets = Utils.parseIntDefault( prefs.getValue( "prefs.num_tweets_to_check" ), 5 );
+				final int numTimelinePagesToCheck = Utils.parseIntDefault( prefs.getValue( "prefs.num_timeline_pages_to_check" ), 1 );
+				final int numIndividualPagesToCheck = Utils.parseIntDefault( prefs.getValue( "prefs.num_individual_pages_to_check" ), 3 );
+				final int maxTweets = Utils.parseIntDefault( prefs.getValue( "prefs.num_tweets_to_check" ), 5 );
 
-				ISearchRunReplies searchRunReplies = builder.buildSearchRunReplies( numTimelinePagesToCheck,
+				final ISearchRunReplies searchRunReplies = builder.buildSearchRunReplies( numTimelinePagesToCheck,
 																					numIndividualPagesToCheck,
 																					maxTweets );
 
@@ -140,7 +175,7 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 				logger.info( Utils.getDefaultObjectMapper().writeValueAsString( searchRunReplies ) );
 				return searchRunReplies;
 			}
-			catch ( Exception e ) {
+			catch ( final Exception e ) {
 				logger.error( bundle.getString( "exc_start", e.getMessage() ), e );
 				publish( new StatusMessage( bundle.getString( "exc_start", e.getMessage() ), StatusMessageSeverity.ERROR ) );
 
@@ -153,22 +188,26 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 		@Override
 		public ISearchRunTimeline doInBackground() {
 			try {
-				SearchRunTimelineBuilder builder = new SearchRunTimelineBuilder( bundle,
+				IArchiveDirectory archiveDirectory = new ArchiveDirectory( appDirectories.getReportsDirectory(), "json-", "", "", ".json" );
+
+				final SearchRunTimelineBuilder builder = new SearchRunTimelineBuilder( bundle,
 																					storage,
 																					prefsFactory,
 																					prefs,
-																					webDriverFactory,
+																					webDriverFactoryFactory,
 																					searchRunFactory,
 																					snapshotFactory,
 																					tweetFactory,
+																					browserProxyFactory,
+																					archiveDirectory,
 																					this,
 																					prefs.getValue( "prefs.handle_to_check" ) );
 
-				int numTimelinePagesToCheck = Utils.parseIntDefault( prefs.getValue( "prefs.num_timeline_pages_to_check" ), 1 );
-				int numIndividualPagesToCheck = Utils.parseIntDefault( prefs.getValue( "prefs.num_individual_pages_to_check" ), 3 );
-				int maxTweets = Utils.parseIntDefault( prefs.getValue( "prefs.num_tweets_to_check" ), 5 );
+				final int numTimelinePagesToCheck = Utils.parseIntDefault( prefs.getValue( "prefs.num_timeline_pages_to_check" ), 1 );
+				final int numIndividualPagesToCheck = Utils.parseIntDefault( prefs.getValue( "prefs.num_individual_pages_to_check" ), 3 );
+				final int maxTweets = Utils.parseIntDefault( prefs.getValue( "prefs.num_tweets_to_check" ), 5 );
 
-				ISearchRunTimeline searchRunTimeline = builder.buildSearchRunTimeline( numTimelinePagesToCheck,
+				final ISearchRunTimeline searchRunTimeline = builder.buildSearchRunTimeline( numTimelinePagesToCheck,
 																						numIndividualPagesToCheck,
 																						maxTweets );
 
@@ -177,7 +216,7 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 				logger.info( Utils.getDefaultObjectMapper().writeValueAsString( searchRunTimeline ) );
 				return searchRunTimeline;
 			}
-			catch ( Exception e ) {
+			catch ( final Exception e ) {
 				logger.error( bundle.getString( "exc_start", e.getMessage() ), e );
 				publish( new StatusMessage( bundle.getString( "exc_start", e.getMessage() ), StatusMessageSeverity.ERROR ) );
 
@@ -187,31 +226,35 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 	}
 
 	class ItineraryRepliesWorker extends WorkerProcessingBase<ISearchRunReplies> {
-		private ISearchRunRepliesItinerary itinerary;
+		private final ISearchRunRepliesItinerary itinerary;
 
-		public ItineraryRepliesWorker( ISearchRunRepliesItinerary itinerary ) {
+		public ItineraryRepliesWorker( final ISearchRunRepliesItinerary itinerary ) {
 			this.itinerary = itinerary;
 		}
 
 		@Override
 		public ISearchRunReplies doInBackground() {
 			try {
-				SearchRunRepliesFromItineraryBuilder builder = new SearchRunRepliesFromItineraryBuilder( bundle,
+				IArchiveDirectory archiveDirectory = new ArchiveDirectory( appDirectories.getReportsDirectory(), "json-", "", "", ".json" );
+
+				final SearchRunRepliesFromItineraryBuilder builder = new SearchRunRepliesFromItineraryBuilder( bundle,
 																storage,
 																prefsFactory,
 																prefs,
-																webDriverFactory,
+																webDriverFactoryFactory,
 																searchRunFactory,
 																snapshotFactory,
 																tweetFactory,
+																browserProxyFactory,
+																archiveDirectory,
 																this,
 																itinerary );
 
-				int numTimelinePagesToCheck = Utils.parseIntDefault( prefs.getValue( "prefs.num_timeline_pages_to_check" ), 1 );
-				int numIndividualPagesToCheck = Utils.parseIntDefault( prefs.getValue( "prefs.num_individual_pages_to_check" ), 3 );
-				int maxTweets = Utils.parseIntDefault( prefs.getValue( "prefs.num_tweets_to_check" ), 5 );
+				final int numTimelinePagesToCheck = Utils.parseIntDefault( prefs.getValue( "prefs.num_timeline_pages_to_check" ), 1 );
+				final int numIndividualPagesToCheck = Utils.parseIntDefault( prefs.getValue( "prefs.num_individual_pages_to_check" ), 3 );
+				final int maxTweets = Utils.parseIntDefault( prefs.getValue( "prefs.num_tweets_to_check" ), 5 );
 
-				ISearchRunReplies searchRunReplies = builder.buildSearchRunReplies( numTimelinePagesToCheck,
+				final ISearchRunReplies searchRunReplies = builder.buildSearchRunReplies( numTimelinePagesToCheck,
 																					numIndividualPagesToCheck,
 																					maxTweets );
 
@@ -220,7 +263,7 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 				logger.info( Utils.getDefaultObjectMapper().writeValueAsString( searchRunReplies ) );
 				return searchRunReplies;
 			}
-			catch ( Exception e ) {
+			catch ( final Exception e ) {
 				logger.error( bundle.getString( "exc_start", e.getMessage() ), e );
 				publish( new StatusMessage( bundle.getString( "exc_start", e.getMessage() ), StatusMessageSeverity.ERROR ) );
 
@@ -233,18 +276,18 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 		@Override
 		public Void doInBackground() {
 			try {
-				List<IStorable> storables = storage.getRecords( StorageTable.SEARCHRUN, StorageOrdering.DESC, 1 );
-				if ( storables.size() > 0 ) {
-					IStorable storable = storables.get( 0 );
-					ISearchRun searchRun = (ISearchRun) storable;
+				final List<IStorable> storables = storage.getRecords( StorageTable.SEARCHRUN, StorageOrdering.DESC, 1 );
+				if ( !storables.isEmpty() ) {
+					final IStorable storable = storables.get( 0 );
+					final ISearchRun searchRun = (ISearchRun) storable;
 
-					SearchRunProcessorWriteReport writeReport = new SearchRunProcessorWriteReport( bundle, prefs, appDirectories,
-																									analysisReportFactory, true );
+					final SearchRunProcessorWriteReport writeReport = new SearchRunProcessorWriteReport( bundle, prefs, appDirectories,
+																											analysisReportFactory, DebugLevel.VERBOSE );
 
 					writeReport.process( searchRun, this );
 				}
 			}
-			catch ( Exception e ) {
+			catch ( final Exception e ) {
 				logger.error( bundle.getString( "exc_start", e.getMessage() ), e );
 				publish( new StatusMessage( bundle.getString( "exc_start", e.getMessage() ), StatusMessageSeverity.ERROR ) );
 
@@ -260,26 +303,28 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 		}
 	}
 
-	public AppGUI( IResourceBundleWithFormatting bundle,
-					IStorage storage,
-					IPreferencesFactory prefsFactory,
-					IPreferences prefs,
-					IWebDriverFactory webDriverFactory,
-					ISearchRunFactory searchRunFactory,
-					ISnapshotFactory snapshotFactory,
-					ITweetFactory tweetFactory,
-					IAnalysisReportFactory analysisReportFactory,
-					IAppDirectories appDirectories,
-					List<ISearchRunProcessor> searchRunProcessors ) throws Exception {
+	public AppGUI( final IResourceBundleWithFormatting bundle,
+					final IStorage storage,
+					final IPreferencesFactory prefsFactory,
+					final IPreferences prefs,
+					final IWebDriverFactoryFactory webDriverFactoryFactory,
+					final ISearchRunFactory searchRunFactory,
+					final ISnapshotFactory snapshotFactory,
+					final ITweetFactory tweetFactory,
+					final IAnalysisReportFactory analysisReportFactory,
+					final IBrowserProxyFactory browserProxyFactory,
+					final IAppDirectories appDirectories,
+					final List<ISearchRunProcessor> searchRunProcessors ) throws Exception {
 		this.bundle = bundle;
 		this.storage = storage;
 		this.prefsFactory = prefsFactory;
 		this.prefs = prefs;
-		this.webDriverFactory = webDriverFactory;
+		this.webDriverFactoryFactory = webDriverFactoryFactory;
 		this.searchRunFactory = searchRunFactory;
 		this.snapshotFactory = snapshotFactory;
 		this.tweetFactory = tweetFactory;
 		this.analysisReportFactory = analysisReportFactory;
+		this.browserProxyFactory = browserProxyFactory;
 		this.appDirectories = appDirectories;
 		this.searchRunProcessors = searchRunProcessors;
 	}
@@ -290,7 +335,7 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 			UIManager.setLookAndFeel( "javax.swing.plaf.nimbus.NimbusLookAndFeel" );
 			//UIManager.setLookAndFeel( "com.pagosoft.plaf.PgsLookAndFeel" );
 		}
-		catch ( Exception e ) {
+		catch ( final Exception e ) {
 			e.printStackTrace();
 		}
 
@@ -304,6 +349,7 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 		gui.addWindowClosingEventListener( this );
 
 		SwingUtilities.invokeLater( new Runnable() {
+			@Override
 			public void run() {
 				gui.showGUI();
 				validatePreferences();
@@ -312,31 +358,31 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 	}
 
 	@Override
-	public void runEventFired( RunEvent runEvent ) {
+	public void runEventFired( final RunEvent runEvent ) {
 		gui.enableRunFunction( false );
 		gui.enablePreferencesFunction( false );
 
 		if ( MainGUI.ACTION_REPLIES.equals( runEvent.getActionName() ) ) {
-			RepliesWorker repliesWorker = new RepliesWorker();
+			final RepliesWorker repliesWorker = new RepliesWorker();
 
 			repliesWorker.execute();
 		}
 		else if ( MainGUI.ACTION_TIMELINE.equals( runEvent.getActionName() ) ) {
-			TimelineWorker timelineWorker = new TimelineWorker();
+			final TimelineWorker timelineWorker = new TimelineWorker();
 
 			timelineWorker.execute();
 		}
 		else if ( MainGUI.ACTION_REWRITE_LAST_REPORT.equals( runEvent.getActionName() ) ) {
-			RewriteWorker rewriteWorker = new RewriteWorker();
+			final RewriteWorker rewriteWorker = new RewriteWorker();
 
 			rewriteWorker.execute();
 		}
 	}
 
 	@Override
-	public void preferencesEventFired( PreferencesEvent preferencesEvent ) {
-		Map<String,String> map = preferencesEvent.getUserdata();
-		for ( String key : map.keySet() ) {
+	public void preferencesEventFired( final PreferencesEvent preferencesEvent ) {
+		final Map<String,String> map = preferencesEvent.getUserdata();
+		for ( final String key : map.keySet() ) {
 			prefs.setValue( key, map.get( key ) );
 		}
 
@@ -344,28 +390,28 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 			prefs.save();
 			validatePreferences();
 		}
-		catch ( Exception e ) {
-			String s = bundle.getString( "exc_cannot_save_prefs", "" + Utils.sanitizeMap( prefs.getValues() ) );
+		catch ( final Exception e ) {
+			final String s = bundle.getString( "exc_cannot_save_prefs", "" + Utils.sanitizeMap( prefs.getValues() ) );
 			logger.error( s, e );
 			gui.addMessage( new StatusMessage( s, StatusMessageSeverity.ERROR ) );
 		}
 	}
 
 	@Override
-	public void runItineraryEventFired( RunItineraryEvent runItineraryEvent ) {
+	public void runItineraryEventFired( final RunItineraryEvent runItineraryEvent ) {
 		gui.enableRunFunction( false );
 		gui.enablePreferencesFunction( false );
 
 		ISearchRunItinerary itinerary;
 
-		File itineraryFile = runItineraryEvent.getItineraryFile();
+		final File itineraryFile = runItineraryEvent.getItineraryFile();
 
 		try {
-			String jsonData = FileUtils.readFileToString( itineraryFile, Charset.defaultCharset() );
+			final String jsonData = FileUtils.readFileToString( itineraryFile, Charset.defaultCharset() );
 			itinerary = searchRunFactory.makeSearchRunItineraryFromJSON( jsonData );
 		}
-		catch ( Exception e ) {
-			String s = bundle.getString( "exc_bad_itinerary_file", itineraryFile.getAbsolutePath() );
+		catch ( final Exception e ) {
+			final String s = bundle.getString( "exc_bad_itinerary_file", itineraryFile.getAbsolutePath() );
 			logger.error( s, e );
 			gui.addMessage( new StatusMessage( s, StatusMessageSeverity.ERROR ) );
 			gui.enableRunFunction( true );
@@ -375,7 +421,7 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 		}
 
 		if ( !( itinerary instanceof ISearchRunRepliesItinerary ) ) {
-			String s = bundle.getString( "exc_bad_itinerary_file", itineraryFile.getAbsolutePath() );
+			final String s = bundle.getString( "exc_bad_itinerary_file", itineraryFile.getAbsolutePath() );
 			gui.addMessage( new StatusMessage( s, StatusMessageSeverity.ERROR ) );
 			gui.enableRunFunction( true );
 			gui.enablePreferencesFunction( true );
@@ -383,13 +429,13 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 			return;
 		}
 
-		ItineraryRepliesWorker itineraryWorker = new ItineraryRepliesWorker( (ISearchRunRepliesItinerary) itinerary );
+		final ItineraryRepliesWorker itineraryWorker = new ItineraryRepliesWorker( (ISearchRunRepliesItinerary) itinerary );
 
 		itineraryWorker.execute();
 	}
 
 	@Override
-	public void windowClosingEventFired( WindowClosingEvent windowClosingEvent ) {
+	public void windowClosingEventFired( final WindowClosingEvent windowClosingEvent ) {
 		windowClosingEvent.getWindow().dispose();
 
 		logger.info( "DONE" );
@@ -415,7 +461,7 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 			gui.addMessage( new StatusMessage( bundle.getString( "prefs_msg_no_ffbin" ), StatusMessageSeverity.WARN ) );
 		}
 
-		String handle = prefs.getValue( "prefs.handle_to_check" );
+		final String handle = prefs.getValue( "prefs.handle_to_check" );
 		if ( Utils.isEmpty( handle ) ) {
 			gui.addMessage( new StatusMessage( bundle.getString( "prefs_msg_no_handle" ), StatusMessageSeverity.ERROR ) );
 			gui.enableRunFunction( false );

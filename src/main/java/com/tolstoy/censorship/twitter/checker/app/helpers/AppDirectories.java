@@ -14,95 +14,87 @@
 package com.tolstoy.censorship.twitter.checker.app.helpers;
 
 import java.io.File;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.scijava.util.ClassUtils;
 import org.scijava.util.FileUtils;
+import com.tolstoy.basic.app.utils.Utils;
+import com.tolstoy.censorship.twitter.checker.api.installation.IAppDirectories;
 
 public class AppDirectories implements IAppDirectories {
 	private static final Logger logger = LogManager.getLogger( AppDirectories.class );
 
-	private File installDirectory, databaseParentDirectory, databaseDirectory, reportsDirectory;
-	private String databaseParentDirectoryName, databaseDirectoryName, reportsDirectoryName;
-	private int levelsUp;
+	private final File installDirectory, databaseParentDirectory, databaseDirectory, reportsDirectory;
+	private final String databaseParentDirectoryName, databaseDirectoryName, reportsDirectoryName;
 
-	public File getInstallDirectory() {
-		return installDirectory;
-	}
-
-	public File getDatabaseParentDirectory() {
-		return databaseParentDirectory;
-	}
-
-	public File getDatabaseDirectory() {
-		return databaseDirectory;
-	}
-
-	public File getReportsDirectory() {
-		return reportsDirectory;
-	}
-
-	public File getSubdirectory( String name ) {
-		if ( installDirectory == null ) {
-			return null;
-		}
-
-		File container;
-
-		if ( levelsUp == 1 ) {
-			container = installDirectory.getParentFile();
-		}
-		else {
-			container = installDirectory.getParentFile().getParentFile();
-		}
-
-		return new File( container, name );
-	}
-
-	public AppDirectories( int levelsUp, String databaseParentDirectoryName, String databaseDirectoryName, String reportsDirectoryName ) {
-		this.levelsUp = levelsUp;
+	public AppDirectories( final String databaseParentDirectoryName, final String databaseDirectoryName, final String reportsDirectoryName ) throws Exception {
 		this.databaseParentDirectoryName = databaseParentDirectoryName;
 		this.databaseDirectoryName = databaseDirectoryName;
 		this.reportsDirectoryName = reportsDirectoryName;
 
-		this.databaseParentDirectory = null;
-		this.databaseDirectory = null;
-		this.reportsDirectory = null;
+		final File start = FileUtils.urlToFile( ClassUtils.getLocation( getClass() ) );
+		final File userscriptsDirectory = Utils.findFileGoingUp( start, "userscripts" );
+		if ( userscriptsDirectory == null ) {
+			throw new RuntimeException( "Cannot find userscripts directory starting at " + start );
+		}
 
-		this.installDirectory = FileUtils.urlToFile( ClassUtils.getLocation( getClass() ) );
-		if ( this.installDirectory == null || this.installDirectory.getParentFile() == null ) {
-			return;
+		this.installDirectory = userscriptsDirectory.getParentFile();
+		if ( this.installDirectory == null ) {
+			throw new RuntimeException( "Cannot find install directory starting at " + userscriptsDirectory );
 		}
 
 		this.databaseParentDirectory = getOrMakeDirectory( this.installDirectory, this.databaseParentDirectoryName );
-		if ( this.databaseParentDirectory != null ) {
-			this.reportsDirectory = getOrMakeDirectory( this.installDirectory, this.reportsDirectoryName );
-		}
+		this.databaseDirectory = new File( this.databaseParentDirectory, this.databaseDirectoryName );
 
-		if ( this.databaseParentDirectory != null ) {
-			this.databaseDirectory = new File( this.databaseParentDirectory, this.databaseDirectoryName );
-		}
+		this.reportsDirectory = getOrMakeDirectory( this.installDirectory, this.reportsDirectoryName );
 	}
 
-	protected File getOrMakeDirectory( File start, String name ) {
-		File container, par;
+	@Override
+	public File getInstallDirectory() {
+		return installDirectory;
+	}
 
-		if ( levelsUp == 1 ) {
-			container = start.getParentFile();
+	@Override
+	public File getDatabaseParentDirectory() {
+		return databaseParentDirectory;
+	}
+
+	@Override
+	public File getDatabaseDirectory() {
+		return databaseDirectory;
+	}
+
+	@Override
+	public File getReportsDirectory() {
+		return reportsDirectory;
+	}
+
+	@Override
+	public File getSubdirectory( final String name ) {
+		return new File( installDirectory, name );
+	}
+
+	protected File getOrMakeDirectory( final File start, final String name ) throws Exception {
+		File dir;
+
+		dir = new File( start, name );
+
+		if ( dir.exists() ) {
+			if ( dir.isDirectory() ) {
+				return dir;
+			}
+
+			throw new RuntimeException( "" + dir + " exists as a file when a directory was expected." );
 		}
-		else {
-			container = start.getParentFile().getParentFile();
+
+		dir.mkdir();
+
+		if ( !dir.exists() || !dir.isDirectory() ) {
+			throw new RuntimeException( "" + dir + " could not be created." );
 		}
 
-		par = new File( container, name );
-
-		if ( par.exists() ) {
-			return par;
-		}
-
-		par.mkdir();
-
-		return par.exists() ? par : null;
+		return dir;
 	}
 }
 

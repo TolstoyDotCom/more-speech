@@ -14,33 +14,36 @@
 package com.tolstoy.censorship.twitter.checker.app.searchrun;
 
 import java.util.Map;
-import org.apache.commons.lang3.builder.ToStringBuilder;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunRepliesItinerary;
-import com.tolstoy.basic.api.tweet.ITweetUser;
+
 import com.tolstoy.basic.api.tweet.ITweetCollection;
+import com.tolstoy.basic.api.tweet.ITweetUser;
+import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunRepliesItinerary;
 
 class SearchRunRepliesItinerary extends SearchRunItinerary implements ISearchRunRepliesItinerary {
 	private static final Logger logger = LogManager.getLogger( SearchRunRepliesItinerary.class );
 
 	private ITweetCollection tweetCollection;
 
-	SearchRunRepliesItinerary( ITweetUser initiatingUser, ITweetCollection tweetCollection ) {
+	SearchRunRepliesItinerary( final ITweetUser initiatingUser, final ITweetCollection tweetCollection ) {
 		super( initiatingUser );
 		this.tweetCollection = tweetCollection;
 	}
 
-	SearchRunRepliesItinerary( ITweetUser initiatingUser, ITweetCollection tweetCollection, Map<String,String> attributes ) {
+	SearchRunRepliesItinerary( final ITweetUser initiatingUser, final ITweetCollection tweetCollection, final Map<String,String> attributes ) {
 		super( initiatingUser, attributes );
 		this.tweetCollection = tweetCollection;
 	}
 
+	@Override
 	public ITweetCollection getTimelineTweetCollection() {
 		return tweetCollection;
 	}
 
-	public void setTimelineTweetCollection( ITweetCollection tweetCollection ) {
+	@Override
+	public void setTimelineTweetCollection( final ITweetCollection tweetCollection ) {
 		this.tweetCollection = tweetCollection;
 	}
 }

@@ -13,40 +13,42 @@
  */
 package com.tolstoy.basic.api.tweet;
 
-import java.io.*;
-import java.net.*;
-import java.util.*;
 import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+
 import com.tolstoy.basic.app.utils.StringList;
 
 public interface ITweetFactory {
 	ITweet makeTweet();
-	ITweet makeTweet( long id, Map<String,String> attributes, StringList classes, StringList mentions, ITweetUser user );
-	ITweet makeTweet( Map<String,String> data, String tweetKey, String attributesKey, String userKey ) throws Exception;
+	ITweet makeTweet( final long id, final Map<String,String> attributes, final StringList classes, final StringList mentions, final ITweetUser user );
+	ITweet makeTweet( final Map<String,String> data, final String tweetKey, final String attributesKey, final String userKey ) throws Exception;
 
 	ITweetCollection makeTweetCollection();
-	ITweetCollection makeTweetCollection( List<ITweet> tweets, Instant retrievalTime, Map<String,String> attributes );
+	ITweetCollection makeTweetCollection( final List<ITweet> tweets, final Instant retrievalTime, final Map<String,String> attributes );
 
-	ITweetUser makeTweetUser( String handle );
-	ITweetUser makeTweetUser( String handle, long id );
-	ITweetUser makeTweetUser( String handle, long id, String displayName );
-	ITweetUser makeTweetUser( String handle, long id, String displayName, TweetUserVerifiedStatus verifiedStatus );
-	ITweetUser makeTweetUser( String handle, long id, String displayName, TweetUserVerifiedStatus verifiedStatus, String avatarURL );
-	ITweetUser makeTweetUser( String handle, long id, String displayName, TweetUserVerifiedStatus verifiedStatus, String avatarURL, int numTotalTweets, int numFollowers, int numFollowing );
+	ITweetUserCollection makeTweetUserCollection();
+	ITweetUserCollection makeTweetUserCollection( final List<ITweetUser> tweetUsers, final Instant retrievalTime, final Map<String,String> attributes );
+
+	ITweetUser makeTweetUser( final String handle );
+	ITweetUser makeTweetUser( final String handle, final long id );
+	ITweetUser makeTweetUser( final String handle, final long id, final String displayName );
+	ITweetUser makeTweetUser( final String handle, final long id, final String displayName, final TweetUserVerifiedStatus verifiedStatus );
+	ITweetUser makeTweetUser( final String handle, final long id, final String displayName, final TweetUserVerifiedStatus verifiedStatus, final String avatarURL );
+	ITweetUser makeTweetUser( final String handle, final long id, final String displayName, final TweetUserVerifiedStatus verifiedStatus, final String avatarURL, final int numTotalTweets, final int numFollowers, final int numFollowing );
 
 	/**
 	 * Construct from a map containing fields in String form.
 	 * @param data must contain these keys:
 	 * <ul>
 	 * <li>id (parseable as a Long)</li>
-	 * <li>verified_status @see TweetUserVerifiedStatus</li>
-	 * <li>num_total_tweets (parseable as an Integer)</li>
-	 * <li>num_followers (parseable as an Integer)</li>
-	 * <li>num_following (parseable as an Integer)</li>
+	 * <li>verifiedStatus @see TweetUserVerifiedStatus</li>
+	 * <li>numTotalTweets (parseable as an Integer)</li>
+	 * <li>numFollowers (parseable as an Integer)</li>
+	 * <li>numFollowing (parseable as an Integer)</li>
 	 * </ul>
-	 * It can also contain display_name and avatar_url keys.
+	 * It can also contain handle, displayName, and avatarURL keys.
 	 * @param baseKey the first part of each key of the map or an empty String
 	 */
-	ITweetUser makeTweetUser( Map<String,String> data, String baseKey ) throws Exception;
+	ITweetUser makeTweetUser( final Map<String,String> data, final String baseKey ) throws Exception;
 }
-

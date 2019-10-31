@@ -13,48 +13,54 @@
  */
 package com.tolstoy.censorship.twitter.checker.app.webdriver;
 
-import java.io.File;
-import java.util.*;
-import java.time.Instant;
-import java.util.concurrent.TimeUnit;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openqa.selenium.*;
-import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.firefox.FirefoxProfile;
-import org.openqa.selenium.firefox.FirefoxBinary;
-import org.openqa.selenium.interactions.*;
-import com.tolstoy.basic.api.tweet.*;
-import com.tolstoy.basic.api.utils.*;
-import com.tolstoy.basic.app.utils.*;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+
+import com.tolstoy.basic.api.tweet.ITweet;
+import com.tolstoy.basic.api.tweet.ITweetFactory;
+import com.tolstoy.basic.api.utils.IResourceBundleWithFormatting;
+import com.tolstoy.basic.app.utils.Utils;
+import com.tolstoy.censorship.twitter.checker.api.installation.IAppDirectories;
+import com.tolstoy.censorship.twitter.checker.api.installation.IBrowserScriptFactory;
 import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
-import com.tolstoy.censorship.twitter.checker.api.webdriver.*;
-import com.tolstoy.censorship.twitter.checker.api.snapshot.*;
+import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotFactory;
+import com.tolstoy.censorship.twitter.checker.api.webdriver.IWebDriverFactory;
+import com.tolstoy.censorship.twitter.checker.api.webdriver.IWebDriverUtils;
 
 public class WebDriverFactoryJS extends WebDriverFactory implements IWebDriverFactory {
 	private static final Logger logger = LogManager.getLogger( WebDriverFactoryJS.class );
 
-	private String attributesScript, tweetScript;
+	private final String attributesScript, tweetScript;
 
-	public WebDriverFactoryJS( ISnapshotFactory snapshotFactory, ITweetFactory tweetFactory,
-									IPreferences prefs, IResourceBundleWithFormatting bundle ) throws Exception {
-		super( snapshotFactory, tweetFactory, prefs, bundle );
+	public WebDriverFactoryJS( final ISnapshotFactory snapshotFactory,
+								final ITweetFactory tweetFactory,
+								final IAppDirectories appDirectories,
+								final IBrowserScriptFactory browserScriptFactory,
+								final IPreferences prefs,
+								final IResourceBundleWithFormatting bundle ) throws Exception {
+		super( snapshotFactory, tweetFactory, appDirectories, browserScriptFactory, prefs, bundle );
 
 		attributesScript = IOUtils.toString( getClass().getResource( "/attributes.js" ), StandardCharsets.UTF_8 );
 		tweetScript = IOUtils.toString( getClass().getResource( "/tweet.js" ), StandardCharsets.UTF_8 );
 	}
 
 	@Override
-	protected void loadTweetAttributes( WebDriver driver, IWebDriverUtils driverutils, ITweet tweet, WebElement tweetElem ) {
-		WebElement tempElem;
+	protected void loadTweetAttributes( final WebDriver driver, final IWebDriverUtils driverutils, final ITweet tweet, final WebElement tweetElem ) {
+		final WebElement tempElem;
 
-		JavascriptExecutor javascriptExecutor = (JavascriptExecutor) driver;
+		final JavascriptExecutor javascriptExecutor = (JavascriptExecutor) driver;
 
-		Map<String,String> attributesMap = makeStringMap( javascriptExecutor.executeScript( attributesScript, tweetElem ) );
+		final Map<String,String> attributesMap = makeStringMap( javascriptExecutor.executeScript( attributesScript, tweetElem ) );
 
-		Map<String,String> tweetMap = makeStringMap( javascriptExecutor.executeScript( tweetScript, tweetElem ) );
+		final Map<String,String> tweetMap = makeStringMap( javascriptExecutor.executeScript( tweetScript, tweetElem ) );
 
 		tweetMap.putAll( attributesMap );
 
@@ -82,18 +88,19 @@ public class WebDriverFactoryJS extends WebDriverFactory implements IWebDriverFa
 		}
 	}
 
-	private Map<String,String> makeStringMap( Object x ) {
+	private Map<String,String> makeStringMap( final Object x ) {
 		if ( !( x instanceof Map ) ) {
 			throw new RuntimeException( "webdriver JS returned something other than a Map: " + x );
 		}
 
 		@SuppressWarnings("unchecked")
+		final
 		Map<String,Object> temp = (Map<String,Object>) x;
 
-		Map<String,String> ret = new HashMap<String,String>();
+		final Map<String,String> ret = new HashMap<String,String>();
 
-		for ( String key : temp.keySet() ) {
-			Object obj = temp.get( key );
+		for ( final String key : temp.keySet() ) {
+			final Object obj = temp.get( key );
 			if ( obj == null ) {
 				ret.put( key, "" );
 			}

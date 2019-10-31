@@ -13,43 +13,55 @@
  */
 package com.tolstoy.censorship.twitter.checker.app.helpers;
 
-import java.util.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.tolstoy.basic.api.statusmessage.*;
+
+import com.tolstoy.basic.api.installation.DebugLevel;
+import com.tolstoy.basic.api.statusmessage.IStatusMessageReceiver;
+import com.tolstoy.basic.api.statusmessage.StatusMessage;
+import com.tolstoy.basic.api.statusmessage.StatusMessageSeverity;
 import com.tolstoy.basic.api.utils.IResourceBundleWithFormatting;
-import com.tolstoy.basic.app.utils.Utils;
+import com.tolstoy.censorship.twitter.checker.api.analyzer.IAnalysisReportFactory;
+import com.tolstoy.censorship.twitter.checker.api.analyzer.IAnalysisReportRepliesBasic;
+import com.tolstoy.censorship.twitter.checker.api.analyzer.IAnalysisReportTimelineBasic;
+import com.tolstoy.censorship.twitter.checker.api.analyzer.ITweetRanker;
+import com.tolstoy.censorship.twitter.checker.api.installation.IAppDirectories;
 import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
-import com.tolstoy.censorship.twitter.checker.app.reportwriter.*;
-import com.tolstoy.censorship.twitter.checker.api.searchrun.*;
-import com.tolstoy.censorship.twitter.checker.api.analyzer.*;
+import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRun;
+import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunProcessor;
+import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunReplies;
+import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunTimeline;
+import com.tolstoy.censorship.twitter.checker.app.reportwriter.ReportWriterRepliesBasic;
+import com.tolstoy.censorship.twitter.checker.app.reportwriter.ReportWriterTimelineBasic;
 
 public class SearchRunProcessorWriteReport implements ISearchRunProcessor {
 	private static final Logger logger = LogManager.getLogger( SearchRunProcessorWriteReport.class );
 
-	private IResourceBundleWithFormatting bundle;
-	private IPreferences prefs;
-	private IAppDirectories appDirectories;
-	private IAnalysisReportFactory analysisReportFactory;
-	private boolean debugFlag;
+	private final IResourceBundleWithFormatting bundle;
+	private final IPreferences prefs;
+	private final IAppDirectories appDirectories;
+	private final IAnalysisReportFactory analysisReportFactory;
+	private final DebugLevel debugLevel;
 
-	public SearchRunProcessorWriteReport( IResourceBundleWithFormatting bundle, IPreferences prefs, IAppDirectories appDirectories,
-													IAnalysisReportFactory analysisReportFactory, boolean debugFlag ) {
+	public SearchRunProcessorWriteReport( final IResourceBundleWithFormatting bundle, final IPreferences prefs, final IAppDirectories appDirectories,
+													final IAnalysisReportFactory analysisReportFactory, final DebugLevel debugLevel ) {
 		this.bundle = bundle;
 		this.prefs = prefs;
 		this.appDirectories = appDirectories;
 		this.analysisReportFactory = analysisReportFactory;
-		this.debugFlag = debugFlag;
+		this.debugLevel = debugLevel;
 	}
 
 	@Override
-	public ISearchRun process( ISearchRun searchRun, IStatusMessageReceiver statusMessageReceiver ) throws Exception {
+	public ISearchRun process( final ISearchRun searchRun, final IStatusMessageReceiver statusMessageReceiver ) throws Exception {
 		ITweetRanker tweetRanker;
 
 		tweetRanker = analysisReportFactory.makeTweetRankerJavascript();
 		if ( tweetRanker == null ) {
 			tweetRanker = analysisReportFactory.makeTweetRankerBasic();
 		}
+
+		logger.info( "SearchRunProcessorWriteReport: made ranker=" + tweetRanker );
 
 		if ( searchRun instanceof ISearchRunReplies ) {
 			IAnalysisReportRepliesBasic basicRepliesReport;
@@ -58,7 +70,7 @@ public class SearchRunProcessorWriteReport implements ISearchRunProcessor {
 
 			basicRepliesReport.run();
 
-			ReportWriterRepliesBasic reportWriterReplies = new ReportWriterRepliesBasic( prefs, bundle, appDirectories, true );
+			final ReportWriterRepliesBasic reportWriterReplies = new ReportWriterRepliesBasic( prefs, bundle, appDirectories, true );
 
 			reportWriterReplies.writeReport( basicRepliesReport );
 
@@ -67,11 +79,17 @@ public class SearchRunProcessorWriteReport implements ISearchRunProcessor {
 		else if ( searchRun instanceof ISearchRunTimeline ) {
 			IAnalysisReportTimelineBasic basicTimelineReport;
 
+			logger.info( "SearchRunProcessorWriteReport: about to makeAnalysisReportTimelineBasic" );
+
 			basicTimelineReport = analysisReportFactory.makeAnalysisReportTimelineBasic( (ISearchRunTimeline) searchRun, tweetRanker );
+
+			logger.info( "SearchRunProcessorWriteReport: did makeAnalysisReportTimelineBasic, calling run" );
 
 			basicTimelineReport.run();
 
-			ReportWriterTimelineBasic reportWriterTimeline = new ReportWriterTimelineBasic( prefs, bundle, appDirectories, true );
+			logger.info( "SearchRunProcessorWriteReport: did makeAnalysisReportTimelineBasic, called run" );
+
+			final ReportWriterTimelineBasic reportWriterTimeline = new ReportWriterTimelineBasic( prefs, bundle, appDirectories, true );
 
 			reportWriterTimeline.writeReport( basicTimelineReport );
 

@@ -13,12 +13,17 @@
  */
 package com.tolstoy.censorship.twitter.checker.app.gui;
 
-import java.util.*;
+import java.util.EventObject;
+import java.util.Map;
 
 public class PreferencesEvent extends EventObject {
-	private Map<String,String> userdata;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 8910263205145961962L;
+	private final Map<String,String> userdata;
 
-	public PreferencesEvent( Object source, Map<String,String> userdata ) {
+	public PreferencesEvent( final Object source, final Map<String,String> userdata ) {
 		super( source );
 
 		this.userdata = userdata;

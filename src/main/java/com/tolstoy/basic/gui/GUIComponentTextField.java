@@ -19,7 +19,7 @@ import javax.swing.JTextField;
 public class GUIComponentTextField extends GUIComponent {
 	private final JTextField field;
 
-	public GUIComponentTextField( ElementDescriptor desc, String value, JPanel panel, int row ) {
+	public GUIComponentTextField( final ElementDescriptor desc, final String value, final JPanel panel, final int row ) {
 		super( desc );
 
 		field = new JTextField( value, getDesc().width );

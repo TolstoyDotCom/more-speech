@@ -13,29 +13,32 @@
  */
 package com.tolstoy.basic.app.utils;
 
-import java.util.*;
-import com.tolstoy.basic.api.utils.IResourceBundleWithFormatting;
+import java.util.ResourceBundle;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import com.tolstoy.basic.api.utils.IResourceBundleWithFormatting;
 
 public class ResourceBundleWithFormatting implements IResourceBundleWithFormatting {
 	private static final Logger logger = LogManager.getLogger( ResourceBundleWithFormatting.class );
 
-	private ResourceBundle bundle;
-	private String name;
+	private final ResourceBundle bundle;
+	private final String name;
 
-	public ResourceBundleWithFormatting( String name ) {
+	public ResourceBundleWithFormatting( final String name ) {
 		this.name = name;
 		this.bundle = ResourceBundle.getBundle( name );
 	}
 
-	public String getString( String key, Object... replacements ) {
+	@Override
+	public String getString( final String key, final Object... replacements ) {
 		String pattern;
 
 		try {
 			pattern = bundle.getString( key );
 		}
-		catch ( Exception e ) {
+		catch ( final Exception e ) {
 			return "unknown";
 		}
 
@@ -46,7 +49,7 @@ public class ResourceBundleWithFormatting implements IResourceBundleWithFormatti
 		try {
 			return String.format( pattern, replacements );
 		}
-		catch ( Exception e ) {
+		catch ( final Exception e ) {
 			return pattern;
 		}
 	}

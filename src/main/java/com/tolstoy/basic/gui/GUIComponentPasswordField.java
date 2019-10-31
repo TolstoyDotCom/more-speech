@@ -19,7 +19,7 @@ import javax.swing.JPasswordField;
 public class GUIComponentPasswordField extends GUIComponent {
 	private final JPasswordField field;
 
-	public GUIComponentPasswordField( ElementDescriptor desc, String value, JPanel panel, int row ) {
+	public GUIComponentPasswordField( final ElementDescriptor desc, final String value, final JPanel panel, final int row ) {
 		super( desc );
 
 		field = new JPasswordField( value, getDesc().width );

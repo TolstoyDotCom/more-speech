@@ -13,10 +13,9 @@
  */
 package com.tolstoy.censorship.twitter.checker.api.searchrun;
 
-import java.util.Map;
 import com.tolstoy.basic.api.tweet.ITweetCollection;
 
 public interface ISearchRunRepliesItinerary extends ISearchRunItinerary {
 	ITweetCollection getTimelineTweetCollection();
-	void setTimelineTweetCollection( ITweetCollection tweetCollection );
+	void setTimelineTweetCollection( final ITweetCollection tweetCollection );
 }

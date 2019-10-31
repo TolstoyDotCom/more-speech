@@ -13,9 +13,7 @@
  */
 package com.tolstoy.basic.api.storage;
 
-import java.io.*;
-import java.net.*;
-import java.util.*;
+import java.util.List;
 
 public interface IStorage {
 	void connect() throws Exception;
@@ -23,9 +21,9 @@ public interface IStorage {
 	void ensureTables() throws Exception;
 	void dropTables() throws Exception;
 
-	IStorable getRecordByID( IStorageTable table, long id ) throws Exception;
-	List<IStorable> getRecords( IStorageTable table, StorageOrdering ordering, int max ) throws Exception;
-	List<IStorable> getRecords( IStorageTable table, String searchkey, StorageOrdering ordering, int max ) throws Exception;
+	IStorable getRecordByID( final IStorageTable table, final long id ) throws Exception;
+	List<IStorable> getRecords( final IStorageTable table, final StorageOrdering ordering, final int max ) throws Exception;
+	List<IStorable> getRecords( final IStorageTable table, final String searchkey, final StorageOrdering ordering, final int max ) throws Exception;
 
-	void saveRecord( IStorageTable table, IStorable record ) throws Exception;
+	void saveRecord( final IStorageTable table, final IStorable record ) throws Exception;
 }

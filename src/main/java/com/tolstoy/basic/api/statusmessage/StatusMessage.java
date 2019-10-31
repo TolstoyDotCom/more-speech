@@ -16,10 +16,10 @@ package com.tolstoy.basic.api.statusmessage;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 public class StatusMessage {
-	private StatusMessageSeverity severity;
-	private String message;
+	private final StatusMessageSeverity severity;
+	private final String message;
 
-	public StatusMessage( String message, StatusMessageSeverity severity ) {
+	public StatusMessage( final String message, final StatusMessageSeverity severity ) {
 		this.message = message;
 		this.severity = severity;
 	}

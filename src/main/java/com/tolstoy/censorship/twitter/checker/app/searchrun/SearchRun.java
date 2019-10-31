@@ -13,17 +13,20 @@
  */
 package com.tolstoy.censorship.twitter.checker.app.searchrun;
 
-import java.util.*;
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.fasterxml.jackson.annotation.JsonProperty;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.tolstoy.censorship.twitter.checker.api.searchrun.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.tolstoy.basic.api.storage.IStorable;
-import com.tolstoy.basic.api.tweet.*;
+import com.tolstoy.basic.api.tweet.ITweetUser;
+import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRun;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
 class SearchRun implements ISearchRun, IStorable {
@@ -51,7 +54,7 @@ class SearchRun implements ISearchRun, IStorable {
 	@JsonProperty
 	private Instant modifyTime;
 
-	SearchRun( long id, ITweetUser user ) {
+	SearchRun( final long id, final ITweetUser user ) {
 		this.id = id;
 		this.user = user;
 		this.startTime = Instant.now();
@@ -59,7 +62,7 @@ class SearchRun implements ISearchRun, IStorable {
 		this.attributes = new HashMap<String,String>();
 	}
 
-	SearchRun( long id, ITweetUser user, Instant startTime, Instant endTime ) {
+	SearchRun( final long id, final ITweetUser user, final Instant startTime, final Instant endTime ) {
 		this.id = id;
 		this.user = user;
 		this.startTime = startTime;
@@ -67,7 +70,7 @@ class SearchRun implements ISearchRun, IStorable {
 		this.attributes = new HashMap<String,String>();
 	}
 
-	SearchRun( long id, ITweetUser user, Instant startTime, Instant endTime, Map<String,String> attributes ) {
+	SearchRun( final long id, final ITweetUser user, final Instant startTime, final Instant endTime, final Map<String,String> attributes ) {
 		this.id = id;
 		this.user = user;
 		this.startTime = startTime;
@@ -81,7 +84,7 @@ class SearchRun implements ISearchRun, IStorable {
 	}
 
 	@Override
-	public void setID( long id ) {
+	public void setID( final long id ) {
 		this.id = id;
 	}
 
@@ -91,7 +94,7 @@ class SearchRun implements ISearchRun, IStorable {
 	}
 
 	@Override
-	public void setInitiatingUser( ITweetUser user ) {
+	public void setInitiatingUser( final ITweetUser user ) {
 		this.user = user;
 	}
 
@@ -101,7 +104,7 @@ class SearchRun implements ISearchRun, IStorable {
 	}
 
 	@Override
-	public void setStartTime( Instant startTime ) {
+	public void setStartTime( final Instant startTime ) {
 		this.startTime = startTime;
 	}
 
@@ -111,7 +114,7 @@ class SearchRun implements ISearchRun, IStorable {
 	}
 
 	@Override
-	public void setEndTime( Instant endTime ) {
+	public void setEndTime( final Instant endTime ) {
 		this.endTime = endTime;
 	}
 
@@ -136,19 +139,19 @@ class SearchRun implements ISearchRun, IStorable {
 	}
 
 	@Override
-	public void setAttributes( Map<String,String> attributes ) {
+	public void setAttributes( final Map<String,String> attributes ) {
 		this.attributes = attributes;
 	}
 
 	@JsonIgnore
 	@Override
-	public String getAttribute( String key ) {
+	public String getAttribute( final String key ) {
 		return attributes.get( key );
 	}
 
 	@JsonIgnore
 	@Override
-	public void setAttribute( String key, String value ) {
+	public void setAttribute( final String key, final String value ) {
 		attributes.put( key, value );
 	}
 

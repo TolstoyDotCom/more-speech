@@ -16,9 +16,9 @@ package com.tolstoy.censorship.twitter.checker.api.preferences;
 import java.util.Map;
 
 public interface IPreferences {
-	String getValue( String key );
-	boolean isEmpty( String key );
-	void setValue( String key, String value );
+	String getValue( final String key );
+	boolean isEmpty( final String key );
+	void setValue( final String key, final String value );
 
 	Map<String,String> getValues();
 

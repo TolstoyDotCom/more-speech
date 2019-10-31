@@ -6,6 +6,7 @@
 
 - [Features](#features)
 - [Examples](#examples)
+- [2.0 Notes](#notes20)
 - [Installation (Windows)](#installation-windows)
 - [Installation (Linux, Mac, or manual on Windows)](#installothers)
 - [Using the application](#using-the-application)
@@ -21,6 +22,8 @@
 More Speech is a desktop application that shows how Twitter censors many of its users. Twitter deceives those users into thinking their replies are visible, but to other users those replies are suppressed or hidden. This deceptive practice is called "shadowbanning" or "ghosting". *(See the What Twitter Does section below for a detailed explanation.)*
 
 It's important to note that Twitter does this to a wide variety of users regardless of the topic or their ideology: this deceptive practice isn't limited to just one group. Twitter also seems to do this regardless of the content of the tweet itself.
+
+The 2.0 version of this app works with "New Twitter" (around July 2019, Twitter greatly changed the technical details of their pages; they used to put their low opinions of many of their users right in the HTML). New Twitter now hides away things like "LowQuality" (described below) in AJAX; the 2.0 version of this app uses a proxy to capture that AJAX.
 
 Features
 ------
@@ -39,6 +42,25 @@ Features
 * You can optionally upload the results to our server for further research and choose to make the result data public. You can also publish the HTML reports on your own site if you wish.
 
 * The Windows download is large but no setup is required: just download, unzip, and run.
+
+2.0 Notes
+------
+To run the 2.0 version, open a console window in the same directory as morespeech.jar and type this:
+    java -jar morespeech.jar
+
+To compile and run from source:
+    mvn clean compile exec:java -D"exec.mainClass"="com.tolstoy.censorship.twitter.checker.app.Start"
+    mvn clean compile exec:java -D"exec.mainClass"="com.tolstoy.censorship.twitter.checker.app.QuickStart"
+
+For QuickStart, first enter the required data into quickstart.prefs.json.
+
+suededenim.java.js in the stockscripts directory is from the [SuedeDenim](https://github.com/TolstoyDotCom/SuedeDenim) project. You should be able to replace that with newer versions of the script.
+
+There's no longer a restriction on using 'mvn clean'.
+
+This no longer needs an older version of Firefox; New Twitter doesn't work with the version that was recommended before.
+
+This has only been tested with Firefox 70 and OpenJDK 11 on Ubuntu 18. A windows version will be released after more testing.
 
 Examples
 ------

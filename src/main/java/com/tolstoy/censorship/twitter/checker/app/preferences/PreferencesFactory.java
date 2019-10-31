@@ -13,44 +13,52 @@
  */
 package com.tolstoy.censorship.twitter.checker.app.preferences;
 
-import java.util.*;
-import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.tolstoy.basic.api.storage.*;
-import com.tolstoy.censorship.twitter.checker.api.preferences.*;
+
+import com.tolstoy.basic.api.storage.IStorable;
+import com.tolstoy.basic.api.storage.IStorage;
+import com.tolstoy.basic.api.storage.StorageOrdering;
+import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
+import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferencesFactory;
 import com.tolstoy.censorship.twitter.checker.app.storage.StorageTable;
 
 public class PreferencesFactory implements IPreferencesFactory {
 	private static final Logger logger = LogManager.getLogger( PreferencesFactory.class );
 
-	private IStorage storage;
-	private Map<String,String> defaultAppPrefs;
+	private final IStorage storage;
+	private final Map<String,String> defaultAppPrefs;
 	private IPreferences appPrefs;
 
-	public PreferencesFactory( IStorage storage, Map<String,String> defaultAppPrefs ) {
+	public PreferencesFactory( final IStorage storage, final Map<String,String> defaultAppPrefs ) {
 		this.storage = storage;
 		this.defaultAppPrefs = defaultAppPrefs;
 		this.appPrefs = null;
 	}
 
+	@Override
 	public IPreferences createPreferences() {
 		return new Preferences();
 	}
 
-	public IPreferences createPreferences( Map<String,String> defaults ) {
+	@Override
+	public IPreferences createPreferences( final Map<String,String> defaults ) {
 		return new Preferences( defaults );
 	}
 
+	@Override
 	public IPreferences getAppPreferences() throws Exception {
 		if ( appPrefs != null ) {
 			return appPrefs;
 		}
 
 		if ( storage != null ) {
-			List<IStorable> list = storage.getRecords( StorageTable.PREFS, StorageOrdering.DESC, 1 );
-			if ( list != null && list.size() > 0 ) {
-				IStorable record = list.get( 0 );
+			final List<IStorable> list = storage.getRecords( StorageTable.PREFS, StorageOrdering.DESC, 1 );
+			if ( list != null && !list.isEmpty() ) {
+				final IStorable record = list.get( 0 );
 				if ( record != null ) {
 					appPrefs = new Preferences( storage, record.getID(), record.getCreateTime(), record.getModifyTime(),
 												( (IPreferences) record ).getValues(), defaultAppPrefs );

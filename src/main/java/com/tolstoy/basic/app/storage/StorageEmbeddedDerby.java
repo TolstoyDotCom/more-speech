@@ -13,24 +13,35 @@
  */
 package com.tolstoy.basic.app.storage;
 
-import java.util.*;
-import java.sql.*;
+import java.sql.Blob;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
 import java.time.Instant;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.commons.dbcp2.BasicDataSource;
-import com.tolstoy.basic.app.utils.*;
-import com.tolstoy.basic.api.storage.*;
+
+import com.tolstoy.basic.api.storage.IStorable;
+import com.tolstoy.basic.api.storage.IStorage;
+import com.tolstoy.basic.api.storage.IStorageTable;
+import com.tolstoy.basic.api.storage.StorageOrdering;
+import com.tolstoy.basic.app.utils.Utils;
 
 public class StorageEmbeddedDerby implements IStorage {
 	private static final Logger logger = LogManager.getLogger( StorageEmbeddedDerby.class );
 
 	private BasicDataSource connectionPool;
-	private List<String> tableNames;
-	private String connectionString;
+	private final List<String> tableNames;
+	private final String connectionString;
 
-	public StorageEmbeddedDerby( String connectionString, List<String> tableNames ) throws Exception {
+	public StorageEmbeddedDerby( final String connectionString, final List<String> tableNames ) throws Exception {
 		this.connectionString = connectionString;
 		this.tableNames = tableNames;
 		this.connectionPool = null;
@@ -49,25 +60,25 @@ public class StorageEmbeddedDerby implements IStorage {
 
 	@Override
 	public void ensureTables() throws Exception {
-		for ( String tableName : tableNames ) {
+		for ( final String tableName : tableNames ) {
 			createTableInternalIgnoreIfExists( tableName );
 		}
 	}
 
 	@Override
 	public void dropTables() throws Exception {
-		for ( String tableName : tableNames ) {
+		for ( final String tableName : tableNames ) {
 			dropTableInternal( tableName );
 		}
 	}
 
 	@Override
-	public IStorable getRecordByID( IStorageTable table, long id ) throws Exception {
+	public IStorable getRecordByID( final IStorageTable table, final long id ) throws Exception {
 		Connection connection = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 
-		String tablename = table.getTablename();
+		final String tablename = table.getTablename();
 
 		try {
 			connection = getConnection();
@@ -96,13 +107,13 @@ public class StorageEmbeddedDerby implements IStorage {
 	}
 
 	@Override
-	public List<IStorable> getRecords( IStorageTable table, StorageOrdering ordering, int max ) throws Exception {
+	public List<IStorable> getRecords( final IStorageTable table, final StorageOrdering ordering, final int max ) throws Exception {
 		Connection connection = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
-		List<IStorable> ret = new ArrayList<IStorable>( max );
+		final List<IStorable> ret = new ArrayList<IStorable>( max );
 
-		String tablename = table.getTablename();
+		final String tablename = table.getTablename();
 
 		try {
 			connection = getConnection();
@@ -112,7 +123,7 @@ public class StorageEmbeddedDerby implements IStorage {
 			rs = ps.executeQuery();
 
 			while ( rs.next() ) {
-				IStorable storable = readRecord( rs );
+				final IStorable storable = readRecord( rs );
 				if ( storable != null ) {
 					ret.add( storable );
 				}
@@ -134,13 +145,13 @@ public class StorageEmbeddedDerby implements IStorage {
 	}
 
 	@Override
-	public List<IStorable> getRecords( IStorageTable table, String searchkey, StorageOrdering ordering, int max ) throws Exception {
+	public List<IStorable> getRecords( final IStorageTable table, final String searchkey, final StorageOrdering ordering, final int max ) throws Exception {
 		Connection connection = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
-		List<IStorable> ret = new ArrayList<IStorable>( max );
+		final List<IStorable> ret = new ArrayList<IStorable>( max );
 
-		String tablename = table.getTablename();
+		final String tablename = table.getTablename();
 
 		try {
 			connection = getConnection();
@@ -171,19 +182,19 @@ public class StorageEmbeddedDerby implements IStorage {
 	}
 
 	@Override
-	public void saveRecord( IStorageTable table, IStorable record ) throws Exception {
+	public void saveRecord( final IStorageTable table, final IStorable record ) throws Exception {
 		Connection connection = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 
-		String tablename = table.getTablename();
+		final String tablename = table.getTablename();
 		String query;
 
 		try {
-			String json = Utils.getDefaultObjectMapper().writeValueAsString( record );
+			final String json = Utils.getDefaultObjectMapper().writeValueAsString( record );
 
 			connection = getConnection();
-			Blob blob = connection.createBlob();
+			final Blob blob = connection.createBlob();
 			blob.setBytes( 1, json.getBytes() );
 
 			if ( record.getID() == 0 ) {
@@ -231,23 +242,23 @@ public class StorageEmbeddedDerby implements IStorage {
 		}
 	}
 
-	protected IStorable readRecord( ResultSet rs ) throws Exception {
-		byte[] bytes = rs.getBytes( "payload" );
+	protected IStorable readRecord( final ResultSet rs ) throws Exception {
+		final byte[] bytes = rs.getBytes( "payload" );
 		try {
 			return (IStorable) Utils.getDefaultObjectMapper().readValue( new String( bytes ), Object.class );
 		}
-		catch ( Exception e ) {
+		catch ( final Exception e ) {
 			logger.error( "can't read record", e );
 			//logger.info( "bytes=" + new String( bytes ) );
 			return null;
 		}
 	}
 
-	protected void createTableInternalIgnoreIfExists( String tablename ) throws Exception {
+	protected void createTableInternalIgnoreIfExists( final String tablename ) throws Exception {
 		Connection connection = null;
 		Statement stmt = null;
 
-		String definition = "CREATE TABLE " + tablename + "( " +
+		final String definition = "CREATE TABLE " + tablename + "( " +
 							" id BIGINT NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1)," +
 							" searchkey VARCHAR(255)," +
 							" created TIMESTAMP," +
@@ -261,8 +272,8 @@ public class StorageEmbeddedDerby implements IStorage {
 			stmt.executeUpdate( definition );
 			logger.info( "created table " + tablename );
 		}
-		catch ( SQLException e ) {
-			String s = e.toString();
+		catch ( final SQLException e ) {
+			final String s = e.toString();
 			if ( s.indexOf( "exists" ) < 0 ) {
 				logger.error( "while creating table " + tablename, e );
 				throw e;
@@ -278,7 +289,7 @@ public class StorageEmbeddedDerby implements IStorage {
 		}
 	}
 
-	protected void dropTableInternal( String tablename ) throws Exception {
+	protected void dropTableInternal( final String tablename ) throws Exception {
 		Connection connection = null;
 		Statement stmt = null;
 
@@ -288,7 +299,7 @@ public class StorageEmbeddedDerby implements IStorage {
 			stmt.executeUpdate( "DROP TABLE " + tablename );
 			logger.info( "dropped table " + tablename );
 		}
-		catch ( SQLException e ) {
+		catch ( final SQLException e ) {
 			logger.error( "could not drop table " + tablename, e );
 			throw e;
 		}
@@ -299,7 +310,7 @@ public class StorageEmbeddedDerby implements IStorage {
 		}
 	}
 
-	protected String getOrdering( StorageOrdering ordering ) {
+	protected String getOrdering( final StorageOrdering ordering ) {
 		if ( ordering == StorageOrdering.DESC ) {
 			return " ORDER BY modified DESC ";
 		}
@@ -319,7 +330,7 @@ public class StorageEmbeddedDerby implements IStorage {
 		return connectionPool.getConnection();
 	}
 
-	protected Timestamp instantToTimestamp( Instant inst ) {
+	protected Timestamp instantToTimestamp( final Instant inst ) {
 		return inst != null ? Timestamp.from( inst ) : Timestamp.from( Instant.now() );
 	}
 }

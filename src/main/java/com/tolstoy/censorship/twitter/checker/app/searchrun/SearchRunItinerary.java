@@ -13,13 +13,14 @@
  */
 package com.tolstoy.censorship.twitter.checker.app.searchrun;
 
-import java.util.Map;
 import java.util.HashMap;
-import org.apache.commons.lang3.builder.ToStringBuilder;
+import java.util.Map;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunItinerary;
+
 import com.tolstoy.basic.api.tweet.ITweetUser;
+import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunItinerary;
 
 class SearchRunItinerary implements ISearchRunItinerary {
 	private static final Logger logger = LogManager.getLogger( SearchRunItinerary.class );
@@ -27,21 +28,23 @@ class SearchRunItinerary implements ISearchRunItinerary {
 	private ITweetUser initiatingUser;
 	private Map<String,String> attributes;
 
-	SearchRunItinerary( ITweetUser initiatingUser ) {
+	SearchRunItinerary( final ITweetUser initiatingUser ) {
 		this.initiatingUser = initiatingUser;
 		this.attributes = new HashMap<String,String>();
 	}
 
-	SearchRunItinerary( ITweetUser initiatingUser, Map<String,String> attributes ) {
+	SearchRunItinerary( final ITweetUser initiatingUser, final Map<String,String> attributes ) {
 		this.initiatingUser = initiatingUser;
 		this.attributes = attributes;
 	}
 
+	@Override
 	public ITweetUser getInitiatingUser() {
 		return initiatingUser;
 	}
 
-	public void setInitiatingUser( ITweetUser initiatingUser ) {
+	@Override
+	public void setInitiatingUser( final ITweetUser initiatingUser ) {
 		this.initiatingUser = initiatingUser;
 	}
 
@@ -51,17 +54,17 @@ class SearchRunItinerary implements ISearchRunItinerary {
 	}
 
 	@Override
-	public void setAttributes( Map<String,String> attributes ) {
+	public void setAttributes( final Map<String,String> attributes ) {
 		this.attributes = attributes;
 	}
 
 	@Override
-	public String getAttribute( String key ) {
+	public String getAttribute( final String key ) {
 		return attributes.get( key );
 	}
 
 	@Override
-	public void setAttribute( String key, String value ) {
+	public void setAttribute( final String key, final String value ) {
 		attributes.put( key, value );
 	}
 }

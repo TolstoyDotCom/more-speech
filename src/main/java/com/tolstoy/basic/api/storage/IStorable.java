@@ -13,9 +13,6 @@
  */
 package com.tolstoy.basic.api.storage;
 
-import java.io.*;
-import java.net.*;
-import java.util.*;
 import java.time.Instant;
 
 public interface IStorable {
@@ -24,5 +21,5 @@ public interface IStorable {
 	Instant getModifyTime();
 	String getSearchKey();
 
-	void setID( long id );
+	void setID( final long id );
 }

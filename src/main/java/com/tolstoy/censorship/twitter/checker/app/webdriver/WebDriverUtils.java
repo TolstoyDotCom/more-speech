@@ -13,51 +13,51 @@
  */
 package com.tolstoy.censorship.twitter.checker.app.webdriver;
 
-import java.util.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openqa.selenium.*;
-import org.openqa.selenium.interactions.*;
-import org.openqa.selenium.support.ui.*;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+
 import com.tolstoy.basic.app.utils.Utils;
 import com.tolstoy.censorship.twitter.checker.api.webdriver.IWebDriverUtils;
 
 class WebDriverUtils implements IWebDriverUtils {
 	private static final Logger logger = LogManager.getLogger( WebDriverUtils.class );
 
-	private WebDriver driver;
+	private final WebDriver driver;
 
-	WebDriverUtils( WebDriver driver ) {
+	WebDriverUtils( final WebDriver driver ) {
 		this.driver = driver;
 	}
 
 	@Override
-	public String makeByXPathClassString( String clz ) {
+	public String makeByXPathClassString( final String clz ) {
 		return ".//*[contains(concat(' ', normalize-space(@class), ' '), ' " + clz + " ')]";
 	}
 
 	@Override
-	public WebElement safeFindByClass( WebElement parent, String clz, String subcontainer ) {
+	public WebElement safeFindByClass( final WebElement parent, final String clz, final String subcontainer ) {
 		try {
 			return parent.findElement( By.xpath( makeByXPathClassString( clz ) + "/" + subcontainer ) );
 		}
-		catch ( Exception e ) {
+		catch ( final Exception e ) {
 			return null;
 		}
 	}
 
 	@Override
-	public WebElement safeFindByClass( WebElement parent, String clz ) {
+	public WebElement safeFindByClass( final WebElement parent, final String clz ) {
 		try {
 			return parent.findElement( By.xpath( makeByXPathClassString( clz ) ) );
 		}
-		catch ( Exception e ) {
+		catch ( final Exception e ) {
 			return null;
 		}
 	}
 
 	@Override
-	public String getWebElementText( WebElement elem ) {
+	public String getWebElementText( final WebElement elem ) {
 		if ( elem == null ) {
 			return "";
 		}
@@ -83,7 +83,7 @@ class WebDriverUtils implements IWebDriverUtils {
 	}
 
 	@Override
-	public String dumpWebElement( WebElement elem ) {
+	public String dumpWebElement( final WebElement elem ) {
 		return elem.getAttribute( "outerHTML" );
 	}
 }

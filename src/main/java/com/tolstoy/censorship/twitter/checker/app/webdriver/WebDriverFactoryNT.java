@@ -1,0 +1,581 @@
+/*
+ * Copyright 2018 Chris Kelly
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ */
+package com.tolstoy.censorship.twitter.checker.app.webdriver;
+
+import java.io.File;
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.logging.Level;
+import java.util.concurrent.TimeUnit;
+import java.nio.charset.Charset;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.firefox.FirefoxOptions;
+import org.openqa.selenium.firefox.FirefoxBinary;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxProfile;
+import org.openqa.selenium.remote.CapabilityType;
+import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.logging.LogType;
+import org.openqa.selenium.logging.LoggingPreferences;
+import org.openqa.selenium.logging.LogEntry;
+import io.github.bonigarcia.wdm.WebDriverManager;
+//import net.jsourcerer.webdriver.jserrorcollector.JavaScriptError;
+
+import com.tolstoy.basic.api.installation.DebugLevel;
+import com.tolstoy.basic.api.tweet.ITweet;
+import com.tolstoy.basic.api.tweet.TargetPageType;
+import com.tolstoy.basic.api.tweet.ITweetCollection;
+import com.tolstoy.basic.api.tweet.ITweetUserCollection;
+import com.tolstoy.basic.api.tweet.ITweetFactory;
+import com.tolstoy.basic.api.tweet.ITweetUser;
+import com.tolstoy.basic.api.tweet.TweetUserVerifiedStatus;
+import com.tolstoy.basic.api.tweet.TweetSupposedQuality;
+import com.tolstoy.basic.api.utils.IResourceBundleWithFormatting;
+import com.tolstoy.basic.api.utils.IArchiveDirectory;
+import com.tolstoy.basic.app.utils.StringList;
+import com.tolstoy.basic.app.utils.Utils;
+import com.tolstoy.censorship.twitter.checker.api.browserproxy.IBrowserProxy;
+import com.tolstoy.censorship.twitter.checker.api.browserproxy.IBrowserProxyLogEntry;
+import com.tolstoy.censorship.twitter.checker.api.installation.IAppDirectories;
+import com.tolstoy.censorship.twitter.checker.api.installation.IBrowserScriptFactory;
+import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
+import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotFactory;
+import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPage;
+import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageIndividualTweet;
+import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageTimeline;
+import com.tolstoy.censorship.twitter.checker.api.webdriver.IInfiniteScrollingActivator;
+import com.tolstoy.censorship.twitter.checker.api.webdriver.IWebDriverFactory;
+import com.tolstoy.censorship.twitter.checker.api.webdriver.IWebDriverUtils;
+import com.tolstoy.censorship.twitter.checker.api.webdriver.InfiniteScrollingActivatorType;
+import com.tolstoy.censorship.twitter.checker.app.webdriver.ntjs.JavascriptInterchangeContainer;
+import com.tolstoy.censorship.twitter.checker.app.webdriver.ntjs.JavascriptInterchangeMetadata;
+import com.tolstoy.censorship.twitter.checker.app.webdriver.ntjs.JavascriptInterchangeSupposedQualities;
+import com.tolstoy.censorship.twitter.checker.app.webdriver.ntjs.JavascriptParams;
+
+class WebDriverFactoryNT implements IWebDriverFactory {
+	private static final Logger logger = LogManager.getLogger( WebDriverFactoryNT.class );
+
+	private static final String TWEETUSER_HANDLE_UNKNOWN = "unknownuser";
+	private static final int JAVASCRIPT_TIMEOUT = 1000;
+
+	private final ISnapshotFactory snapshotFactory;
+	private final ITweetFactory tweetFactory;
+	private final IAppDirectories appDirectories;
+	private final IBrowserScriptFactory browserScriptFactory;
+	private final IPreferences prefs;
+	private final IResourceBundleWithFormatting bundle;
+	private final DebugLevel debugLevel;
+
+	WebDriverFactoryNT( final ISnapshotFactory snapshotFactory,
+								final ITweetFactory tweetFactory,
+								final IAppDirectories appDirectories,
+								final IBrowserScriptFactory browserScriptFactory,
+								final IPreferences prefs,
+								final IResourceBundleWithFormatting bundle,
+								final DebugLevel debugLevel ) throws Exception {
+		this.snapshotFactory = snapshotFactory;
+		this.tweetFactory = tweetFactory;
+		this.appDirectories = appDirectories;
+		this.browserScriptFactory = browserScriptFactory;
+		this.prefs = prefs;
+		this.bundle = bundle;
+		this.debugLevel = debugLevel;
+	}
+
+	@Override
+	public ISnapshotUserPageTimeline makeSnapshotUserPageTimelineFromURL( final WebDriver driver,
+																			final IWebDriverUtils driverutils,
+																			final IInfiniteScrollingActivator infiniteScroller,
+																			final IBrowserProxy browserProxy,
+																			final IArchiveDirectory archiveDirectory,
+																			final String url,
+																			final int numberOfPagesToCheck,
+																			final int maxTweets ) throws Exception {
+		browserProxy.beginRecording( url );
+
+		final ITweetCollection tweetCollection = makeTweetCollectionFromURL( driver, driverutils, infiniteScroller, archiveDirectory,
+																				url, TargetPageType.TIMELINE, numberOfPagesToCheck, maxTweets );
+
+		final List<IBrowserProxyLogEntry> responses = browserProxy.endRecording();
+
+		final List<String> jsonStrings = saveJSONStrings( responses, archiveDirectory );
+
+		final List<String> tweetSupplementMessages = supplementTweetCollection( driver, tweetCollection, jsonStrings, TargetPageType.TIMELINE, url );
+
+		final ISnapshotUserPageTimeline snapshot = snapshotFactory.makeSnapshotUserPageTimeline( url, Instant.now() );
+
+		snapshot.setTweetCollection( tweetCollection );
+
+		snapshot.setTitle( driver.getTitle() );
+
+		if ( tweetCollection.getTweets() != null && !tweetCollection.getTweets().isEmpty() ) {
+			snapshot.setUser( tweetCollection.getTweets().get( 0 ).getUser() );
+		}
+
+		logger.info( "\n\n\nmakeSnapshotUserPageTimelineFromURL made timeline snapshot, tweets after supplementation=\n" + tweetCollection.toDebugString( "  " ) );
+		logger.info( "\n\n\nmakeSnapshotUserPageTimelineFromURL made replypage snapshot, tweetSupplementMessages=\n" + tweetSupplementMessages );
+
+		return snapshot;
+	}
+
+	@Override
+	public ISnapshotUserPageIndividualTweet makeSnapshotUserPageIndividualTweetFromURL( final WebDriver driver,
+																						final IWebDriverUtils driverutils,
+																						final IInfiniteScrollingActivator infiniteScroller,
+																						final IBrowserProxy browserProxy,
+																						final IArchiveDirectory archiveDirectory,
+																						final String url,
+																						final int numberOfPagesToCheck,
+																						final int maxTweets ) throws Exception {
+		browserProxy.beginRecording( url );
+
+		final ITweetCollection tweetCollection = makeTweetCollectionFromURL( driver, driverutils, infiniteScroller, archiveDirectory,
+																				url, TargetPageType.REPLYPAGE, numberOfPagesToCheck, maxTweets );
+
+		final List<ITweet> tweets = tweetCollection.getTweets();
+		if ( tweets == null || tweets.isEmpty() ) {
+			throw new RuntimeException( "makeSnapshotUserPageIndividualTweetFromURL: individual page must have at least one tweet" );
+		}
+
+		List<IBrowserProxyLogEntry> responses = browserProxy.endRecording();
+
+		List<String> jsonStrings = saveJSONStrings( responses, archiveDirectory );
+
+		final List<String> tweetSupplementMessages = supplementTweetCollection( driver, tweetCollection, jsonStrings, TargetPageType.REPLYPAGE, url );
+
+		final ISnapshotUserPageIndividualTweet snapshot = snapshotFactory.makeSnapshotUserPageIndividualTweet( url, Instant.now() );
+
+		snapshot.setComplete( infiniteScroller.getComplete() );
+
+		final ITweet individualTweet = tweets.remove( 0 );
+		snapshot.setIndividualTweet( individualTweet );
+		snapshot.setUser( individualTweet.getUser() );
+		snapshot.setTweetID( individualTweet.getID() );
+
+		tweetCollection.setTweets( tweets );
+		snapshot.setTweetCollection( tweetCollection );
+
+		snapshot.setTitle( driver.getTitle() );
+
+		snapshot.setNumRetweets( Utils.parseIntDefault( individualTweet.getAttribute( "retweetcount" ) ) );
+		snapshot.setNumLikes( Utils.parseIntDefault( individualTweet.getAttribute( "favoritecount" ) ) );
+		snapshot.setNumReplies( Utils.parseIntDefault( individualTweet.getAttribute( "replycount" ) ) );
+
+		logger.info( "makeSnapshotUserPageIndividualTweetFromURL made replypage snapshot, tweets after supplementation=\n" + tweetCollection.toDebugString( "  " ) );
+		logger.info( "makeSnapshotUserPageIndividualTweetFromURL made replypage snapshot, tweetSupplementMessages=\n" + tweetSupplementMessages );
+
+		return snapshot;
+	}
+
+	@Override
+	public ITweetCollection makeTweetCollectionFromURL( final WebDriver driver,
+														final IWebDriverUtils driverutils,
+														final IInfiniteScrollingActivator infiniteScroller,
+														final IArchiveDirectory archiveDirectory,
+														final String url,
+														final TargetPageType pageType,
+														final int numberOfPagesToCheck,
+														final int maxTweets ) throws Exception {
+		final JavascriptExecutor javascriptExecutor = (JavascriptExecutor) driver;
+
+		driver.manage().timeouts().setScriptTimeout( JAVASCRIPT_TIMEOUT, TimeUnit.SECONDS );
+
+		logger.info( "makeTweetCollectionFromURL: calling SuedeDenim tweet_retriever script" );
+
+		final JavascriptParams jsParams = new JavascriptParams( url, pageType, debugLevel );
+
+		final String suedeDenimRetrieverScript = browserScriptFactory.getScript( "tweet_retriever" ).getScript();
+
+		final List rawInterchangeData = (List) javascriptExecutor.executeAsyncScript( suedeDenimRetrieverScript, jsParams.getMap() );
+
+		final JavascriptInterchangeContainer interchangeContainer = new JavascriptInterchangeContainer( rawInterchangeData, tweetFactory, bundle );
+
+/*
+		logger.info( "SuedeDenim tweet_retriever script called, messages=" );
+		for ( String message : getBrowserLogs( driver ) ) {
+			logger.info( "  " + message );
+		}
+*/
+
+		logger.info( "makeTweetCollectionFromURL: SuedeDenim tweet_retriever script called, javascript interchange=\n" + interchangeContainer.toDebugString( "  " ) );
+
+		final JavascriptInterchangeMetadata meta = interchangeContainer.getMetadata();
+
+		final ITweetCollection tweetCollection = interchangeContainer.getTweetCollection();
+		tweetCollection.setAttribute( "url", url );
+		tweetCollection.setAttribute( "numberOfPagesToCheck", "" + numberOfPagesToCheck );
+		tweetCollection.setAttribute( "maxTweets", "" + maxTweets );
+
+		return tweetCollection;
+	}
+
+	protected List<String> supplementTweetCollection( final WebDriver driver,
+														final ITweetCollection tweetCollection,
+														final List<String> jsonStrings,
+														final TargetPageType pageType,
+														final String url ) throws Exception {
+		final JavascriptExecutor javascriptExecutor = (JavascriptExecutor) driver;
+
+		driver.manage().timeouts().setScriptTimeout( JAVASCRIPT_TIMEOUT, TimeUnit.SECONDS );
+
+		logger.info( "supplementTweetCollection: calling SuedeDenim json_parser script" );
+
+		final JavascriptParams jsParams = new JavascriptParams( url, pageType, debugLevel );
+
+		final String suedeDenimJSONParserScript = browserScriptFactory.getScript( "json_parser" ).getScript();
+
+		final List rawInterchangeData = (List) javascriptExecutor.executeAsyncScript( suedeDenimJSONParserScript, jsParams.getMap(), jsonStrings );
+
+		final JavascriptInterchangeContainer interchangeContainer = new JavascriptInterchangeContainer( rawInterchangeData, tweetFactory, bundle );
+
+/*
+		logger.info( "SuedeDenim json_parser script called, messages=" );
+		for ( String message : getBrowserLogs( driver ) ) {
+			logger.info( "  " + message );
+		}
+*/
+
+		logger.info( "\n\n\nsupplementTweetCollection: SuedeDenim json_parser script called, javascript interchange=\n" + interchangeContainer.toDebugString( "  " ) );
+
+		final List<String> tweetSupplementMessages = tweetCollection.supplementFrom( interchangeContainer.getTweetCollection() );
+
+		final ITweetUserCollection users = tweetFactory.makeTweetUserCollection( tweetCollection.getTweetUsers(), Instant.now(), new HashMap<String,String>( 1 ) );
+
+		users.supplementFrom( interchangeContainer.getTweetUserCollection() );
+
+		if ( interchangeContainer.getSupposedQualities() != null ) {
+			supplementSupposedQualities( tweetCollection.getTweets(), interchangeContainer.getSupposedQualities() );
+		}
+
+		supplementUserIDs( tweetCollection.getTweets() );
+
+		supplementUserHandles( tweetCollection.getTweets() );
+
+		return tweetSupplementMessages;
+	}
+
+	@Override
+	public IInfiniteScrollingActivator makeInfiniteScrollingActivator( final WebDriver driver,
+																		final IWebDriverUtils driverutils,
+																		final InfiniteScrollingActivatorType type ) {
+		return new InfiniteScrollingActivatorTimelineNT( driver, driverutils );
+	}
+
+	@Override
+	public IWebDriverUtils makeWebDriverUtils( final WebDriver driver ) {
+		return new WebDriverUtils( driver );
+	}
+
+	@Override
+	public WebDriver makeWebDriver() throws Exception {
+		return makeWebDriver( null );
+	}
+
+	@Override
+	public WebDriver makeWebDriver( final IBrowserProxy proxy ) throws Exception {
+		try {
+			//logger.info( "original=" + prefs.getValue( "prefs.firefox_path_geckodriver" ) );
+			//System.setProperty( "webdriver.gecko.driver", prefs.getValue( "prefs.firefox_path_geckodriver" ) );
+
+			final DesiredCapabilities capabilities = new DesiredCapabilities();
+			capabilities.setAcceptInsecureCerts( true );
+
+			final LoggingPreferences loggingPreferences = new LoggingPreferences();
+			loggingPreferences.enable( LogType.BROWSER, Level.INFO );
+			capabilities.setCapability( CapabilityType.LOGGING_PREFS, loggingPreferences );
+
+			if ( proxy != null ) {
+				logger.info( "WebDriverFactoryNT.makeWebDriver: using browser proxy" );
+				capabilities.setCapability( CapabilityType.PROXY, proxy.getSeleniumProxy() );
+			}
+
+			logger.info( "WebDriverFactoryNT.makeWebDriver: webdriver capabilities=" + capabilities );
+
+			final FirefoxOptions firefoxOptions = new FirefoxOptions( capabilities );
+
+			if ( !prefs.isEmpty( "prefs.firefox_path_app" ) ) {
+				String firefoxBinaryPath = prefs.getValue( "prefs.firefox_path_app" );
+
+				logger.info( "WebDriverFactoryNT.makeWebDriver: making WebDriver binary from " + firefoxBinaryPath );
+
+				WebDriverManager.firefoxdriver().browserPath( firefoxBinaryPath ).setup();
+				firefoxOptions.setBinary( new FirefoxBinary( new File( firefoxBinaryPath ) ) );
+
+				return new FirefoxDriver( firefoxOptions );
+			}
+			else {
+				WebDriverManager.firefoxdriver().setup();
+			}
+
+			final FirefoxProfile firefoxProfile;
+
+			if ( !prefs.isEmpty( "prefs.firefox_path_profile" ) ) {
+				String firefoxProfilePath = prefs.getValue( "prefs.firefox_path_app" );
+
+				logger.info( "WebDriverFactoryNT.makeWebDriver: making WebDriver profile from " + firefoxProfilePath );
+
+				firefoxProfile = new FirefoxProfile( new File( firefoxProfilePath ) );
+			}
+			else {
+				logger.info( "WebDriverFactoryNT.makeWebDriver: making empty WebDriver profile" );
+				firefoxProfile = new FirefoxProfile();
+			}
+
+			setFirefoxProfilePreferences( firefoxProfile );
+			addFirefoxExtensions( firefoxProfile );
+
+			logger.info( "WebDriverFactoryNT.makeWebDriver: making WebDriver from profile" );
+
+			firefoxOptions.setProfile( firefoxProfile );
+
+			return new FirefoxDriver( firefoxOptions );
+		}
+		catch ( Exception e ) {
+			logger.error( "FAILED TO CREATE WEBDRIVER", e );
+			throw e;
+		}
+	}
+
+	@Override
+	public List<String> getBrowserLogs( WebDriver driver ) {
+		final List<String> list = new ArrayList<String>( 1000 );
+
+		return list;
+
+/*
+		final List<String> list = new ArrayList<String>( 1000 );
+
+		for ( JavaScriptError entry : JavaScriptError.readErrors( driver ) ) {
+			list.add( "" + entry );
+		}
+
+		return list;
+*/
+
+/*
+		final List<String> list = new ArrayList<String>( 1000 );
+
+		for ( LogEntry entry : driver.manage().logs().get( LogType.BROWSER ) ) {
+			list.add( "" + entry );
+		}
+
+		return list;
+*/
+	}
+
+	protected int supplementSupposedQualities( List<ITweet> tweets, JavascriptInterchangeSupposedQualities supposedQualities ) {
+		TweetSupposedQuality supposedQuality;
+		long tweetID;
+		int count = 0;
+
+		for ( final ITweet tweet : tweets ) {
+			tweetID = tweet.getID();
+			if ( tweetID == 0 ) {
+				continue;
+			}
+
+			supposedQuality = supposedQualities.getSupposedQuality( tweetID );
+			if ( supposedQuality != null ) {
+				tweet.setSupposedQuality( supposedQuality );
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+	protected void supplementUserIDs( List<ITweet> tweets ) {
+		ITweetUser tweetUser;
+		Set<Long> idSet;
+		long userIDFromTweet;
+
+		for ( final ITweet tweet : tweets ) {
+			if ( tweet.getUser() == null ) {
+				continue;
+			}
+
+			tweetUser = tweet.getUser();
+			idSet = new HashSet<Long>( 2 );
+
+			userIDFromTweet = Utils.parseLongDefault( tweet.getAttribute( "userid" ) );
+			if ( userIDFromTweet != 0 ) {
+				idSet.add( userIDFromTweet );
+			}
+
+			if ( tweetUser.getID() != 0 ) {
+				idSet.add( tweetUser.getID() );
+			}
+
+			if ( idSet.isEmpty() ) {
+				logger.info( "BOTH USER IDS ARE ZERO: " + tweet.toDebugString( "" ) );
+			}
+			else if ( idSet.size() == 1 ) {
+				tweetUser.setID( idSet.iterator().next() );
+				tweet.setAttribute( "userid", "" + tweetUser.getID() );
+			}
+			else {
+				logger.info( "MISMATCHED USER IDS: " + tweet.toDebugString( "" ) );
+			}
+		}
+	}
+
+	protected void supplementUserHandles( List<ITweet> tweets ) {
+		ITweetUser tweetUser;
+		Set<String> handleSet;
+		String handleFromTweet, handleFromUser;
+
+		for ( final ITweet tweet : tweets ) {
+			if ( tweet.getUser() == null ) {
+				continue;
+			}
+
+			tweetUser = tweet.getUser();
+			handleSet = new HashSet<String>( 2 );
+
+			handleFromTweet = Utils.normalizeHandle( tweet.getAttribute( "username" ) );
+			handleFromUser = Utils.normalizeHandle( tweetUser.getHandle() );
+
+			if ( !Utils.isEmpty( handleFromTweet ) ) {
+				handleSet.add( handleFromTweet );
+			}
+
+			if ( !Utils.isEmpty( handleFromUser ) ) {
+				handleSet.add( handleFromUser );
+			}
+
+			if ( handleSet.isEmpty() ) {
+				logger.info( "BOTH USER HANDLES ARE EMPTY: " + tweet.toDebugString( "" ) );
+			}
+			else if ( handleSet.size() == 1 ) {
+				tweetUser.setHandle( handleSet.iterator().next() );
+				tweet.setAttribute( "username", tweetUser.getHandle() );
+			}
+			else {
+				logger.info( "MISMATCHED USER HANDLES: " + tweet.toDebugString( "" ) );
+			}
+		}
+	}
+
+	protected List<String> saveJSONStrings( final List<IBrowserProxyLogEntry> responses, final IArchiveDirectory archiveDirectory ) throws Exception {
+		final List<String> jsonStrings = new ArrayList<String>( 10 );
+
+		for ( IBrowserProxyLogEntry response : responses ) {
+			String responseContent = response.getContent();
+			final String responseURL = response.getURL();
+			if ( responseURL == null ) {
+				continue;
+			}
+
+/*
+			if ( || responseURL.indexOf( "cursor" ) < 0 ) {
+				continue;
+			}
+*/
+
+			if ( responseContent == null || responseContent.length() < 1 ) {
+				logger.info( "WebDriverFactoryNT.saveJSONStrings: NO RESPONSE FOR " + responseURL );
+				continue;
+			}
+
+			responseContent = responseContent.trim();
+			if ( !( responseContent.startsWith( "[" ) || responseContent.startsWith( "{" ) ) ) {
+				logger.info( "WebDriverFactoryNT.saveJSONStrings: NOT JSON FOR " + responseURL );
+				continue;
+			}
+
+			jsonStrings.add( responseContent );
+
+			String archiveFilename = archiveDirectory.put( responseContent );
+			logger.info( "WebDriverFactoryNT.saveJSONStrings: ARCHIVE SAVED " + responseURL + " TO " + archiveFilename );
+		}
+
+		return jsonStrings;
+	}
+
+	protected void setFirefoxProfilePreferences( final FirefoxProfile firefoxProfile ) {
+		firefoxProfile.setPreference( "app.update.auto", false );
+		firefoxProfile.setPreference( "app.update.enabled", false );
+		firefoxProfile.setPreference( "browser.shell.checkDefaultBrowser", false );
+
+		firefoxProfile.setPreference( "devtools.console.stdout.content", true );
+
+		/* for using an external proxy:
+		profile.setPreference( "network.proxy.type", 1 );
+		profile.setPreference( "network.proxy.http", "127.0.0.1" );
+		profile.setPreference( "network.proxy.http_port", 8080 );
+		profile.setPreference( "network.proxy.ssl", "127.0.0.1" );
+		profile.setPreference( "network.proxy.ssl_port", 8080 );
+		*/
+	}
+
+	protected void addFirefoxExtensions( final FirefoxProfile firefoxProfile ) {
+/* not working with latest FF, need to use something like https://stackoverflow.com/a/45045036
+		final File jsErrorCollectorXPIFile = new File( appDirectories.getSubdirectory( "xpi" ), "JSErrorCollector.xpi" );
+
+		if ( jsErrorCollectorXPIFile.exists() ) {
+			firefoxProfile.addExtension( JavaScriptError.class, jsErrorCollectorXPIFile );
+			logger.info( "Installed Firefox extension from " + jsErrorCollectorXPIFile );
+		}
+*/
+	}
+
+	protected ITweetUser makeTweetUser( final String handle, final String displayName, final String userIDString, final String verifiedText, String avatarURL ) {
+		if ( Utils.isEmpty( handle ) ) {
+			return tweetFactory.makeTweetUser( TWEETUSER_HANDLE_UNKNOWN );
+		}
+
+		long userID = 0;
+		try {
+			userID = Long.parseLong( userIDString );
+		}
+		catch ( final Exception e ) {
+			logger.info( "can't parse userIDString: " + userIDString + ", handle=" + handle + ", displayName=" + displayName );
+			throw e;
+		}
+
+		TweetUserVerifiedStatus verifiedStatus = TweetUserVerifiedStatus.UNKNOWN;
+		if ( Utils.isEmpty( verifiedText ) ) {
+			verifiedStatus = TweetUserVerifiedStatus.NOTVERIFIED;
+		}
+		else if ( verifiedText.toLowerCase().indexOf( "verified" ) > -1 ) {
+			verifiedStatus = TweetUserVerifiedStatus.VERIFIED;
+		}
+
+		avatarURL = Utils.trimDefault( avatarURL );
+
+		return tweetFactory.makeTweetUser( handle, userID, displayName, verifiedStatus, avatarURL );
+	}
+}
+/*@todo:
+
+get from JSON metainfo:
+
+ret.setComplete
+ret.setUser
+ret.setNumTotalTweets( Utils.parseIntDefault( profileMap.get( "tweets" ) ) );
+ret.setNumFollowers( Utils.parseIntDefault( profileMap.get( "followers" ) ) );
+ret.setNumFollowing( Utils.parseIntDefault( profileMap.get( "following" ) ) );
+*/
+

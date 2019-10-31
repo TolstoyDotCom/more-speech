@@ -13,17 +13,22 @@
  */
 package com.tolstoy.censorship.twitter.checker.app.searchrun;
 
-import java.util.*;
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.fasterxml.jackson.annotation.JsonProperty;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.tolstoy.censorship.twitter.checker.api.searchrun.*;
-import com.tolstoy.censorship.twitter.checker.api.snapshot.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.tolstoy.basic.api.tweet.ITweetUser;
+import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunReplies;
+import com.tolstoy.censorship.twitter.checker.api.snapshot.IReplyThread;
+import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageTimeline;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
 class SearchRunReplies extends SearchRun implements ISearchRunReplies {
@@ -40,40 +45,40 @@ class SearchRunReplies extends SearchRun implements ISearchRunReplies {
 		super( 0, null );
 	}
 
-	SearchRunReplies( long id, ITweetUser user ) {
+	SearchRunReplies( final long id, final ITweetUser user ) {
 		super( id, user );
 
 		this.timeline = null;
 		this.replies = new HashMap<Long,IReplyThread>();
 	}
 
-	SearchRunReplies( long id, ITweetUser user, Instant startTime, Instant endTime ) {
+	SearchRunReplies( final long id, final ITweetUser user, final Instant startTime, final Instant endTime ) {
 		super( id, user, startTime, endTime );
 
 		this.timeline = null;
 		this.replies = new HashMap<Long,IReplyThread>();
 	}
 
-	SearchRunReplies( long id, ITweetUser user, Instant startTime, Instant endTime, Map<String,String> attributes ) {
+	SearchRunReplies( final long id, final ITweetUser user, final Instant startTime, final Instant endTime, final Map<String,String> attributes ) {
 		super( id, user, startTime, endTime, attributes );
 
 		this.timeline = null;
 		this.replies = new HashMap<Long,IReplyThread>();
 	}
 
-	SearchRunReplies( long id, ITweetUser user, Instant startTime, Instant endTime,
-								ISnapshotUserPageTimeline timeline,
-								Map<Long,IReplyThread> replies ) {
+	SearchRunReplies( final long id, final ITweetUser user, final Instant startTime, final Instant endTime,
+								final ISnapshotUserPageTimeline timeline,
+								final Map<Long,IReplyThread> replies ) {
 		super( id, user, startTime, endTime );
 
 		this.timeline = timeline;
 		this.replies = replies;
 	}
 
-	SearchRunReplies( long id, ITweetUser user, Instant startTime, Instant endTime,
-								ISnapshotUserPageTimeline timeline,
-								Map<Long,IReplyThread> replies,
-								Map<String,String> attributes ) {
+	SearchRunReplies( final long id, final ITweetUser user, final Instant startTime, final Instant endTime,
+								final ISnapshotUserPageTimeline timeline,
+								final Map<Long,IReplyThread> replies,
+								final Map<String,String> attributes ) {
 		super( id, user, startTime, endTime, attributes );
 
 		this.timeline = timeline;
@@ -86,7 +91,7 @@ class SearchRunReplies extends SearchRun implements ISearchRunReplies {
 	}
 
 	@Override
-	public void setSnapshotUserPageTimeline( ISnapshotUserPageTimeline timeline ) {
+	public void setSnapshotUserPageTimeline( final ISnapshotUserPageTimeline timeline ) {
 		this.timeline = timeline;
 	}
 
@@ -96,13 +101,13 @@ class SearchRunReplies extends SearchRun implements ISearchRunReplies {
 	}
 
 	@Override
-	public void setReplies( Map<Long,IReplyThread> replies ) {
+	public void setReplies( final Map<Long,IReplyThread> replies ) {
 		this.replies = replies;
 	}
 
 	@JsonIgnore
 	@Override
-	public void setReply( long sourceTweetID, IReplyThread replyThread ) {
+	public void setReply( final long sourceTweetID, final IReplyThread replyThread ) {
 		replies.put( sourceTweetID, replyThread );
 	}
 
@@ -114,7 +119,7 @@ class SearchRunReplies extends SearchRun implements ISearchRunReplies {
 
 	@JsonIgnore
 	@Override
-	public IReplyThread getReplyThreadBySourceTweetID( long sourceTweetID ) {
+	public IReplyThread getReplyThreadBySourceTweetID( final long sourceTweetID ) {
 		return replies.get( sourceTweetID );
 	}
 

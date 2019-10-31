@@ -13,15 +13,18 @@
  */
 package com.tolstoy.censorship.twitter.checker.app.snapshot;
 
-import java.util.*;
 import java.time.Instant;
+
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.tolstoy.basic.api.tweet.*;
-import com.fasterxml.jackson.annotation.JsonProperty;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.tolstoy.basic.api.tweet.ITweet;
+import com.tolstoy.basic.api.tweet.ITweetCollection;
+import com.tolstoy.basic.api.tweet.ITweetUser;
 import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPage;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
@@ -39,7 +42,7 @@ class SnapshotUserPage extends Snapshot implements ISnapshotUserPage {
 		super( "", Instant.now() );
 	}
 
-	SnapshotUserPage( String url, Instant retrievalTime ) {
+	SnapshotUserPage( final String url, final Instant retrievalTime ) {
 		super( url, retrievalTime );
 	}
 
@@ -54,17 +57,17 @@ class SnapshotUserPage extends Snapshot implements ISnapshotUserPage {
 	}
 
 	@Override
-	public void setUser( ITweetUser user ) {
+	public void setUser( final ITweetUser user ) {
 		this.user = user;
 	}
 
 	@Override
-	public void setTweetCollection( ITweetCollection tweetCollection ) {
+	public void setTweetCollection( final ITweetCollection tweetCollection ) {
 		this.tweetCollection = tweetCollection;
 	}
 
 	@Override
-	public void addTweet( ITweet tweet ) {
+	public void addTweet( final ITweet tweet ) {
 		tweetCollection.addTweet( tweet );
 	}
 

@@ -13,17 +13,29 @@
  */
 package com.tolstoy.basic.api.tweet;
 
-import java.io.*;
-import java.net.*;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 public interface ITweetUser {
+	IEntityAttributeDescriptorSet getAttributeDescriptorSet();
+
 	long getID();
+	void setID( long id );
 	String getHandle();
+	void setHandle( String handle );
 	String getDisplayName();
 	String getAvatarURL();
 	TweetUserVerifiedStatus getVerifiedStatus();
 	int getNumTotalTweets();
 	int getNumFollowers();
 	int getNumFollowing();
+
+	Map<String,String> getAttributes();
+	void setAttributes( final Map<String,String> attributes );
+	String getAttribute( final String key );
+	void setAttribute( final String key, final String value );
+	void loadFromMap( Map<String,String> map );
+
+	List<String> supplementFrom( ITweetUser other );
+	String toDebugString( String indent );
 }

@@ -13,33 +13,33 @@
  */
 package com.tolstoy.basic.app.utils;
 
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
+
 import org.apache.commons.lang3.StringUtils;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class StringList {
-	private List<String> items;
-	private String original;
+	private final List<String> items;
+	private final String original;
 
 	private static final String DELIMITERS = ", \t\r\n";
 	private static final char JOINCHAR = ',';
 
 	@JsonCreator
-	public StringList( @JsonProperty("original") String s ) {
-		if ( s == null ) {
-			s = "";
-		}
+	public StringList( @JsonProperty("original") final String s ) {
+		final String str = s != null ? s : "";
 
-		List<String> tempList = Arrays.asList( StringUtils.split( StringUtils.strip( s, DELIMITERS ), DELIMITERS ) );
+		final List<String> tempList = Arrays.asList( StringUtils.split( StringUtils.strip( str, DELIMITERS ), DELIMITERS ) );
 
 		this.items = new ArrayList<String>( tempList.size() );
 
-		for ( String temp : tempList ) {
+		for ( final String temp : tempList ) {
 			if ( !Utils.isEmpty( temp ) ) {
 				this.items.add( temp );
 			}
@@ -63,12 +63,12 @@ public class StringList {
 	}
 
 	@Override
-	public boolean equals( Object obj ) {
+	public boolean equals( final Object obj ) {
 		if ( !( obj instanceof StringList ) ) {
 			return false;
 		}
 
-		StringList other = (StringList) obj;
+		final StringList other = (StringList) obj;
 
 		return Objects.equals( original, other.original );
 	}

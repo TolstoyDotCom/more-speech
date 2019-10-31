@@ -47,7 +47,7 @@ public class WordSyllableCounter {
     
     private final String languageCode;
     
-    public WordSyllableCounter(String languageCode)
+    public WordSyllableCounter(final String languageCode)
     {
         vowels   = new HashSet<String>(Arrays.asList(vowelsArray));
         deVowels = new HashSet<String>(Arrays.asList(deVowelsArray));
@@ -56,7 +56,7 @@ public class WordSyllableCounter {
         this.languageCode = languageCode;
     }
     
-    private boolean isVowel(String character)
+    private boolean isVowel(final String character)
     {
         if (languageCode.equals("en")) {
             return enVowels.contains(character);
@@ -69,15 +69,15 @@ public class WordSyllableCounter {
         }
     }
     
-    public int countSyllables(Iterable<String> words) {
+    public int countSyllables(final Iterable<String> words) {
         int count = 0;
-        for (String word : words) {
+        for (final String word : words) {
             count = count + countSyllables(word);
         }
         return count;
     }
     
-    public int countSyllables(String word)
+    public int countSyllables(final String word)
     {
         String lowcaseWord = word.toLowerCase();
         int count = 0;
@@ -99,8 +99,8 @@ public class WordSyllableCounter {
         }
 
         for (int i = 0; i < lowcaseWord.length() - 1; ++i) {
-            String curCh = lowcaseWord.substring(i, i + 1);
-            String nextCh = lowcaseWord.substring(i + 1, i + 2);
+            final String curCh = lowcaseWord.substring(i, i + 1);
+            final String nextCh = lowcaseWord.substring(i + 1, i + 2);
             if (isVowel(curCh) && !isVowel(nextCh)) {
                 ++count;
             }

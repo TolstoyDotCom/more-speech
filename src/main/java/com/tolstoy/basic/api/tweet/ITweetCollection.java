@@ -13,10 +13,9 @@
  */
 package com.tolstoy.basic.api.tweet;
 
-import java.io.*;
-import java.net.*;
-import java.util.*;
 import java.time.Instant;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Represents an ordered list of ITweet objects, with a retrieval time and optional
@@ -39,42 +38,60 @@ public interface ITweetCollection {
 	 * Set the list of tweets.
 	 * @return the list
 	 */
-	void setTweets( List<ITweet> tweets );
+	void setTweets( final List<ITweet> tweets );
+
+	/**
+	 * Get a unique list of all the tweetUsers on this collection's tweets.
+	 * The order is random.
+	 * tweetUsers that are null or that have a 0 ID aren't included.
+	 * @return the list
+	 */
+	List<ITweetUser> getTweetUsers();
 
 	/**
 	 * Find a tweet in the list given its ID
 	 * @return the tweet, or null if not found
 	 */
-	ITweet getTweetByID( long id );
+	ITweet getTweetByID( final long id );
 
 	/**
 	 * Find the ordinal position of tweet in the list given its ID
 	 * @return the order (starting at 1) or 0 if the tweet is not in the list
 	 */
-	int getTweetOrderByID( long id );
+	int getTweetOrderByID( final long id );
 
 	/**
 	 * Add a tweet to the end of the list
 	 * @param tweet the tweet to add
 	 */
-	void addTweet( ITweet tweet );
+	void addTweet( final ITweet tweet );
 
 	/**
 	 * Removes all tweets that have the given ID
 	 * @param id the ID to match
 	 */
-	void removeTweetByID( long id );
+	void removeTweetByID( final long id );
+
+	/**
+	 * Calls supplementFrom() on each tweet in this collection that
+	 * has a corresponding tweet in the given collection.
+	 */
+	List<String> supplementFrom( final ITweetCollection otherCollection );
 
 	Instant getRetrievalTime();
-	void setRetrievalTime( Instant retrievalTime );
+	void setRetrievalTime( final Instant retrievalTime );
 
 	/**
 	 * Optional, free-form metadata such as "handle", "userid", "url", etc.
 	 * Don't rely on any of those being available.
 	 */
 	Map<String,String> getAttributes();
-	void setAttributes( Map<String,String> attributes );
+	void setAttributes( final Map<String,String> attributes );
 
-	String getAttribute( String key );
-	void setAttribute( String key, String value );
+	String getAttribute( final String key );
+	void setAttribute( final String key, String value );
+
+	/** Return a debug string.
+	*/
+	String toDebugString( String indent );
 }

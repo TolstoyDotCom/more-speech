@@ -13,15 +13,16 @@
  */
 package com.tolstoy.censorship.twitter.checker.app.analyzer;
 
-import java.util.*;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
+import java.util.List;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.tolstoy.basic.api.tweet.ITweet;
+
 import com.tolstoy.basic.app.utils.Utils;
-import com.tolstoy.censorship.twitter.checker.api.analyzer.ITweetRanker;
 import com.tolstoy.censorship.twitter.checker.api.analyzer.IAnalyzedTweet;
+import com.tolstoy.censorship.twitter.checker.api.analyzer.ITweetRanker;
 
 class TweetRankerBasic implements ITweetRanker {
 	private static final Logger logger = LogManager.getLogger( TweetRankerBasic.class );
@@ -69,18 +70,18 @@ class TweetRankerBasic implements ITweetRanker {
 	}
 
 	@Override
-	public void rankTweets( List<IAnalyzedTweet> analyzedTweets, IAnalyzedTweet referenceAnalyzedTweet ) {
-		int count = analyzedTweets.size();
-		for ( IAnalyzedTweet analyzedTweet : analyzedTweets ) {
+	public void rankTweets( final List<IAnalyzedTweet> analyzedTweets, final IAnalyzedTweet referenceAnalyzedTweet ) {
+		final int count = analyzedTweets.size();
+		for ( final IAnalyzedTweet analyzedTweet : analyzedTweets ) {
 			rankTweet( analyzedTweet, count, referenceAnalyzedTweet );
 		}
 	}
 
 	@Override
-	public void rankTweet( IAnalyzedTweet analyzedTweet, int count, IAnalyzedTweet referenceAnalyzedTweet ) {
+	public void rankTweet( final IAnalyzedTweet analyzedTweet, final int count, final IAnalyzedTweet referenceAnalyzedTweet ) {
 		double ranking = 0.0d, temp = 0.0d;
 
-		temp = (double) analyzedTweet.getToReferenceTweetFuzzyScore();
+		temp = analyzedTweet.getToReferenceTweetFuzzyScore();
 		if ( temp != 0 ) {
 			temp = temp / FUZZY_DIVISOR;
 			if ( temp > FUZZY_LIMIT ) {
@@ -153,19 +154,19 @@ class TweetRankerBasic implements ITweetRanker {
 			ranking += temp;
 		}
 
-		temp = (double) analyzedTweet.getNumSentences();
+		temp = analyzedTweet.getNumSentences();
 		analyzedTweet.setAttribute( "rank_numsent", decimalFormat.format( temp ) );
 		ranking += temp;
 
-		temp = (double) analyzedTweet.getNumWords();
+		temp = analyzedTweet.getNumWords();
 		temp = temp / NUM_WORDS_DIVISOR;
 		temp = Math.floor( temp );
 		analyzedTweet.setAttribute( "rank_numword", decimalFormat.format( temp ) );
 		ranking += temp;
 
-		double numReplies = (double) Utils.parseIntDefault( analyzedTweet.getTweet().getAttribute( "replycount" ) );
-		double numRetweets = (double) Utils.parseIntDefault( analyzedTweet.getTweet().getAttribute( "retweetcount" ) );
-		double numFavorites = (double) Utils.parseIntDefault( analyzedTweet.getTweet().getAttribute( "favoritecount" ) );
+		final double numReplies = Utils.parseIntDefault( analyzedTweet.getTweet().getAttribute( "replycount" ) );
+		final double numRetweets = Utils.parseIntDefault( analyzedTweet.getTweet().getAttribute( "retweetcount" ) );
+		final double numFavorites = Utils.parseIntDefault( analyzedTweet.getTweet().getAttribute( "favoritecount" ) );
 
 		temp = ( BOOST_REPLIES * numReplies ) + ( BOOST_RETWEETS * numRetweets ) + ( BOOST_FAVORITES * numFavorites );
 
@@ -175,8 +176,8 @@ class TweetRankerBasic implements ITweetRanker {
 			ranking += temp;
 		}
 
-		temp = (double) analyzedTweet.getDateOrder();
-		temp = ( ( (double) count - temp + 1.0d ) / (double) count );
+		temp = analyzedTweet.getDateOrder();
+		temp = ( ( count - temp + 1.0d ) / count );
 		temp = BOOST_DATE_RATIO * temp;
 
 		analyzedTweet.setAttribute( "rank_time", decimalFormat.format( temp ) );

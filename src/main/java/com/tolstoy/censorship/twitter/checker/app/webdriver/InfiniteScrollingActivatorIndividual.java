@@ -13,18 +13,17 @@
  */
 package com.tolstoy.censorship.twitter.checker.app.webdriver;
 
-import java.util.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openqa.selenium.*;
-import org.openqa.selenium.interactions.*;
-import org.openqa.selenium.support.ui.*;
-import com.tolstoy.censorship.twitter.checker.api.webdriver.*;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+
+import com.tolstoy.censorship.twitter.checker.api.webdriver.IWebDriverUtils;
 
 class InfiniteScrollingActivatorIndividual extends InfiniteScrollingActivatorBase {
 	private static final Logger logger = LogManager.getLogger( InfiniteScrollingActivatorIndividual.class );
 
-	InfiniteScrollingActivatorIndividual( WebDriver driver, IWebDriverUtils utils ) {
+	InfiniteScrollingActivatorIndividual( final WebDriver driver, final IWebDriverUtils utils ) {
 		super( driver, utils );
 	}
 

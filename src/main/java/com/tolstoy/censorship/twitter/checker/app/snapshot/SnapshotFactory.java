@@ -14,24 +14,32 @@
 package com.tolstoy.censorship.twitter.checker.app.snapshot;
 
 import java.time.Instant;
+
 import com.tolstoy.basic.api.tweet.ITweet;
 import com.tolstoy.basic.api.tweet.ITweetCollection;
-import com.tolstoy.censorship.twitter.checker.api.snapshot.*;
+import com.tolstoy.censorship.twitter.checker.api.snapshot.IReplyThread;
+import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotFactory;
+import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageIndividualTweet;
+import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageTimeline;
+import com.tolstoy.censorship.twitter.checker.api.snapshot.ReplyThreadType;
 
 public class SnapshotFactory implements ISnapshotFactory {
-	public ISnapshotUserPageTimeline makeSnapshotUserPageTimeline( String url, Instant retrievalTime ) {
+	@Override
+	public ISnapshotUserPageTimeline makeSnapshotUserPageTimeline( final String url, final Instant retrievalTime ) {
 		return new SnapshotUserPageTimeline( url, retrievalTime );
 	}
 
-	public ISnapshotUserPageIndividualTweet makeSnapshotUserPageIndividualTweet( String url, Instant retrievalTime ) {
+	@Override
+	public ISnapshotUserPageIndividualTweet makeSnapshotUserPageIndividualTweet( final String url, final Instant retrievalTime ) {
 		return new SnapshotUserPageIndividualTweet( url, retrievalTime );
 	}
 
-	public IReplyThread makeReplyThread( ReplyThreadType replyThreadType,
-											ITweet sourceTweet,
-											ITweet repliedToTweet,
-											ISnapshotUserPageIndividualTweet replyPage,
-											ITweetCollection conversationTweetCollection ) {
+	@Override
+	public IReplyThread makeReplyThread( final ReplyThreadType replyThreadType,
+											final ITweet sourceTweet,
+											final ITweet repliedToTweet,
+											final ISnapshotUserPageIndividualTweet replyPage,
+											final ITweetCollection conversationTweetCollection ) {
 		return new ReplyThread( replyThreadType, sourceTweet, repliedToTweet, replyPage, conversationTweetCollection );
 	}
 }

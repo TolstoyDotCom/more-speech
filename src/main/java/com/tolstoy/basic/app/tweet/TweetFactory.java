@@ -13,15 +13,19 @@
  */
 package com.tolstoy.basic.app.tweet;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-import java.time.Instant;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.tolstoy.basic.api.tweet.ITweetFactory;
-import com.tolstoy.basic.api.tweet.ITweetCollection;
-import com.tolstoy.basic.api.tweet.ITweetUser;
+import org.apache.commons.lang3.ObjectUtils;
+
 import com.tolstoy.basic.api.tweet.ITweet;
+import com.tolstoy.basic.api.tweet.ITweetCollection;
+import com.tolstoy.basic.api.tweet.ITweetFactory;
+import com.tolstoy.basic.api.tweet.ITweetUser;
+import com.tolstoy.basic.api.tweet.ITweetUserCollection;
 import com.tolstoy.basic.api.tweet.TweetUserVerifiedStatus;
 import com.tolstoy.basic.app.utils.StringList;
 import com.tolstoy.basic.app.utils.Utils;
@@ -38,17 +42,25 @@ public class TweetFactory implements ITweetFactory {
 	}
 
 	@Override
-	public ITweet makeTweet( long id, Map<String,String> attributes, StringList classes, StringList mentions, ITweetUser user ) {
+	public ITweet makeTweet( final long id, final Map<String,String> attributes, final StringList classes, final StringList mentions, final ITweetUser user ) {
 		return new Tweet( id, attributes, classes, mentions, user );
 	}
 
 	@Override
-	public ITweet makeTweet( Map<String,String> data, String tweetKey, String attributesKey, String userKey ) throws Exception {
-		return makeTweet( Long.parseLong( data.get( tweetKey + "id" ) ),
-							Utils.copyMapWithMatchingKeys( data, attributesKey ),
-							new StringList( data.get( tweetKey + "classes" ) ),
-							new StringList( data.get( tweetKey + "mentions" ) ),
-							makeTweetUser( data, userKey ) );
+	public ITweet makeTweet( final Map<String,String> data, final String tweetKey, final String attributesKey, final String userKey ) throws Exception {
+		String idKey = tweetKey + "id";
+
+		try {
+			return makeTweet( Long.parseLong( data.get( idKey ) ),
+								Utils.copyMapWithMatchingKeys( data, attributesKey ),
+								new StringList( data.get( tweetKey + "classes" ) ),
+								new StringList( data.get( tweetKey + "mentions" ) ),
+								makeTweetUser( data, userKey ) );
+		}
+		catch ( NumberFormatException e ) {
+			logger.info( "makeTweet cannot parse a number, idKey=" + idKey + ", data=\n" + Utils.prettyPrintMap( "  ", data ) );
+			throw e;
+		}
 	}
 
 	@Override
@@ -57,49 +69,64 @@ public class TweetFactory implements ITweetFactory {
 	}
 
 	@Override
-	public ITweetCollection makeTweetCollection( List<ITweet> tweets, Instant retrievalTime, Map<String,String> attributes ) {
+	public ITweetCollection makeTweetCollection( final List<ITweet> tweets, final Instant retrievalTime, final Map<String,String> attributes ) {
 		return new TweetCollection( tweets, retrievalTime, attributes );
 	}
 
 	@Override
-	public ITweetUser makeTweetUser( String handle ) {
+	public ITweetUserCollection makeTweetUserCollection() {
+		return new TweetUserCollection();
+	}
+
+	@Override
+	public ITweetUserCollection makeTweetUserCollection( final List<ITweetUser> tweetUsers, final Instant retrievalTime, final Map<String,String> attributes ) {
+		return new TweetUserCollection( tweetUsers, retrievalTime, attributes );
+	}
+
+	@Override
+	public ITweetUser makeTweetUser( final String handle ) {
 		return new TweetUser( handle, 0, null, TweetUserVerifiedStatus.UNKNOWN, "" );
 	}
 
 	@Override
-	public ITweetUser makeTweetUser( String handle, long id ) {
+	public ITweetUser makeTweetUser( final String handle, final long id ) {
 		return new TweetUser( handle, id, null, TweetUserVerifiedStatus.UNKNOWN, "" );
 	}
 
 	@Override
-	public ITweetUser makeTweetUser( String handle, long id, String displayName ) {
+	public ITweetUser makeTweetUser( final String handle, final long id, final String displayName ) {
 		return new TweetUser( handle, id, displayName, TweetUserVerifiedStatus.UNKNOWN, "" );
 	}
 
 	@Override
-	public ITweetUser makeTweetUser( String handle, long id, String displayName, TweetUserVerifiedStatus verifiedStatus ) {
+	public ITweetUser makeTweetUser( final String handle, final long id, final String displayName, final TweetUserVerifiedStatus verifiedStatus ) {
 		return new TweetUser( handle, id, displayName, verifiedStatus, "" );
 	}
 
 	@Override
-	public ITweetUser makeTweetUser( String handle, long id, String displayName, TweetUserVerifiedStatus verifiedStatus, String avatarURL ) {
+	public ITweetUser makeTweetUser( final String handle, final long id, final String displayName, final TweetUserVerifiedStatus verifiedStatus, final String avatarURL ) {
 		return new TweetUser( handle, id, displayName, verifiedStatus, avatarURL );
 	}
 
 	@Override
-	public ITweetUser makeTweetUser( String handle, long id, String displayName, TweetUserVerifiedStatus verifiedStatus, String avatarURL, int numTotalTweets, int numFollowers, int numFollowing ) {
+	public ITweetUser makeTweetUser( final String handle, final long id, final String displayName, final TweetUserVerifiedStatus verifiedStatus, final String avatarURL, final int numTotalTweets, final int numFollowers, final int numFollowing ) {
 		return new TweetUser( handle, id, displayName, verifiedStatus, avatarURL, numTotalTweets, numFollowers, numFollowing );
 	}
 
 	@Override
-	public ITweetUser makeTweetUser( Map<String,String> data, String baseKey ) throws Exception {
-		return new TweetUser( data.get( baseKey + "handle" ),
-								Long.parseLong( data.get( baseKey + "id" ) ),
-								Utils.trimDefault( data.get( baseKey + "display_name" ) ),
-								TweetUserVerifiedStatus.valueOf( data.get( baseKey + "verified_status" ) ),
-								Utils.trimDefault( data.get( baseKey + "avatar_url" ) ),
-								Integer.parseInt( data.get( baseKey + "num_total_tweets" ) ),
-								Integer.parseInt( data.get( baseKey + "num_followers" ) ),
-								Integer.parseInt( data.get( baseKey + "num_following" ) ) );
+	public ITweetUser makeTweetUser( final Map<String,String> data, final String baseKey ) throws Exception {
+		try {
+			Map<String,String> map = Utils.copyMapWithMatchingKeys( data, baseKey );
+
+			ITweetUser tweetUser = new TweetUser( map.get( "handle" ), Long.parseLong( map.get( "id" ) ), null, TweetUserVerifiedStatus.UNKNOWN, "" );
+
+			tweetUser.loadFromMap( map );
+
+			return tweetUser;
+		}
+		catch ( Exception e ) {
+			logger.info( "makeTweetUser failed to create user, baseKey=" + baseKey + ", data=\n" + Utils.prettyPrintMap( "  ", data ) );
+			throw e;
+		}
 	}
 }

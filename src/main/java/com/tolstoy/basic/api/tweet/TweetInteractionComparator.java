@@ -13,19 +13,26 @@
  */
 package com.tolstoy.basic.api.tweet;
 
-import java.util.Comparator;
 import java.io.Serializable;
+import java.util.Comparator;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import com.tolstoy.basic.app.utils.Utils;
 
 public class TweetInteractionComparator implements Comparator<ITweet>, Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6249043792518702372L;
+
 	private static final Logger logger = LogManager.getLogger( TweetInteractionComparator.class );
 
-	private TweetComparatorDirection direction;
-	private int boostReplies, boostRTs, boostFavorites;
+	private final TweetComparatorDirection direction;
+	private final int boostReplies, boostRTs, boostFavorites;
 
-	public TweetInteractionComparator( int boostReplies, int boostRTs, int boostFavorites, TweetComparatorDirection direction ) {
+	public TweetInteractionComparator( final int boostReplies, final int boostRTs, final int boostFavorites, final TweetComparatorDirection direction ) {
 		this.boostReplies = boostReplies;
 		this.boostRTs = boostRTs;
 		this.boostFavorites = boostFavorites;
@@ -33,19 +40,19 @@ public class TweetInteractionComparator implements Comparator<ITweet>, Serializa
 	}
 
 	@Override
-	public int compare( ITweet a, ITweet b ) {
-		int scoreA = makeScore( Utils.parseIntDefault( a.getAttribute( "replycount" ) ),
+	public int compare( final ITweet a, final ITweet b ) {
+		final int scoreA = makeScore( Utils.parseIntDefault( a.getAttribute( "replycount" ) ),
 							Utils.parseIntDefault( a.getAttribute( "retweetcount" ) ),
 							Utils.parseIntDefault( a.getAttribute( "favoritecount" ) ) );
 
-		int scoreB = makeScore( Utils.parseIntDefault( b.getAttribute( "replycount" ) ),
+		final int scoreB = makeScore( Utils.parseIntDefault( b.getAttribute( "replycount" ) ),
 							Utils.parseIntDefault( b.getAttribute( "retweetcount" ) ),
 							Utils.parseIntDefault( b.getAttribute( "favoritecount" ) ) );
 
 		return direction == TweetComparatorDirection.DESC ? scoreB - scoreA : scoreA - scoreB;
 	}
 
-	protected int makeScore( int countReplies, int countRTs, int countFavorites ) {
+	protected int makeScore( final int countReplies, final int countRTs, final int countFavorites ) {
 		return ( boostReplies * ( countReplies + 1 ) )
 				* ( boostRTs * ( countRTs + 1 ) )
 				* ( boostFavorites * ( countFavorites + 1 ) );

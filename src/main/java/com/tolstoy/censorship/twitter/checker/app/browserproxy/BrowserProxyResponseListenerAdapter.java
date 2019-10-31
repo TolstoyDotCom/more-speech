@@ -11,14 +11,21 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.tolstoy.censorship.twitter.checker.app.helpers;
+package com.tolstoy.censorship.twitter.checker.app.browserproxy;
 
-import java.io.File;
+import org.dizitart.jbus.Subscribe;
 
-public interface IAppDirectories {
-	File getInstallDirectory();
-	File getDatabaseParentDirectory();
-	File getDatabaseDirectory();
-	File getReportsDirectory();
-	File getSubdirectory( String name );
+import com.tolstoy.censorship.twitter.checker.api.browserproxy.IBrowserProxyResponseListener;
+
+public class BrowserProxyResponseListenerAdapter {
+	private final IBrowserProxyResponseListener target;
+
+	public BrowserProxyResponseListenerAdapter( final IBrowserProxyResponseListener target ) {
+		this.target = target;
+	}
+
+	@Subscribe
+	public void listen( final BrowserProxyResponseEventBUP event ) {
+		target.responseEventFired( event );
+	}
 }

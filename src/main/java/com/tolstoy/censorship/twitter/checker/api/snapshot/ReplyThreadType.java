@@ -13,10 +13,6 @@
  */
 package com.tolstoy.censorship.twitter.checker.api.snapshot;
 
-import com.tolstoy.basic.api.tweet.ITweet;
-import com.tolstoy.basic.api.tweet.ITweetUser;
-import com.tolstoy.basic.api.tweet.ITweetCollection;
-
 public enum ReplyThreadType {
 	DIRECT,
 	INDIRECT

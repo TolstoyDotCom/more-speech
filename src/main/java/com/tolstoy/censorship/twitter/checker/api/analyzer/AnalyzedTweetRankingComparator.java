@@ -13,25 +13,30 @@
  */
 package com.tolstoy.censorship.twitter.checker.api.analyzer;
 
-import java.util.Comparator;
 import java.io.Serializable;
+import java.util.Comparator;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.tolstoy.basic.app.utils.Utils;
 
 public class AnalyzedTweetRankingComparator implements Comparator<IAnalyzedTweet>, Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 9089074563642453726L;
+
 	private static final Logger logger = LogManager.getLogger( AnalyzedTweetRankingComparator.class );
 
-	private AnalyzedTweetComparatorDirection direction;
+	private final AnalyzedTweetComparatorDirection direction;
 
-	public AnalyzedTweetRankingComparator( AnalyzedTweetComparatorDirection direction ) {
+	public AnalyzedTweetRankingComparator( final AnalyzedTweetComparatorDirection direction ) {
 		this.direction = direction;
 	}
 
 	@Override
-	public int compare( IAnalyzedTweet a, IAnalyzedTweet b ) {
-		double rankA = a.getRanking();
-		double rankB = b.getRanking();
+	public int compare( final IAnalyzedTweet a, final IAnalyzedTweet b ) {
+		final double rankA = a.getRanking();
+		final double rankB = b.getRanking();
 
 		return direction == AnalyzedTweetComparatorDirection.DESC ? Double.compare( rankB, rankA ) : Double.compare( rankA, rankB );
 	}

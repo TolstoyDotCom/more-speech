@@ -17,7 +17,7 @@ import java.util.Map;
 
 public interface IPreferencesFactory {
 	IPreferences createPreferences();
-	IPreferences createPreferences( Map<String,String> defaults );
+	IPreferences createPreferences( final Map<String,String> defaults );
 	IPreferences getAppPreferences() throws Exception;
 }
 

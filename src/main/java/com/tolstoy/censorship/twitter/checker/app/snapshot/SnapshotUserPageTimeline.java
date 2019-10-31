@@ -13,15 +13,15 @@
  */
 package com.tolstoy.censorship.twitter.checker.app.snapshot;
 
-import java.util.*;
 import java.time.Instant;
+
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.fasterxml.jackson.annotation.JsonProperty;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.tolstoy.basic.api.tweet.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageTimeline;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
@@ -42,7 +42,7 @@ class SnapshotUserPageTimeline extends SnapshotUserPage implements ISnapshotUser
 		super( "", Instant.now() );
 	}
 
-	SnapshotUserPageTimeline( String url, Instant retrievalTime ) {
+	SnapshotUserPageTimeline( final String url, final Instant retrievalTime ) {
 		super( url, retrievalTime );
 	}
 
@@ -62,17 +62,17 @@ class SnapshotUserPageTimeline extends SnapshotUserPage implements ISnapshotUser
 	}
 
 	@Override
-	public void setNumTotalTweets( int numTotalTweets ) {
+	public void setNumTotalTweets( final int numTotalTweets ) {
 		this.numTotalTweets = numTotalTweets;
 	}
 
 	@Override
-	public void setNumFollowers( int numFollowers ) {
+	public void setNumFollowers( final int numFollowers ) {
 		this.numFollowers = numFollowers;
 	}
 
 	@Override
-	public void setNumFollowing( int numFollowing ) {
+	public void setNumFollowing( final int numFollowing ) {
 		this.numFollowing = numFollowing;
 	}
 

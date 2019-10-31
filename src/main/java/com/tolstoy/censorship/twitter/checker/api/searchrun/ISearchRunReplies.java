@@ -15,7 +15,9 @@ package com.tolstoy.censorship.twitter.checker.api.searchrun;
 
 import java.util.Map;
 import java.util.Set;
-import com.tolstoy.censorship.twitter.checker.api.snapshot.*;
+
+import com.tolstoy.censorship.twitter.checker.api.snapshot.IReplyThread;
+import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageTimeline;
 
 /**
  * Represents a set of tweets retrieved from a user's timeline plus
@@ -38,7 +40,7 @@ public interface ISearchRunReplies extends ISearchRun {
 	/** Set the tweets etc retrieved from a user's timeline.
 	 * @param timeline the timeline object
 	 */
-	void setSnapshotUserPageTimeline( ISnapshotUserPageTimeline timeline );
+	void setSnapshotUserPageTimeline( final ISnapshotUserPageTimeline timeline );
 
 	/** Get the set of individual pages that should contain the user's replies.
 	 * @return the individual pages in a map. The map key is the tweet ID
@@ -54,13 +56,13 @@ public interface ISearchRunReplies extends ISearchRun {
 	 * user replied to can be obtained from the IReplyThread
 	 * object.)
 	 */
-	void setReplies( Map<Long,IReplyThread> replies );
+	void setReplies( final Map<Long,IReplyThread> replies );
 
 	/** Set a reply thread that should contain a user's reply.
 	 * @param sourceTweetID the tweet ID of the user's original tweet
 	 * @param replyThread a reply thread
 	 */
-	void setReply( long sourceTweetID, IReplyThread replyThread );
+	void setReply( final long sourceTweetID, final IReplyThread replyThread );
 
 	/** Get the set of tweet IDs for the user's replies. If five replies
 	 * from the timeline were saved, this will have the five IDs of those tweets.
@@ -72,6 +74,6 @@ public interface ISearchRunReplies extends ISearchRun {
 	 * @param sourceTweetID the ID of a tweet, such as from the user's timeline.
 	 * @return a reply thread, or null if there is no such page.
 	 */
-	IReplyThread getReplyThreadBySourceTweetID( long sourceTweetID );
+	IReplyThread getReplyThreadBySourceTweetID( final long sourceTweetID );
 }
 

@@ -13,12 +13,14 @@
  */
 package com.tolstoy.basic.api.tweet;
 
-import java.io.*;
-import java.net.*;
-import java.util.*;
+import org.apache.commons.lang3.StringUtils;
 
 public enum TweetUserVerifiedStatus {
 	UNKNOWN,
 	VERIFIED,
 	NOTVERIFIED;
+
+	public static TweetUserVerifiedStatus getMatching( final String verifiedStatus ) {
+		return StringUtils.containsIgnoreCase( verifiedStatus, "verified" ) ? VERIFIED : UNKNOWN;
+	}
 }

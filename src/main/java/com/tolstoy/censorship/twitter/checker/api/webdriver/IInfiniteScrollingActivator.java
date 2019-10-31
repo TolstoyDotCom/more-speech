@@ -14,6 +14,6 @@
 package com.tolstoy.censorship.twitter.checker.api.webdriver;
 
 public interface IInfiniteScrollingActivator {
-	void activate( int numberOfPages ) throws Exception;
+	void activate( final int numberOfPages ) throws Exception;
 	boolean getComplete();
 }

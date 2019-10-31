@@ -13,13 +13,17 @@
  */
 package com.tolstoy.censorship.twitter.checker.app.gui;
 
-import java.util.*;
 import java.awt.Window;
+import java.util.EventObject;
 
 public class WindowClosingEvent extends EventObject {
-	private Window window;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8039206645007048173L;
+	private final Window window;
 
-	public WindowClosingEvent( Object source, Window window ) {
+	public WindowClosingEvent( final Object source, final Window window ) {
 		super( source );
 		this.window = window;
 	}

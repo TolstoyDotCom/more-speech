@@ -14,14 +14,14 @@
 package com.tolstoy.censorship.twitter.checker.api.snapshot;
 
 import com.tolstoy.basic.api.tweet.ITweet;
-import com.tolstoy.basic.api.tweet.ITweetUser;
 import com.tolstoy.basic.api.tweet.ITweetCollection;
+import com.tolstoy.basic.api.tweet.ITweetUser;
 
 public interface ISnapshotUserPage extends ISnapshot {
 	ITweetUser getUser();
 	ITweetCollection getTweetCollection();
 
-	void setUser( ITweetUser user );
-	void setTweetCollection( ITweetCollection tweets );
-	void addTweet( ITweet tweet );
+	void setUser( final ITweetUser user );
+	void setTweetCollection( final ITweetCollection tweets );
+	void addTweet( final ITweet tweet );
 }

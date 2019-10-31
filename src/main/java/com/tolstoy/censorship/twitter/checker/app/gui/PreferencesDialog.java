@@ -13,31 +13,50 @@
  */
 package com.tolstoy.censorship.twitter.checker.app.gui;
 
-import java.util.*;
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
-import javax.swing.border.*;
-import com.tolstoy.basic.gui.*;
-import com.tolstoy.basic.api.utils.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.FlowLayout;
+import java.awt.Frame;
+import java.awt.GridBagLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JPanel;
+import javax.swing.border.LineBorder;
+
+import com.tolstoy.basic.api.utils.IResourceBundleWithFormatting;
 import com.tolstoy.basic.app.utils.Utils;
+import com.tolstoy.basic.gui.ElementDescriptor;
+import com.tolstoy.basic.gui.GUIComponent;
+import com.tolstoy.basic.gui.GUIComponentCheckBox;
+import com.tolstoy.basic.gui.GUIComponentPasswordField;
+import com.tolstoy.basic.gui.GUIComponentTextField;
 
 class PreferencesDialog extends JDialog implements ActionListener {
-	private java.util.List<GUIComponent> components;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -403942946798848557L;
+	private final java.util.List<GUIComponent> components;
 	private Map<String,String> userdata;
-	private JButton btnSave, btnCancel;
+	private final JButton btnSave, btnCancel;
 
-	PreferencesDialog( Frame parent, IResourceBundleWithFormatting bundle, java.util.List<ElementDescriptor> descriptors, Map<String,String> values ) {
+	PreferencesDialog( final Frame parent, final IResourceBundleWithFormatting bundle, final java.util.List<ElementDescriptor> descriptors, final Map<String,String> values ) {
 		super( parent, bundle.getString( "prefs_title" ), true );
 
 		this.userdata = null;
 		this.components = new ArrayList<GUIComponent>( descriptors.size() );
 
-		JPanel fieldsPanel = new JPanel( new GridBagLayout() );
+		final JPanel fieldsPanel = new JPanel( new GridBagLayout() );
 		fieldsPanel.setBorder( new LineBorder( Color.GRAY ) );
 
 		int row = 0;
-		for ( ElementDescriptor descriptor : descriptors ) {
+		for ( final ElementDescriptor descriptor : descriptors ) {
 			if ( "textfield".equals( descriptor.type ) ) {
 				components.add( new GUIComponentTextField( descriptor, values.get( descriptor.key ), fieldsPanel, row ) );
 			}
@@ -50,7 +69,7 @@ class PreferencesDialog extends JDialog implements ActionListener {
 			row++;
 		}
 
-		JPanel buttonsPanel = new JPanel( new FlowLayout() );
+		final JPanel buttonsPanel = new JPanel( new FlowLayout() );
 
 		btnSave = new JButton( bundle.getString( "prefs_save_button" ) );
 		btnSave.addActionListener( this );
@@ -68,10 +87,10 @@ class PreferencesDialog extends JDialog implements ActionListener {
 	}
 
 	@Override
-	public void actionPerformed( ActionEvent actionEvent ) {
+	public void actionPerformed( final ActionEvent actionEvent ) {
 		if ( actionEvent.getSource() == btnSave ) {
 			userdata = new HashMap<String,String>( 50 );
-			for ( GUIComponent component : components ) {
+			for ( final GUIComponent component : components ) {
 				component.storeValue( userdata );
 			}
 		}

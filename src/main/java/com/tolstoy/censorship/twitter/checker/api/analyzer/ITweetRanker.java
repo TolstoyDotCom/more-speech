@@ -18,7 +18,7 @@ import java.util.List;
 public interface ITweetRanker {
 	String getFunctionName();
 
-	void rankTweets( List<IAnalyzedTweet> analyzedTweets, IAnalyzedTweet referenceAnalyzedTweet ) throws Exception;
+	void rankTweets( final List<IAnalyzedTweet> analyzedTweets, final IAnalyzedTweet referenceAnalyzedTweet ) throws Exception;
 
-	void rankTweet( IAnalyzedTweet analyzedTweet, int count, IAnalyzedTweet referenceAnalyzedTweet ) throws Exception;
+	void rankTweet( final IAnalyzedTweet analyzedTweet, final int count, final IAnalyzedTweet referenceAnalyzedTweet ) throws Exception;
 }

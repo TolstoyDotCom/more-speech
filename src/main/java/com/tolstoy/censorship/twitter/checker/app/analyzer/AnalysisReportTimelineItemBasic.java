@@ -13,16 +13,20 @@
  */
 package com.tolstoy.censorship.twitter.checker.app.analyzer;
 
-import java.util.Map;
-import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.tolstoy.basic.api.tweet.ITweetFactory;
+
 import com.tolstoy.basic.api.tweet.ITweet;
-import com.tolstoy.censorship.twitter.checker.api.analyzer.*;
+import com.tolstoy.basic.api.tweet.ITweetFactory;
+import com.tolstoy.censorship.twitter.checker.api.analyzer.AnalysisReportItemBasicTimelineRepliesStatus;
+import com.tolstoy.censorship.twitter.checker.api.analyzer.IAnalysisReportTimelineItemBasic;
+import com.tolstoy.censorship.twitter.checker.api.analyzer.IAnalyzedTweet;
 import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageIndividualTweet;
 
 class AnalysisReportTimelineItemBasic implements IAnalysisReportTimelineItemBasic {
@@ -34,10 +38,14 @@ class AnalysisReportTimelineItemBasic implements IAnalysisReportTimelineItemBasi
 	private List<IAnalyzedTweet> anomalousElevatedTweets, anomalousSuppressedOrHiddenTweets, hiddenTweets;
 	private AnalysisReportItemBasicTimelineRepliesStatus status;
 	private Map<String,String> attributes;
-	private int totalReplies, totalRepliesActual, numSuppressed, numHidden;
-	private boolean isComplete;
+	private final int totalReplies, totalRepliesActual;
 
-	AnalysisReportTimelineItemBasic( ITweetFactory tweetFactory, ITweet sourceTweet, ISnapshotUserPageIndividualTweet individualPage ) {
+	private int numSuppressed;
+
+	private int numHidden;
+	private final boolean isComplete;
+
+	AnalysisReportTimelineItemBasic( final ITweetFactory tweetFactory, final ITweet sourceTweet, final ISnapshotUserPageIndividualTweet individualPage ) {
 		this.tweetFactory = tweetFactory;
 		this.sourceTweet = sourceTweet;
 		this.individualPage = individualPage;
@@ -69,7 +77,7 @@ class AnalysisReportTimelineItemBasic implements IAnalysisReportTimelineItemBasi
 	}
 
 	@Override
-	public void setTimelineRepliesStatus( AnalysisReportItemBasicTimelineRepliesStatus status ) {
+	public void setTimelineRepliesStatus( final AnalysisReportItemBasicTimelineRepliesStatus status ) {
 		this.status = status;
 	}
 
@@ -94,7 +102,7 @@ class AnalysisReportTimelineItemBasic implements IAnalysisReportTimelineItemBasi
 	}
 
 	@Override
-	public void setNumSuppressed( int numSuppressed ) {
+	public void setNumSuppressed( final int numSuppressed ) {
 		this.numSuppressed = numSuppressed;
 	}
 
@@ -104,7 +112,7 @@ class AnalysisReportTimelineItemBasic implements IAnalysisReportTimelineItemBasi
 	}
 
 	@Override
-	public void setNumHidden( int numHidden ) {
+	public void setNumHidden( final int numHidden ) {
 		this.numHidden = numHidden;
 	}
 
@@ -114,7 +122,7 @@ class AnalysisReportTimelineItemBasic implements IAnalysisReportTimelineItemBasi
 	}
 
 	@Override
-	public void setAnomalousElevatedTweets( List<IAnalyzedTweet> anomalousElevatedTweets ) {
+	public void setAnomalousElevatedTweets( final List<IAnalyzedTweet> anomalousElevatedTweets ) {
 		this.anomalousElevatedTweets = anomalousElevatedTweets;
 	}
 
@@ -124,7 +132,7 @@ class AnalysisReportTimelineItemBasic implements IAnalysisReportTimelineItemBasi
 	}
 
 	@Override
-	public void setAnomalousSuppressedOrHiddenTweets( List<IAnalyzedTweet> anomalousSuppressedOrHiddenTweets ) {
+	public void setAnomalousSuppressedOrHiddenTweets( final List<IAnalyzedTweet> anomalousSuppressedOrHiddenTweets ) {
 		this.anomalousSuppressedOrHiddenTweets = anomalousSuppressedOrHiddenTweets;
 	}
 
@@ -134,7 +142,7 @@ class AnalysisReportTimelineItemBasic implements IAnalysisReportTimelineItemBasi
 	}
 
 	@Override
-	public void setHiddenTweets( List<IAnalyzedTweet> hiddenTweets ) {
+	public void setHiddenTweets( final List<IAnalyzedTweet> hiddenTweets ) {
 		this.hiddenTweets = hiddenTweets;
 	}
 
@@ -144,17 +152,17 @@ class AnalysisReportTimelineItemBasic implements IAnalysisReportTimelineItemBasi
 	}
 
 	@Override
-	public void setAttributes( Map<String,String> attributes ) {
+	public void setAttributes( final Map<String,String> attributes ) {
 		this.attributes = attributes;
 	}
 
 	@Override
-	public String getAttribute( String key ) {
+	public String getAttribute( final String key ) {
 		return attributes.get( key );
 	}
 
 	@Override
-	public void setAttribute( String key, String value ) {
+	public void setAttribute( final String key, final String value ) {
 		attributes.put( key, value );
 	}
 

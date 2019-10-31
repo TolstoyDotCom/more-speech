@@ -13,17 +13,18 @@
  */
 package com.tolstoy.censorship.twitter.checker.app.analyzer;
 
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.tolstoy.basic.api.tweet.ITweetFactory;
-import com.tolstoy.basic.api.tweet.ITweetCollection;
+
 import com.tolstoy.basic.api.tweet.ITweet;
-import com.tolstoy.censorship.twitter.checker.api.analyzer.IAnalysisReportRepliesItemBasic;
+import com.tolstoy.basic.api.tweet.ITweetCollection;
+import com.tolstoy.basic.api.tweet.ITweetFactory;
 import com.tolstoy.censorship.twitter.checker.api.analyzer.AnalysisReportItemBasicTweetStatus;
-import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageIndividualTweet;
+import com.tolstoy.censorship.twitter.checker.api.analyzer.IAnalysisReportRepliesItemBasic;
 import com.tolstoy.censorship.twitter.checker.api.snapshot.IReplyThread;
 
 class AnalysisReportRepliesItemBasic implements IAnalysisReportRepliesItemBasic {
@@ -35,10 +36,18 @@ class AnalysisReportRepliesItemBasic implements IAnalysisReportRepliesItemBasic 
 	private ITweetCollection anomalousHigherTweets, anomalousLowerTweets, suppressedOrHiddenTweets;
 	private AnalysisReportItemBasicTweetStatus status;
 	private Map<String,String> attributes;
-	private int totalReplies, totalRepliesActual, rank, expectedRankByInteraction, expectedRankByDate, expectedRankByOverallRanking;
-	private boolean isComplete;
+	private final int totalReplies, totalRepliesActual;
 
-	AnalysisReportRepliesItemBasic( ITweetFactory tweetFactory, ITweet sourceTweet, IReplyThread replyThread ) {
+	private int rank;
+
+	private int expectedRankByInteraction;
+
+	private int expectedRankByDate;
+
+	private int expectedRankByOverallRanking;
+	private final boolean isComplete;
+
+	AnalysisReportRepliesItemBasic( final ITweetFactory tweetFactory, final ITweet sourceTweet, final IReplyThread replyThread ) {
 		this.tweetFactory = tweetFactory;
 		this.sourceTweet = sourceTweet;
 		this.replyThread = replyThread;
@@ -94,7 +103,7 @@ class AnalysisReportRepliesItemBasic implements IAnalysisReportRepliesItemBasic 
 	}
 
 	@Override
-	public void setRank( int rank ) {
+	public void setRank( final int rank ) {
 		this.rank = rank;
 	}
 
@@ -104,7 +113,7 @@ class AnalysisReportRepliesItemBasic implements IAnalysisReportRepliesItemBasic 
 	}
 
 	@Override
-	public void setExpectedRankByInteraction( int expectedRankByInteraction ) {
+	public void setExpectedRankByInteraction( final int expectedRankByInteraction ) {
 		this.expectedRankByInteraction = expectedRankByInteraction;
 	}
 
@@ -114,7 +123,7 @@ class AnalysisReportRepliesItemBasic implements IAnalysisReportRepliesItemBasic 
 	}
 
 	@Override
-	public void setExpectedRankByDate( int expectedRankByDate ) {
+	public void setExpectedRankByDate( final int expectedRankByDate ) {
 		this.expectedRankByDate = expectedRankByDate;
 	}
 
@@ -124,7 +133,7 @@ class AnalysisReportRepliesItemBasic implements IAnalysisReportRepliesItemBasic 
 	}
 
 	@Override
-	public void setExpectedRankByOverallRanking( int expectedRankByOverallRanking ) {
+	public void setExpectedRankByOverallRanking( final int expectedRankByOverallRanking ) {
 		this.expectedRankByOverallRanking = expectedRankByOverallRanking;
 	}
 
@@ -134,7 +143,7 @@ class AnalysisReportRepliesItemBasic implements IAnalysisReportRepliesItemBasic 
 	}
 
 	@Override
-	public void setTweetStatus( AnalysisReportItemBasicTweetStatus status ) {
+	public void setTweetStatus( final AnalysisReportItemBasicTweetStatus status ) {
 		this.status = status;
 	}
 
@@ -144,7 +153,7 @@ class AnalysisReportRepliesItemBasic implements IAnalysisReportRepliesItemBasic 
 	}
 
 	@Override
-	public void setAnomalousHigherTweets( ITweetCollection anomalousHigherTweets ) {
+	public void setAnomalousHigherTweets( final ITweetCollection anomalousHigherTweets ) {
 		this.anomalousHigherTweets = anomalousHigherTweets;
 	}
 
@@ -154,7 +163,7 @@ class AnalysisReportRepliesItemBasic implements IAnalysisReportRepliesItemBasic 
 	}
 
 	@Override
-	public void setAnomalousLowerTweets( ITweetCollection anomalousLowerTweets ) {
+	public void setAnomalousLowerTweets( final ITweetCollection anomalousLowerTweets ) {
 		this.anomalousLowerTweets = anomalousLowerTweets;
 	}
 
@@ -164,7 +173,7 @@ class AnalysisReportRepliesItemBasic implements IAnalysisReportRepliesItemBasic 
 	}
 
 	@Override
-	public void setSuppressedOrHiddenTweets( ITweetCollection suppressedOrHiddenTweets ) {
+	public void setSuppressedOrHiddenTweets( final ITweetCollection suppressedOrHiddenTweets ) {
 		this.suppressedOrHiddenTweets = suppressedOrHiddenTweets;
 	}
 
@@ -174,17 +183,17 @@ class AnalysisReportRepliesItemBasic implements IAnalysisReportRepliesItemBasic 
 	}
 
 	@Override
-	public void setAttributes( Map<String,String> attributes ) {
+	public void setAttributes( final Map<String,String> attributes ) {
 		this.attributes = attributes;
 	}
 
 	@Override
-	public String getAttribute( String key ) {
+	public String getAttribute( final String key ) {
 		return attributes.get( key );
 	}
 
 	@Override
-	public void setAttribute( String key, String value ) {
+	public void setAttribute( final String key, final String value ) {
 		attributes.put( key, value );
 	}
 
