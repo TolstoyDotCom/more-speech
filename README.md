@@ -46,11 +46,16 @@ Features
 2.0 Notes
 ------
 To run the 2.0 version, open a console window in the same directory as morespeech.jar and type this:
-    java -jar morespeech.jar
 
-To compile and run from source:
-    mvn clean compile exec:java -D"exec.mainClass"="com.tolstoy.censorship.twitter.checker.app.Start"
-    mvn clean compile exec:java -D"exec.mainClass"="com.tolstoy.censorship.twitter.checker.app.QuickStart"
+`java -jar morespeech.jar`
+
+
+To compile and run from source use one of these:
+
+`mvn clean compile exec:java -D"exec.mainClass"="com.tolstoy.censorship.twitter.checker.app.Start"`
+
+`mvn clean compile exec:java -D"exec.mainClass"="com.tolstoy.censorship.twitter.checker.app.QuickStart"`
+
 
 For QuickStart, first enter the required data into quickstart.prefs.json.
 
