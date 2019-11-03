@@ -27,6 +27,7 @@ import java.util.Locale;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang.time.FastDateFormat;
 import org.jtwig.JtwigModel;
 import org.jtwig.JtwigTemplate;
@@ -184,7 +185,7 @@ public class ReportWriterTimelineBasic {
 			.with( "handle", tweet.getUser().getHandle() )
 			.with( "link", String.format( prefs.getValue( "targetsite.pattern.individual" ), tweet.getUser().getHandle(), tweet.getID() ) )
 			.with( "dateStr", Utils.formatTimestampString( tweet.getAttribute( "time" ), "date unknown" ) )
-			.with( "text", Utils.removeNewlines( Utils.trimDefault( Utils.removeAllEmojis( tweet.getAttribute( "tweettext" ) ) ) ) );
+			.with( "text", Utils.removeNewlines( Utils.trimDefault( Utils.removeAllEmojis( ObjectUtils.firstNonNull( tweet.getAttribute( "tweettext" ), "" ) ) ) ) );
 
 		return tweetReplyTemplate.render( model );
 	}
@@ -216,6 +217,6 @@ public class ReportWriterTimelineBasic {
 			.with( "handle", tweet.getUser().getHandle() )
 			.with( "link", String.format( prefs.getValue( "targetsite.pattern.individual" ), tweet.getUser().getHandle(), tweet.getID() ) )
 			.with( "dateStr", Utils.formatTimestampString( tweet.getAttribute( "time" ), "date unknown" ) )
-			.with( "text", Utils.removeNewlines( Utils.trimDefault( Utils.removeAllEmojis( tweet.getAttribute( "tweettext" ) ) ) ) );
+			.with( "text", Utils.removeNewlines( Utils.trimDefault( Utils.removeAllEmojis( ObjectUtils.firstNonNull( tweet.getAttribute( "tweettext" ), "" ) ) ) ) );
 	}
 }

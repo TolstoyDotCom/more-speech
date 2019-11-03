@@ -156,6 +156,7 @@ class Tweet implements ITweet {
 		this.user = user;
 	}
 
+	@JsonIgnore
 	@Override
 	public IEntityAttributeDescriptorSet getAttributeDescriptorSet() {
 		return entityAttributeDescriptorSet;
@@ -277,6 +278,7 @@ class Tweet implements ITweet {
 				String value = ObjectUtils.firstNonNull( sourceMap.get( descriptor.getKey() ),
 															sourceMap.get( descriptor.getKeyAlias() ),
 															descriptor.getDefaultValue() );
+
 				attributes.put( descriptor.getKey(), value );
 			}
 		}
@@ -387,6 +389,14 @@ class Tweet implements ITweet {
 			warnings.add( "Tweet " + this.getID() + " MISMATCH, other mentions is " + other.getMentions() );
 		}
 
+		for ( IEntityAttributeDescriptor descriptor : getAttributeDescriptorSet().getDescriptors() ) {
+			if ( descriptor.getType() == EntityAttributeDescriptorType.SCALAR ) {
+				this.setAttribute( descriptor.getKey(), Utils.chooseLeastEmpty( this.getAttribute( descriptor.getKey() ),
+																				other.getAttribute( descriptor.getKey() ),
+																				descriptor.getDefaultValue() ) );
+			}
+		}
+
 		return warnings;
 	}
 
@@ -401,6 +411,7 @@ class Tweet implements ITweet {
 		list.add( !TWEETTEXT_EMPTY_MARKER.equals( text ) ? "txt=" + text : "NO_TXT" );
 		list.add( !Utils.isEmpty( getAttribute( "userid" ) ) ? "uid=" + getAttribute( "userid" ) : "NO_UID" );
 		list.add( !Utils.isEmpty( getAttribute( "username" ) ) ? "unm=" + getAttribute( "username" ) : "NO_UNM" );
+		list.add( !Utils.isEmptyOrZero( getAttribute( "time" ) ) ? "time=" + getAttribute( "time" ) : "NO_TIME" );
 		list.add( !Utils.isEmpty( getAttribute( "verifiedText" ) ) ? "ver=" + getAttribute( "verifiedText" ) : "NO_VER" );
 		list.add( getSupposedQuality() != null ? "q=" + getSupposedQuality() : "NO_QUAL" );
 

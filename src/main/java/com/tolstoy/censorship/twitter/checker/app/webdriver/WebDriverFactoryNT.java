@@ -88,6 +88,16 @@ class WebDriverFactoryNT implements IWebDriverFactory {
 	private final IResourceBundleWithFormatting bundle;
 	private final DebugLevel debugLevel;
 
+	private static class TweetCollectionExtended {
+		ITweetCollection tweetCollection;
+		JavascriptInterchangeContainer interchangeContainer;
+
+		TweetCollectionExtended( ITweetCollection tweetCollection, JavascriptInterchangeContainer interchangeContainer ) {
+			this.tweetCollection = tweetCollection;
+			this.interchangeContainer = interchangeContainer;
+		}
+	}
+
 	WebDriverFactoryNT( final ISnapshotFactory snapshotFactory,
 								final ITweetFactory tweetFactory,
 								final IAppDirectories appDirectories,
@@ -115,8 +125,17 @@ class WebDriverFactoryNT implements IWebDriverFactory {
 																			final int maxTweets ) throws Exception {
 		browserProxy.beginRecording( url );
 
-		final ITweetCollection tweetCollection = makeTweetCollectionFromURL( driver, driverutils, infiniteScroller, archiveDirectory,
-																				url, TargetPageType.TIMELINE, numberOfPagesToCheck, maxTweets );
+		final TweetCollectionExtended tweetCollectionExtended = makeTweetCollectionFromURLInternal( driver,
+																									driverutils,
+																									infiniteScroller,
+																									archiveDirectory,
+																									url,
+																									TargetPageType.TIMELINE,
+																									numberOfPagesToCheck,
+																									maxTweets );
+
+		final ITweetCollection tweetCollection = tweetCollectionExtended.tweetCollection;
+		final JavascriptInterchangeMetadata meta = tweetCollectionExtended.interchangeContainer.getMetadata();
 
 		final List<IBrowserProxyLogEntry> responses = browserProxy.endRecording();
 
@@ -130,8 +149,16 @@ class WebDriverFactoryNT implements IWebDriverFactory {
 
 		snapshot.setTitle( driver.getTitle() );
 
+		snapshot.setComplete( meta != null ? meta.isCompleted() : false );
+
 		if ( tweetCollection.getTweets() != null && !tweetCollection.getTweets().isEmpty() ) {
-			snapshot.setUser( tweetCollection.getTweets().get( 0 ).getUser() );
+			ITweetUser tweetUser = tweetCollection.getTweets().get( 0 ).getUser();
+			if ( tweetUser != null ) {
+				snapshot.setUser( tweetUser );
+				snapshot.setNumTotalTweets( tweetUser.getNumTotalTweets() );
+				snapshot.setNumFollowers( tweetUser.getNumFollowers() );
+				snapshot.setNumFollowing( tweetUser.getNumFollowing() );
+			}
 		}
 
 		logger.info( "\n\n\nmakeSnapshotUserPageTimelineFromURL made timeline snapshot, tweets after supplementation=\n" + tweetCollection.toDebugString( "  " ) );
@@ -151,8 +178,17 @@ class WebDriverFactoryNT implements IWebDriverFactory {
 																						final int maxTweets ) throws Exception {
 		browserProxy.beginRecording( url );
 
-		final ITweetCollection tweetCollection = makeTweetCollectionFromURL( driver, driverutils, infiniteScroller, archiveDirectory,
-																				url, TargetPageType.REPLYPAGE, numberOfPagesToCheck, maxTweets );
+		final TweetCollectionExtended tweetCollectionExtended = makeTweetCollectionFromURLInternal( driver,
+																									driverutils,
+																									infiniteScroller,
+																									archiveDirectory,
+																									url,
+																									TargetPageType.REPLYPAGE,
+																									numberOfPagesToCheck,
+																									maxTweets );
+
+		final ITweetCollection tweetCollection = tweetCollectionExtended.tweetCollection;
+		final JavascriptInterchangeMetadata meta = tweetCollectionExtended.interchangeContainer.getMetadata();
 
 		final List<ITweet> tweets = tweetCollection.getTweets();
 		if ( tweets == null || tweets.isEmpty() ) {
@@ -179,6 +215,8 @@ class WebDriverFactoryNT implements IWebDriverFactory {
 
 		snapshot.setTitle( driver.getTitle() );
 
+		snapshot.setComplete( meta != null ? meta.isCompleted() : false );
+
 		snapshot.setNumRetweets( Utils.parseIntDefault( individualTweet.getAttribute( "retweetcount" ) ) );
 		snapshot.setNumLikes( Utils.parseIntDefault( individualTweet.getAttribute( "favoritecount" ) ) );
 		snapshot.setNumReplies( Utils.parseIntDefault( individualTweet.getAttribute( "replycount" ) ) );
@@ -198,6 +236,32 @@ class WebDriverFactoryNT implements IWebDriverFactory {
 														final TargetPageType pageType,
 														final int numberOfPagesToCheck,
 														final int maxTweets ) throws Exception {
+		return makeTweetCollectionFromURLInternal( driver,
+													driverutils,
+													infiniteScroller,
+													archiveDirectory,
+													url,
+													pageType,
+													numberOfPagesToCheck,
+													maxTweets ).tweetCollection;
+	}
+
+	/**
+	 * The API was based on 'old Twitter' and it's been mostly resilient despite 'New Twitter', but there are
+	 * things that weren't planned for. This is just a temporary fix.
+	 * @todo v3: something like a SnapshotBuilder API that hides the differences between new & old and has
+	 * a pipeline of processors to deal with parsing JSON, supplementing tweets, etc.
+	 * The builder methods in this class will be moved into that API and only the API implementation will
+	 * know about webdriver etc.
+	 */
+	protected TweetCollectionExtended makeTweetCollectionFromURLInternal( final WebDriver driver,
+																			final IWebDriverUtils driverutils,
+																			final IInfiniteScrollingActivator infiniteScroller,
+																			final IArchiveDirectory archiveDirectory,
+																			final String url,
+																			final TargetPageType pageType,
+																			final int numberOfPagesToCheck,
+																			final int maxTweets ) throws Exception {
 		final JavascriptExecutor javascriptExecutor = (JavascriptExecutor) driver;
 
 		driver.manage().timeouts().setScriptTimeout( JAVASCRIPT_TIMEOUT, TimeUnit.SECONDS );
@@ -205,6 +269,8 @@ class WebDriverFactoryNT implements IWebDriverFactory {
 		logger.info( "makeTweetCollectionFromURL: calling SuedeDenim tweet_retriever script" );
 
 		final JavascriptParams jsParams = new JavascriptParams( url, pageType, debugLevel );
+		jsParams.setValue( "scrollerNumTimesToScroll", "" + ( 5 * numberOfPagesToCheck ) );
+		jsParams.setValue( "scrollerHeightMultiplier", "0.25" );
 
 		final String suedeDenimRetrieverScript = browserScriptFactory.getScript( "tweet_retriever" ).getScript();
 
@@ -228,7 +294,7 @@ class WebDriverFactoryNT implements IWebDriverFactory {
 		tweetCollection.setAttribute( "numberOfPagesToCheck", "" + numberOfPagesToCheck );
 		tweetCollection.setAttribute( "maxTweets", "" + maxTweets );
 
-		return tweetCollection;
+		return new TweetCollectionExtended( tweetCollection, interchangeContainer );
 	}
 
 	protected List<String> supplementTweetCollection( final WebDriver driver,
@@ -568,14 +634,3 @@ class WebDriverFactoryNT implements IWebDriverFactory {
 		return tweetFactory.makeTweetUser( handle, userID, displayName, verifiedStatus, avatarURL );
 	}
 }
-/*@todo:
-
-get from JSON metainfo:
-
-ret.setComplete
-ret.setUser
-ret.setNumTotalTweets( Utils.parseIntDefault( profileMap.get( "tweets" ) ) );
-ret.setNumFollowers( Utils.parseIntDefault( profileMap.get( "followers" ) ) );
-ret.setNumFollowing( Utils.parseIntDefault( profileMap.get( "following" ) ) );
-*/
-

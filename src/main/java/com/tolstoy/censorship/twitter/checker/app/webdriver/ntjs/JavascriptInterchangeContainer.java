@@ -99,8 +99,8 @@ public final class JavascriptInterchangeContainer {
 
 					this.tweetCollection.addTweet( tweet );
 					
-					logger.info( "JIC added tweet: " + tweet.toDebugString( "" ) + " from " + map );
-					logger.info( "JIC added tweet user: " + tweetUser.toDebugString( "" ) + " from " + userMap );
+					logger.info( "JIC added tweet: " + tweet.toDebugString( "" ) + " from\n" + Utils.prettyPrintMap( "  ", map ) );
+					logger.info( "JIC added tweet user: " + tweetUser.toDebugString( "" ) + " from\n" + Utils.prettyPrintMap( "  ", userMap ) );
 				}
 				catch ( Exception e ) {
 					logger.error( "Cannot create tweet from:\n" + Utils.prettyPrintMap( "  ", map ), e );

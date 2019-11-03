@@ -21,6 +21,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.text.similarity.CosineDistance;
 import org.apache.commons.text.similarity.FuzzyScore;
 import org.apache.commons.text.similarity.JaccardSimilarity;
@@ -199,7 +200,7 @@ class AnalyzedTweet implements IAnalyzedTweet {
 		this.tweet = tweet;
 		this.tweetMap = tweet.getAsMapBasic();
 		this.originalOrder = order;
-		this.textContentRaw = tweet.getAttribute( "tweettext" );
+		this.textContentRaw = ObjectUtils.firstNonNull( tweet.getAttribute( "tweettext" ), "" );
 
 		this.textContentPlain = extractPlainTextHashtagsURLsMentionsHasPicHasCards( this.textContentRaw );
 

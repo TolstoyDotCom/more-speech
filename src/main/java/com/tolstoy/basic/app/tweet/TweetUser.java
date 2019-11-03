@@ -111,6 +111,7 @@ class TweetUser implements ITweetUser {
 		this.attributes.put( "numFollowing", "" + numFollowing );
 	}
 
+	@JsonIgnore
 	@Override
 	public IEntityAttributeDescriptorSet getAttributeDescriptorSet() {
 		return entityAttributeDescriptorSet;

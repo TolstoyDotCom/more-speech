@@ -141,6 +141,19 @@ public final class Utils {
 		return ret;
 	}
 
+	public static boolean parseBoolean( final String input ) {
+		if ( input == null ) {
+			return false;
+		}
+
+		String test = input.trim();
+		if ( test.isEmpty() ) {
+			return false;
+		}
+
+		return "1".equals( input ) || "true".equalsIgnoreCase( input );
+	}
+
 	public static int makePercentInt( final int dividend, final int divisor ) {
 		if ( divisor == 0 ) {
 			return 100;
@@ -365,6 +378,30 @@ public final class Utils {
 
 	public static boolean isEmpty( final String s ) {
 		return ( s == null || s.trim().isEmpty() );
+	}
+
+	public static boolean isEmptyOrZero( final String s ) {
+		return ( s == null || s.trim().isEmpty() || "0".equals( s.trim() ) );
+	}
+
+	public static String chooseLeastEmpty( final String a, final String b, final String defaultValue ) {
+		if ( Utils.isEmpty( a ) ) {
+			return !Utils.isEmpty( b ) ? b : defaultValue;
+		}
+
+		if ( Utils.isEmpty( b ) ) {
+			return !Utils.isEmpty( a ) ? a : defaultValue;
+		}
+
+		if ( "0".equals( a ) ) {
+			return b;
+		}
+
+		if ( "0".equals( b ) ) {
+			return a;
+		}
+
+		return a.length() > b.length() ? a : b;
 	}
 
 	public static int numberObjectToInteger( final Object x ) {

@@ -34,6 +34,7 @@ public final class JavascriptInterchangeMetadata {
 		"tweet_selector",
 		"show_hidden_replies",
 		"show_hidden_replies2",
+		"completed",
 		"error_code",
 		"error_message"
 	};
@@ -79,6 +80,10 @@ public final class JavascriptInterchangeMetadata {
 
 	public String getShowHiddenReplies2() {
 		return getValue( "show_hidden_replies2" );
+	}
+
+	public boolean isCompleted() {
+		return Utils.parseBoolean( getValue( "completed" ) );
 	}
 
 	public String getErrorCode() {
