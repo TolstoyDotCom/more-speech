@@ -13,8 +13,10 @@
  */
 package com.tolstoy.censorship.twitter.checker.app.helpers;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
@@ -39,30 +41,155 @@ public class LoginToSite {
 	}
 
 	public void perform( final WebDriver webDriver, final IWebDriverUtils webDriverUtils ) {
-		WebElement temp;
 		Actions actions;
 
 		webDriver.manage().timeouts().implicitlyWait( 20, TimeUnit.SECONDS );
 		webDriver.get( prefs.getValue( "targetsite.login_url" ) );
 
-		final WebElement formElem = webDriver.findElement( By.xpath( webDriverUtils.makeByXPathClassString( "signin" ) ) );
+		LoginPlan plan;
 
-		temp = webDriverUtils.safeFindByClass( formElem, "js-username-field" );
+		plan = new LoginPlanA( webDriver, webDriverUtils );
+		plan.perform();
+		if ( !plan.isValid() ) {
+			plan = new LoginPlanB( webDriver, webDriverUtils );
+			plan.perform();
+		}
+		// plan C = javascript
+
+		if ( !plan.isValid() ) {
+			throw new RuntimeException( "cannot find login page elements" );
+		}
+
 		actions = new Actions( webDriver );
-		actions.sendKeys( temp, username );
+		actions.sendKeys( plan.getUsername(), username );
 		actions.perform();
 
 		Utils.delay( 1500 );
 
-		temp = webDriverUtils.safeFindByClass( formElem, "js-password-field" );
 		actions = new Actions( webDriver );
-		actions.sendKeys( temp, password );
+		actions.sendKeys( plan.getPassword(), password );
 		actions.perform();
 
 		Utils.delay( 2000 );
 
-		temp = webDriverUtils.safeFindByClass( formElem, "submit" );
-		temp.click();
+		plan.getSubmit().click();
+
+		logger.info( "logged in" );
+	}
+
+	private static final class LoginPlanA extends LoginPlan {
+		LoginPlanA( final WebDriver webDriver, final IWebDriverUtils webDriverUtils ) {
+			super( webDriver, webDriverUtils );
+		}
+
+		void perform() {
+			String name, role, testid;
+
+			try {
+				for ( final WebElement textInput : getWebDriver().findElements( By.xpath( "//input[@type='text']" ) ) ) {
+					name = textInput.getAttribute( "name" );
+
+					if ( StringUtils.containsIgnoreCase( name, "username" ) ) {
+						setUsername( textInput );
+						break;
+					}
+				}
+
+				for ( final WebElement passwordInput : getWebDriver().findElements( By.xpath( "//input[@type='password']" ) ) ) {
+					name = passwordInput.getAttribute( "name" );
+
+					if ( StringUtils.containsIgnoreCase( name, "password" ) ) {
+						setPassword( passwordInput );
+						break;
+					}
+				}
+
+				for ( final WebElement div : getWebDriver().findElements( By.tagName( "div" ) ) ) {
+					role = div.getAttribute( "role" );
+					testid = div.getAttribute( "data-testid" );
+
+					if ( StringUtils.containsIgnoreCase( role, "button" ) || StringUtils.containsIgnoreCase( testid, "button" ) ) {
+						setSubmit( div );
+						break;
+					}
+				}
+			}
+			catch ( Exception e ) {
+				logger.error( "finding login textfields, LoginPlanA failed", e );
+			}
+		}
+	}
+
+	private static final class LoginPlanB extends LoginPlan {
+		LoginPlanB( final WebDriver webDriver, final IWebDriverUtils webDriverUtils ) {
+			super( webDriver, webDriverUtils );
+		}
+
+		void perform() {
+			try {
+				final WebElement formElem = getWebDriver().findElement( By.xpath( getWebDriverUtils().makeByXPathClassString( "signin" ) ) );
+
+				setUsername( getWebDriverUtils().safeFindByClass( formElem, "js-username-field" ) );
+
+				setPassword( getWebDriverUtils().safeFindByClass( formElem, "js-password-field" ) );
+
+				setSubmit( getWebDriverUtils().safeFindByClass( formElem, "submit" ) );
+			}
+			catch ( Exception e ) {
+				logger.error( "finding login textfields, LoginPlanB failed", e );
+			}
+		}
+	}
+
+	private static abstract class LoginPlan {
+		private final WebDriver webDriver;
+		private final IWebDriverUtils webDriverUtils;
+		private WebElement username, password, submit;
+
+		LoginPlan( final WebDriver webDriver, final IWebDriverUtils webDriverUtils ) {
+			this.webDriver = webDriver;
+			this.webDriverUtils = webDriverUtils;
+			this.username = null;
+			this.password = null;
+			this.submit = null;
+		}
+
+		abstract void perform();
+
+		boolean isValid() {
+			return username != null && password != null && submit != null;
+		}
+
+		WebDriver getWebDriver() {
+			return webDriver;
+		}
+
+		IWebDriverUtils getWebDriverUtils() {
+			return webDriverUtils;
+		}
+
+		WebElement getUsername() {
+			return username;
+		}
+
+		void setUsername( WebElement elem ) {
+			this.username = elem;
+		}
+
+		WebElement getPassword() {
+			return password;
+		}
+
+		void setPassword( WebElement elem ) {
+			this.password = elem;
+		}
+
+		WebElement getSubmit() {
+			return submit;
+		}
+
+		void setSubmit( WebElement elem ) {
+			this.submit = elem;
+		}
 	}
 }
-
