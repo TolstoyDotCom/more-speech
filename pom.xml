@@ -31,14 +31,6 @@
 
 	<repositories>
 		<repository>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-			<id>bintray-jtwig-maven</id>
-			<name>bintray</name>
-			<url>https://dl.bintray.com/jtwig/maven</url>
-		</repository>
-		<repository>
 			<id>jitpack.io</id>
 			<url>https://jitpack.io</url>
 		</repository>

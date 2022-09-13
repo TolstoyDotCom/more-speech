@@ -25,7 +25,7 @@ import com.tolstoy.censorship.twitter.checker.api.installation.IAppDirectories;
 public class AppDirectories implements IAppDirectories {
 	private static final Logger logger = LogManager.getLogger( AppDirectories.class );
 
-	private final File installDirectory, databaseParentDirectory, databaseDirectory, reportsDirectory;
+	private File installDirectory, databaseParentDirectory, databaseDirectory, reportsDirectory;
 	private final String databaseParentDirectoryName, databaseDirectoryName, reportsDirectoryName;
 
 	public AppDirectories( final String databaseParentDirectoryName, final String databaseDirectoryName, final String reportsDirectoryName ) throws Exception {
@@ -33,7 +33,18 @@ public class AppDirectories implements IAppDirectories {
 		this.databaseDirectoryName = databaseDirectoryName;
 		this.reportsDirectoryName = reportsDirectoryName;
 
-		final File start = FileUtils.urlToFile( ClassUtils.getLocation( getClass() ) );
+		setup( FileUtils.urlToFile( ClassUtils.getLocation( getClass() ) ) );
+	}
+
+	public AppDirectories( final String databaseParentDirectoryName, final String databaseDirectoryName, final String reportsDirectoryName, final File start ) throws Exception {
+		this.databaseParentDirectoryName = databaseParentDirectoryName;
+		this.databaseDirectoryName = databaseDirectoryName;
+		this.reportsDirectoryName = reportsDirectoryName;
+
+		setup( start );
+	}
+
+	private void setup( final File start ) throws Exception {
 		final File userscriptsDirectory = Utils.findFileGoingUp( start, "userscripts" );
 		if ( userscriptsDirectory == null ) {
 			throw new RuntimeException( "Cannot find userscripts directory starting at " + start );
