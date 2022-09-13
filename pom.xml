@@ -25,7 +25,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<selenium.java.version>3.141.59</selenium.java.version>							<!-- 3.9.0 -->
 		<selenium.firefox.driver.version>3.141.59</selenium.firefox.driver.version>		<!-- 3.9.0 -->
-		<log4j.version>2.10.0</log4j.version>
+		<log4j.version>2.17.1</log4j.version>
 		<jackson.version>[2.9.9.1,)</jackson.version>
 	</properties>
 
@@ -75,7 +75,7 @@
 		<dependency>
 			<groupId>org.apache.derby</groupId>
 			<artifactId>derby</artifactId>
-			<version>10.14.1.0</version>
+			<version>10.16.1.1</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-io</groupId>
@@ -85,7 +85,7 @@
 		<dependency>
 			<groupId>com.browserup</groupId>
 			<artifactId>browserup-proxy-core</artifactId>
-			<version>2.0.1</version>
+			<version>2.1.2</version>
 		</dependency>
 		<dependency>
 			<groupId>io.netty</groupId>
