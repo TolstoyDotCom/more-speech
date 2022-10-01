@@ -398,7 +398,7 @@ class WebDriverFactoryNT implements IWebDriverFactory {
 			final FirefoxProfile firefoxProfile;
 
 			if ( !prefs.isEmpty( "prefs.firefox_path_profile" ) ) {
-				String firefoxProfilePath = prefs.getValue( "prefs.firefox_path_app" );
+				String firefoxProfilePath = prefs.getValue( "prefs.firefox_path_profile" );
 
 				logger.info( "WebDriverFactoryNT.makeWebDriver: making WebDriver profile from " + firefoxProfilePath );
 

@@ -391,7 +391,7 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 			validatePreferences();
 		}
 		catch ( final Exception e ) {
-			final String s = bundle.getString( "exc_cannot_save_prefs", "" + Utils.sanitizeMap( prefs.getValues() ) );
+			final String s = bundle.getString( "exc_cannot_save_prefs", "" + Utils.prettyPrintMap( "", Utils.sanitizeMap( prefs.getValues() ) ) );
 			logger.error( s, e );
 			gui.addMessage( new StatusMessage( s, StatusMessageSeverity.ERROR ) );
 		}

@@ -22,11 +22,15 @@
 	<url>http://maven.apache.org</url>
 
 	<properties>
+		<java.version>17</java.version>
+		<maven.compiler.source>17</maven.compiler.source>
+		<maven.compiler.target>17</maven.compiler.target>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<selenium.java.version>3.141.59</selenium.java.version>							<!-- 3.9.0 -->
 		<selenium.firefox.driver.version>3.141.59</selenium.firefox.driver.version>		<!-- 3.9.0 -->
 		<log4j.version>2.17.1</log4j.version>
 		<jackson.version>[2.9.9.1,)</jackson.version>
+		<derby.version>10.16.1.1</derby.version>
 	</properties>
 
 	<repositories>
@@ -75,7 +79,12 @@
 		<dependency>
 			<groupId>org.apache.derby</groupId>
 			<artifactId>derby</artifactId>
-			<version>10.16.1.1</version>
+			<version>${derby.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.derby</groupId>
+			<artifactId>derbytools</artifactId>
+			<version>${derby.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-io</groupId>
@@ -229,8 +238,8 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.7.0</version>
 				<configuration>
-					<source>1.10</source>
-					<target>1.10</target>
+					<source>${maven.compiler.source}</source>
+					<target>${maven.compiler.target}</target>
 				</configuration>
 			</plugin>
 			<plugin>

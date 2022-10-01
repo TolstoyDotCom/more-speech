@@ -140,6 +140,8 @@ public final class Start {
 			prefsFactory = new PreferencesFactory( storage, defaultAppPrefs );
 			prefs = prefsFactory.getAppPreferences();
 
+			logger.info( "prefs before override=" + Utils.prettyPrintMap( "", Utils.sanitizeMap( prefs.getValues() ) ) );
+
 			final IOverridePreferences[] overrides = {
 				new OverridePreferencesFromSystemProperties( PREFERENCES_OVERRIDEABLE_BY_SYSTEM_PROPERTIES ),
 				new OverridePreferencesFromEmbedPathsLinux( appDirectories ),
@@ -158,7 +160,7 @@ public final class Start {
 				prefs.save();
 			}
 
-			logger.info( "prefs=" + Utils.sanitizeMap( prefs.getValues() ) );
+			logger.info( "prefs after override=" + Utils.prettyPrintMap( "", Utils.sanitizeMap( prefs.getValues() ) ) );
 		}
 		catch ( final Exception e ) {
 			handleError( true, bundle.getString( "exc_prefs_init" ), e );

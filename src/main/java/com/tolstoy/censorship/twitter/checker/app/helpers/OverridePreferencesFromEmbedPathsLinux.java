@@ -40,7 +40,7 @@ public class OverridePreferencesFromEmbedPathsLinux implements IOverridePreferen
 	public boolean override( final IPreferences prefs, final IResourceBundleWithFormatting bundle ) {
 		boolean bChanged = false;
 
-		prefs.setValue( "prefs.firefox_path_geckodriver", "/home/zapp/projects/htdocs/twitter_censorship/geckodriver" );
+		prefs.setValue( "prefs.firefox_path_geckodriver", "" );
 		bChanged = true;
 
 		final File firefoxDir = appDirectories.getSubdirectory( prefs.getValue( "embed.firefox.containing_dir" ) );

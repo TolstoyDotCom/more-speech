@@ -65,7 +65,7 @@ There's no longer a restriction on using 'mvn clean'.
 
 This no longer needs an older version of Firefox; New Twitter doesn't work with the version that was recommended before.
 
-This has only been tested with Firefox 70 and OpenJDK 11 on Ubuntu 18. A windows version will be released after more testing.
+This has only been tested with Firefox 105 and OpenJDK 17 on Ubuntu 18. JDK 17 is required. A windows version will be released after more testing.
 
 Examples
 ------
