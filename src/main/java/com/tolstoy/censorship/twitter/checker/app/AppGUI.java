@@ -480,6 +480,9 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 		guiElements.add( new ElementDescriptor( "textfield", "prefs.handle_to_check",
 													bundle.getString( "prefs_element_handle_to_check_name" ),
 													bundle.getString( "prefs_element_handle_to_check_help" ), 30 ) );
+		guiElements.add( new ElementDescriptor( "checkbox", "prefs.skip_login",
+													bundle.getString( "prefs_element_skip_login_name" ),
+													bundle.getString( "prefs_element_skip_login_help" ), 30 ) );
 		guiElements.add( new ElementDescriptor( "textfield", "prefs.testing_account_name_private",
 													bundle.getString( "prefs_element_testing_account_name" ),
 													bundle.getString( "prefs_element_testing_account_help" ), 30 ) );
@@ -510,6 +513,9 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 		guiElements.add( new ElementDescriptor( "textfield", "prefs.firefox_path_profile",
 													bundle.getString( "prefs_element_firefox_path_profile_name" ),
 													bundle.getString( "prefs_element_firefox_path_profile_help" ), 30 ) );
+		guiElements.add( new ElementDescriptor( "textfield", "prefs.firefox_name_profile",
+													bundle.getString( "prefs_element_firefox_name_profile_name" ),
+													bundle.getString( "prefs_element_firefox_name_profile_help" ), 30 ) );
 		guiElements.add( new ElementDescriptor( "textfield", "prefs.firefox_screen_position_x",
 													bundle.getString( "prefs_element_firefox_screen_position_x_name" ),
 													bundle.getString( "prefs_element_firefox_screen_position_x_help" ), 30 ) );
@@ -518,4 +524,3 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 													bundle.getString( "prefs_element_firefox_screen_position_y_help" ), 30 ) );
 	}
 }
-

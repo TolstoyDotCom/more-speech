@@ -20,6 +20,8 @@ import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.openqa.selenium.Point;
 import org.openqa.selenium.WebDriver;
 
@@ -123,7 +125,7 @@ final public class SearchRunTimelineBuilder /*implements IBrowserProxyResponseLi
 		LoginToSite loginToSite = null;
 		String loginName = null;
 		String loginPassword = null;
-		boolean bUsingLogin = false;
+		boolean bSkipLogin = false, bUsingLogin = false;
 
 		logger.info( "SearchRunTimelineBuilder: buildSearchRunTimeline start" );
 
@@ -131,8 +133,13 @@ final public class SearchRunTimelineBuilder /*implements IBrowserProxyResponseLi
 			loginName = prefs.getValue( "prefs.testing_account_name_private" );
 			loginPassword = prefs.getValue( "prefs.testing_account_password_private" );
 
+			bSkipLogin = Utils.isStringTrue( prefs.getValue( "prefs.skip_login" ) );
+
 			if ( !Utils.isEmpty( loginName ) && !Utils.isEmpty( loginPassword ) ) {
 				bUsingLogin = true;
+			}
+
+			if ( bUsingLogin || bSkipLogin ) {
 				webDriverFactory = webDriverFactoryFactory.makeWebDriverFactory( WebDriverFactoryType.NEWTWITTER_WITH_JAVASCRIPT );
 			}
 			else {
@@ -170,7 +177,7 @@ final public class SearchRunTimelineBuilder /*implements IBrowserProxyResponseLi
 		try {
 			webDriverUtils = webDriverFactory.makeWebDriverUtils( webDriver );
 
-			if ( bUsingLogin ) {
+			if ( bUsingLogin && !bSkipLogin ) {
 				loginToSite = new LoginToSite( loginName, loginPassword, prefs );
 				loginToSite.perform( webDriver, webDriverUtils );
 			}
@@ -338,7 +345,6 @@ final public class SearchRunTimelineBuilder /*implements IBrowserProxyResponseLi
 																final int numberOfReplyPagesToCheck )
 																	throws Exception {
 		ISnapshotUserPageIndividualTweet individualPage;
-		IInfiniteScrollingActivator scroller;
 
 		final String url = String.format( prefs.getValue( "targetsite.pattern.individual" ), sourceTweet.getUser().getHandle(), sourceTweet.getID() );
 
@@ -346,9 +352,9 @@ final public class SearchRunTimelineBuilder /*implements IBrowserProxyResponseLi
 
 		webDriver.get( url );
 
-		scroller = webDriverFactory.makeInfiniteScrollingActivator( webDriver,
-																	webDriverUtils,
-																	InfiniteScrollingActivatorType.INDIVIDUAL );
+		final IInfiniteScrollingActivator scroller = webDriverFactory.makeInfiniteScrollingActivator( webDriver,
+																										webDriverUtils,
+																										InfiniteScrollingActivatorType.INDIVIDUAL );
 
 		try {
 			individualPage = webDriverFactory.makeSnapshotUserPageIndividualTweetFromURL( webDriver,
@@ -380,7 +386,7 @@ final public class SearchRunTimelineBuilder /*implements IBrowserProxyResponseLi
 	}
 
 	private void logWarn( final String s, final Exception e ) {
-		logger.error( s, e );
+		logger.error( e.getMessage() + ", trace=" + StringUtils.substring( ExceptionUtils.getStackTrace( e ), 0, 3000 ) );
 		statusMessageReceiver.addMessage( new StatusMessage( s, StatusMessageSeverity.WARN ) );
 	}
 

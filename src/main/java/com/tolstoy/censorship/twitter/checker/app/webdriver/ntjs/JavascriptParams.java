@@ -38,7 +38,7 @@ public final class JavascriptParams {
 		this.map.put( "pageType", pageType.getKey() );
 		this.map.put( "debugLevel", "" + debugLevel.getAsInt() );
 
-		this.map.put( "mainClockDelay", "1250" );
+		this.map.put( "mainClockDelay", "1100" );
 
 		this.map.put( "tweetSelector", "main article" );
 

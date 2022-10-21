@@ -14,6 +14,7 @@
 package com.tolstoy.censorship.twitter.checker.app.webdriver;
 
 import java.io.File;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
@@ -29,12 +30,16 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.Proxy;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.UnexpectedAlertBehaviour;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.firefox.FirefoxBinary;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxProfile;
+import org.openqa.selenium.firefox.ProfilesIni;
+import org.openqa.selenium.firefox.FirefoxDriverLogLevel;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.logging.LogType;
@@ -78,7 +83,7 @@ class WebDriverFactoryNT implements IWebDriverFactory {
 	private static final Logger logger = LogManager.getLogger( WebDriverFactoryNT.class );
 
 	private static final String TWEETUSER_HANDLE_UNKNOWN = "unknownuser";
-	private static final int JAVASCRIPT_TIMEOUT = 1000;
+	private static final Duration TIMEOUT = Duration.ofSeconds( 10000 );
 
 	private final ISnapshotFactory snapshotFactory;
 	private final ITweetFactory tweetFactory;
@@ -123,7 +128,7 @@ class WebDriverFactoryNT implements IWebDriverFactory {
 																			final String url,
 																			final int numberOfPagesToCheck,
 																			final int maxTweets ) throws Exception {
-		browserProxy.beginRecording( url );
+		browserProxy.beginRecording( driver, url );
 
 		final TweetCollectionExtended tweetCollectionExtended = makeTweetCollectionFromURLInternal( driver,
 																									driverutils,
@@ -137,7 +142,7 @@ class WebDriverFactoryNT implements IWebDriverFactory {
 		final ITweetCollection tweetCollection = tweetCollectionExtended.tweetCollection;
 		final JavascriptInterchangeMetadata meta = tweetCollectionExtended.interchangeContainer.getMetadata();
 
-		final List<IBrowserProxyLogEntry> responses = browserProxy.endRecording();
+		final List<IBrowserProxyLogEntry> responses = browserProxy.endRecording( driver );
 
 		final List<String> jsonStrings = saveJSONStrings( responses, archiveDirectory );
 
@@ -176,7 +181,7 @@ class WebDriverFactoryNT implements IWebDriverFactory {
 																						final String url,
 																						final int numberOfPagesToCheck,
 																						final int maxTweets ) throws Exception {
-		browserProxy.beginRecording( url );
+		browserProxy.beginRecording( driver, url );
 
 		final TweetCollectionExtended tweetCollectionExtended = makeTweetCollectionFromURLInternal( driver,
 																									driverutils,
@@ -195,7 +200,7 @@ class WebDriverFactoryNT implements IWebDriverFactory {
 			throw new RuntimeException( "makeSnapshotUserPageIndividualTweetFromURL: individual page must have at least one tweet" );
 		}
 
-		List<IBrowserProxyLogEntry> responses = browserProxy.endRecording();
+		List<IBrowserProxyLogEntry> responses = browserProxy.endRecording( driver );
 
 		List<String> jsonStrings = saveJSONStrings( responses, archiveDirectory );
 
@@ -264,7 +269,8 @@ class WebDriverFactoryNT implements IWebDriverFactory {
 																			final int maxTweets ) throws Exception {
 		final JavascriptExecutor javascriptExecutor = (JavascriptExecutor) driver;
 
-		driver.manage().timeouts().setScriptTimeout( JAVASCRIPT_TIMEOUT, TimeUnit.SECONDS );
+		driver.manage().timeouts().scriptTimeout( TIMEOUT );
+		driver.manage().window().maximize();
 
 		logger.info( "makeTweetCollectionFromURL: calling SuedeDenim tweet_retriever script" );
 
@@ -304,7 +310,7 @@ class WebDriverFactoryNT implements IWebDriverFactory {
 														final String url ) throws Exception {
 		final JavascriptExecutor javascriptExecutor = (JavascriptExecutor) driver;
 
-		driver.manage().timeouts().setScriptTimeout( JAVASCRIPT_TIMEOUT, TimeUnit.SECONDS );
+		driver.manage().timeouts().scriptTimeout( TIMEOUT );
 
 		logger.info( "supplementTweetCollection: calling SuedeDenim json_parser script" );
 
@@ -359,64 +365,67 @@ class WebDriverFactoryNT implements IWebDriverFactory {
 		return makeWebDriver( null );
 	}
 
-	@Override
 	public WebDriver makeWebDriver( final IBrowserProxy proxy ) throws Exception {
 		try {
-			//logger.info( "original=" + prefs.getValue( "prefs.firefox_path_geckodriver" ) );
-			//System.setProperty( "webdriver.gecko.driver", prefs.getValue( "prefs.firefox_path_geckodriver" ) );
+			final String firefoxBinaryPath = Utils.trimDefault( prefs.getValue( "prefs.firefox_path_app" ), null, true );
+			final String firefoxProfilePath = Utils.trimDefault( prefs.getValue( "prefs.firefox_path_profile" ), null, true );
+			final String firefoxProfileName = Utils.trimDefault( prefs.getValue( "prefs.firefox_name_profile" ), null, true );
 
-			final DesiredCapabilities capabilities = new DesiredCapabilities();
-			capabilities.setAcceptInsecureCerts( true );
+			logger.info( "makeWebDriver: binary=" + firefoxBinaryPath +
+							", profile path=" + firefoxProfilePath +
+							", profile name=" + firefoxProfileName +
+							", proxy=" + proxy );
 
-			final LoggingPreferences loggingPreferences = new LoggingPreferences();
-			loggingPreferences.enable( LogType.BROWSER, Level.INFO );
-			capabilities.setCapability( CapabilityType.LOGGING_PREFS, loggingPreferences );
+			WebDriverManager.firefoxdriver().setup();
+
+			final FirefoxOptions firefoxOptions = new FirefoxOptions();
+
+			firefoxOptions.setAcceptInsecureCerts( true );
+			firefoxOptions.setPageLoadTimeout( TIMEOUT );
+			firefoxOptions.setScriptTimeout( TIMEOUT );
+			firefoxOptions.setImplicitWaitTimeout​( TIMEOUT );
+			firefoxOptions.setUnhandledPromptBehaviour​​( UnexpectedAlertBehaviour.DISMISS );
 
 			if ( proxy != null ) {
-				logger.info( "WebDriverFactoryNT.makeWebDriver: using browser proxy" );
-				capabilities.setCapability( CapabilityType.PROXY, proxy.getSeleniumProxy() );
+				Proxy seleniumProxy = proxy.getSeleniumProxy();
+				if ( seleniumProxy != null ) {
+					firefoxOptions.setProxy( seleniumProxy );
+				}
 			}
 
-			logger.info( "WebDriverFactoryNT.makeWebDriver: webdriver capabilities=" + capabilities );
-
-			final FirefoxOptions firefoxOptions = new FirefoxOptions( capabilities );
-
-			if ( !prefs.isEmpty( "prefs.firefox_path_app" ) ) {
-				String firefoxBinaryPath = prefs.getValue( "prefs.firefox_path_app" );
-
-				logger.info( "WebDriverFactoryNT.makeWebDriver: making WebDriver binary from " + firefoxBinaryPath );
-
-				WebDriverManager.firefoxdriver().browserPath( firefoxBinaryPath ).setup();
+			if ( firefoxBinaryPath != null ) {
 				firefoxOptions.setBinary( new FirefoxBinary( new File( firefoxBinaryPath ) ) );
 
 				return new FirefoxDriver( firefoxOptions );
 			}
-			else {
-				WebDriverManager.firefoxdriver().setup();
-			}
 
 			final FirefoxProfile firefoxProfile;
 
-			if ( !prefs.isEmpty( "prefs.firefox_path_profile" ) ) {
-				String firefoxProfilePath = prefs.getValue( "prefs.firefox_path_profile" );
-
-				logger.info( "WebDriverFactoryNT.makeWebDriver: making WebDriver profile from " + firefoxProfilePath );
-
+			if ( firefoxProfileName != null ) {
+				ProfilesIni profilesIni = new ProfilesIni();
+				firefoxProfile = profilesIni.getProfile( firefoxProfileName );
+			}
+			else if ( firefoxProfilePath != null ) {
 				firefoxProfile = new FirefoxProfile( new File( firefoxProfilePath ) );
 			}
 			else {
-				logger.info( "WebDriverFactoryNT.makeWebDriver: making empty WebDriver profile" );
 				firefoxProfile = new FirefoxProfile();
 			}
 
 			setFirefoxProfilePreferences( firefoxProfile );
 			addFirefoxExtensions( firefoxProfile );
 
-			logger.info( "WebDriverFactoryNT.makeWebDriver: making WebDriver from profile" );
+			firefoxOptions.setLogLevel( FirefoxDriverLogLevel.INFO );
+			firefoxOptions.addPreference( "toolkit.asyncshutdown.log", true );
+			firefoxOptions.addArguments( "--devtools" );
 
 			firefoxOptions.setProfile( firefoxProfile );
 
-			return new FirefoxDriver( firefoxOptions );
+			WebDriver driver = new FirefoxDriver( firefoxOptions );
+			driver.manage().timeouts().scriptTimeout( TIMEOUT );
+			logger.info( "WEBDRIVER SCRIPT TIMEOUT=" + driver.manage().timeouts().getScriptTimeout() );
+
+			return driver;
 		}
 		catch ( Exception e ) {
 			logger.error( "FAILED TO CREATE WEBDRIVER", e );
@@ -584,8 +593,19 @@ class WebDriverFactoryNT implements IWebDriverFactory {
 		firefoxProfile.setPreference( "app.update.auto", false );
 		firefoxProfile.setPreference( "app.update.enabled", false );
 		firefoxProfile.setPreference( "browser.shell.checkDefaultBrowser", false );
-
 		firefoxProfile.setPreference( "devtools.console.stdout.content", true );
+		firefoxProfile.setPreference( "devtools.toolbox.selectedTool", "netmonitor" );
+		firefoxProfile.setPreference( "devtools.netmonitor.persistlog", true );
+		firefoxProfile.setPreference( "devtools.toolbox.footer.height", 120 );
+
+		firefoxProfile.setPreference( "extensions.pocket.enabled", false );
+		firefoxProfile.setPreference( "identity.fxaccounts.enabled", false );
+
+		//	fission = different processes for different sites, not needed in this case.
+		firefoxProfile.setPreference( "fission.autostart", false );
+		firefoxProfile.setPreference( "fission.bfcacheInParent", 0 );
+		firefoxProfile.setPreference( "fission.webContentIsolationStrategy", 0 );
+
 
 		/* for using an external proxy:
 		profile.setPreference( "network.proxy.type", 1 );

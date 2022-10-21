@@ -104,15 +104,16 @@ final public class SearchRunRepliesFromItineraryBuilder {
 		final LoginToSite loginToSite;
 		final String loginName;
 		final String loginPassword;
-		final boolean bUsingLogin;
+		final boolean bSkipLogin, bUsingLogin;
 
 		try {
 			loginName = prefs.getValue( "prefs.testing_account_name_private" );
 			loginPassword = prefs.getValue( "prefs.testing_account_password_private" );
 
+			bSkipLogin = Utils.isStringTrue( prefs.getValue( "prefs.skip_login" ) );
 			bUsingLogin = !Utils.isEmpty( loginName ) && !Utils.isEmpty( loginPassword );
 
-			if ( bUsingLogin ) {
+			if ( bUsingLogin || bSkipLogin ) {
 				webDriverFactory = webDriverFactoryFactory.makeWebDriverFactory( WebDriverFactoryType.NEWTWITTER_WITH_JAVASCRIPT );
 			}
 			else {
@@ -152,7 +153,7 @@ final public class SearchRunRepliesFromItineraryBuilder {
 		try {
 			webDriverUtils = webDriverFactory.makeWebDriverUtils( webDriver );
 
-			if ( bUsingLogin ) {
+			if ( bUsingLogin && !bSkipLogin ) {
 				loginToSite = new LoginToSite( loginName, loginPassword, prefs );
 				loginToSite.perform( webDriver, webDriverUtils );
 			}

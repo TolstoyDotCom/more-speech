@@ -43,29 +43,26 @@ Features
 
 * The Windows download is large but no setup is required: just download, unzip, and run.
 
-2.0 Notes
+2.1 Notes (ignore the other instructions for now)
 ------
-To run the 2.0 version, open a console window in the same directory as morespeech.jar and type this:
+This has only been tested with Firefox 105 and OpenJDK 17 on Ubuntu 18. JDK 17 is required. A windows version and a pre-built jar file will be released after more testing.
 
-`java -jar morespeech.jar`
+The Installation sections below should be ignored for now.
 
+To run the 2.1 version:
 
-To compile and run from source use one of these:
+1. Create a new Firefox profile just for use by this application. Set it to remember cookies. You'll need the name of the profile; choose something all lowercase without spaces like "twtr_censorship".
+2. In the new profile, log in to the testing Twitter account. (See below for the details on the testing account. The previous version could log in automatically but that part hasn't been updated yet).
+3. In the new profile, install [this extenion](https://addons.mozilla.org/en-US/firefox/addon/har-export-trigger/). (The previous version of this application used a proxy to capture the AJAX messages from Twitter but the proxy [isn't working](https://github.com/lightbody/browsermob-proxy/issues/897). So, the new version gets the AJAX directly from the browser and the extension is used to accomplish that.)
+4. Open a console window in the top-level directory (where `pom.xml` is) and type this:
 
-`mvn clean compile exec:java -D"exec.mainClass"="com.tolstoy.censorship.twitter.checker.app.Start"`
+`JDK_JAVA_OPTIONS="--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.time=ALL-UNNAMED" mvn clean compile exec:java -D{webdriver.http.factory}={jdk-http-client} -D"exec.mainClass"="com.tolstoy.censorship.twitter.checker.app.Start"`
 
-`mvn clean compile exec:java -D"exec.mainClass"="com.tolstoy.censorship.twitter.checker.app.QuickStart"`
+5. When the application opens, in the Preferences dialog fill out the handle, check the 'Skip the login page' checkbox, and fill out the 'Firefox profile name' (or path). Then, click the 'Check timeline' button and wait until it says it's created the report.
 
-
-For QuickStart, first enter the required data into quickstart.prefs.json.
+You could also first enter the required data into quickstart.prefs.json and then replace `Start` with `QuickStart` in the command above, but that hasn't been tested.
 
 suededenim.java.js in the stockscripts directory is from the [SuedeDenim](https://github.com/TolstoyDotCom/SuedeDenim) project. You should be able to replace that with newer versions of the script.
-
-There's no longer a restriction on using 'mvn clean'.
-
-This no longer needs an older version of Firefox; New Twitter doesn't work with the version that was recommended before.
-
-This has only been tested with Firefox 105 and OpenJDK 17 on Ubuntu 18. JDK 17 is required. A windows version will be released after more testing.
 
 Examples
 ------

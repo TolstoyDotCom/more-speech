@@ -27,6 +27,7 @@ import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.Proxy;
 import org.openqa.selenium.firefox.FirefoxBinary;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
@@ -339,8 +340,11 @@ public class WebDriverFactory implements IWebDriverFactory {
 			capabilities.setCapability( CapabilityType.LOGGING_PREFS, loggingPreferences );
 
 			if ( proxy != null ) {
-				logger.info( "WebDriverFactory.makeWebDriver: using browser proxy" );
-				capabilities.setCapability( CapabilityType.PROXY, proxy.getSeleniumProxy() );
+				Proxy seleniumProxy = proxy.getSeleniumProxy();
+				if ( seleniumProxy != null ) {
+					logger.info( "WebDriverFactory.makeWebDriver: using browser proxy" );
+					capabilities.setCapability( CapabilityType.PROXY, seleniumProxy );
+				}
 			}
 
 			logger.info( "WebDriverFactory.makeWebDriver: webdriver capabilities=" + capabilities );
@@ -352,7 +356,8 @@ public class WebDriverFactory implements IWebDriverFactory {
 
 				logger.info( "WebDriverFactory.makeWebDriver: making WebDriver binary from " + firefoxBinaryPath );
 
-				WebDriverManager.firefoxdriver().browserPath( firefoxBinaryPath ).setup();
+				//WebDriverManager.firefoxdriver().browserPath( firefoxBinaryPath ).setup();
+				WebDriverManager.firefoxdriver().setup();
 				firefoxOptions.setBinary( new FirefoxBinary( new File( firefoxBinaryPath ) ) );
 
 				return new FirefoxDriver( firefoxOptions );
@@ -364,7 +369,7 @@ public class WebDriverFactory implements IWebDriverFactory {
 			final FirefoxProfile firefoxProfile;
 
 			if ( !prefs.isEmpty( "prefs.firefox_path_profile" ) ) {
-				String firefoxProfilePath = prefs.getValue( "prefs.firefox_path_app" );
+				String firefoxProfilePath = prefs.getValue( "prefs.firefox_path_profile" );
 
 				logger.info( "WebDriverFactory.makeWebDriver: making WebDriver profile from " + firefoxProfilePath );
 

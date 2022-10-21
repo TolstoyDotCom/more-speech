@@ -29,7 +29,7 @@ public class BrowserScriptFactory implements IBrowserScriptFactory {
 	private static final Logger logger = LogManager.getLogger( BrowserScriptFactory.class );
 
 	private final Map<String,IBrowserScript> map;
-	private final String[] scriptNames = { "tweet_retriever", "json_parser" };
+	private final String[] scriptNames = { "tweet_retriever", "json_parser", "har_retriever" };
 
 	public BrowserScriptFactory( final File stockscriptsDir ) throws Exception {
 		this.map = new HashMap<String,IBrowserScript>( 2 );
@@ -45,22 +45,29 @@ public class BrowserScriptFactory implements IBrowserScriptFactory {
 		}
 
 		final File tweetRetrieverFooterFile = new File( stockscriptsDir, "tweet_retriever.footer.js" );
-		if ( !suededenimFile.exists() ) {
-			throw new RuntimeException( "tweet_retriever.footer.js does not exist in " + suededenimFile );
+		if ( !tweetRetrieverFooterFile.exists() ) {
+			throw new RuntimeException( "tweet_retriever.footer.js does not exist in " + tweetRetrieverFooterFile );
 		}
 
 		final File jsonParserFooterFile = new File( stockscriptsDir, "json_parser.footer.js" );
-		if ( !suededenimFile.exists() ) {
-			throw new RuntimeException( "json_parser.footer.js does not exist in " + suededenimFile );
+		if ( !jsonParserFooterFile.exists() ) {
+			throw new RuntimeException( "json_parser.footer.js does not exist in " + jsonParserFooterFile );
+		}
+
+		final File harRetrieverFooterFile = new File( stockscriptsDir, "har_retriever.footer.js" );
+		if ( !harRetrieverFooterFile.exists() ) {
+			throw new RuntimeException( "har_retriever.footer.js does not exist in " + harRetrieverFooterFile );
 		}
 
 		final String jQueryContents = FileUtils.readFileToString( jqueryFile, Charset.defaultCharset() );
 		final String suedeDenimContents = FileUtils.readFileToString( suededenimFile, Charset.defaultCharset() );
 		final String tweetRetrieverFooterContents = FileUtils.readFileToString( tweetRetrieverFooterFile, Charset.defaultCharset() );
 		final String jsonParserFooterContents = FileUtils.readFileToString( jsonParserFooterFile, Charset.defaultCharset() );
+		final String harRetrieverFooterContents = FileUtils.readFileToString( harRetrieverFooterFile, Charset.defaultCharset() );
 
 		map.put( "tweet_retriever", new BrowserScript( "tweet_retriever", jQueryContents + "\n\n" + suedeDenimContents + "\n\n" + tweetRetrieverFooterContents ) );
 		map.put( "json_parser", new BrowserScript( "json_parser", jQueryContents + "\n\n" + suedeDenimContents + "\n\n" + jsonParserFooterContents ) );
+		map.put( "har_retriever", new BrowserScript( "har_retriever", jQueryContents + "\n\n" + suedeDenimContents + "\n\n" + harRetrieverFooterContents ) );
 	}
 
 	public IBrowserScript getScript( String name ) throws Exception {

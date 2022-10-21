@@ -22,6 +22,7 @@ import com.tolstoy.censorship.twitter.checker.api.browserproxy.IBrowserProxy;
 import com.tolstoy.censorship.twitter.checker.api.browserproxy.IBrowserProxyFactory;
 import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
 import com.tolstoy.censorship.twitter.checker.app.helpers.SearchRunRepliesBuilder;
+import com.tolstoy.censorship.twitter.checker.api.installation.IBrowserScriptFactory;
 
 public class BrowserProxyFactory implements IBrowserProxyFactory {
 	private static final Logger logger = LogManager.getLogger( SearchRunRepliesBuilder.class );
@@ -29,17 +30,21 @@ public class BrowserProxyFactory implements IBrowserProxyFactory {
 	private final IPreferences prefs;
 	private final IResourceBundleWithFormatting bundle;
 	private final JBus jbus;
+	private final IBrowserScriptFactory browserScriptFactory;
 
 	public BrowserProxyFactory( final IPreferences prefs,
 								final IResourceBundleWithFormatting bundle,
-								final JBus jbus ) {
+								final JBus jbus,
+								final IBrowserScriptFactory browserScriptFactory ) {
 		this.prefs = prefs;
 		this.bundle = bundle;
 		this.jbus = jbus;
+		this.browserScriptFactory = browserScriptFactory;
 	}
 
 	@Override
 	public IBrowserProxy makeBrowserProxy() throws Exception {
-		return new BrowserProxyBUP( prefs, bundle, jbus );
+		return new BrowserProxyHAR( prefs, bundle, jbus, browserScriptFactory );
+		//return new BrowserProxyBUP( prefs, bundle, jbus );
 	}
 }

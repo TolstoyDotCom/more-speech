@@ -14,6 +14,7 @@
 package com.tolstoy.censorship.twitter.checker.api.browserproxy;
 
 import org.openqa.selenium.Proxy;
+import org.openqa.selenium.WebDriver;
 
 import java.util.List;
 import java.util.Map;
@@ -24,8 +25,8 @@ public interface IBrowserProxy {
 
 	Proxy getSeleniumProxy();
 
-	void beginRecording( String name );
-	List<IBrowserProxyLogEntry> endRecording();
+	void beginRecording( WebDriver driver, String name );
+	List<IBrowserProxyLogEntry> endRecording( WebDriver driver ) throws Exception;
 
 	void addBrowserProxyResponseListener( final IBrowserProxyResponseListener l );
 	void removeBrowserProxyResponseListener( final IBrowserProxyResponseListener l );

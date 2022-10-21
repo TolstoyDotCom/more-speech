@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -42,7 +43,7 @@ final class BrowserProxyLogEntry implements IBrowserProxyLogEntry {
 		final HarResponse response = entry.getResponse();
 		final HarContent content = response.getContent();
 
-		headers = new ArrayList<String>( 20 );
+		this.headers = new ArrayList<String>( 20 );
 		for ( HarHeader header : response.getHeaders() ) {
 			headers.add( header.getName() + ": " + header.getValue() );
 		}
@@ -64,6 +65,35 @@ final class BrowserProxyLogEntry implements IBrowserProxyLogEntry {
 		this.map.put( "response_redirecturl", response.getRedirectURL() );
 		this.map.put( "response_status", "response_status " + response.getStatus() );
 		this.map.put( "response_statustext", response.getStatusText() );
+	}
+
+	public BrowserProxyLogEntry( final Map<String,Object> entry ) {
+		Map<String,Object> request = (Map<String,Object>) entry.get( "request" );
+		Map<String,Object> response = (Map<String,Object>) entry.get( "response" );
+		Map<String,Object> content = (Map<String,Object>) response.get( "content" );
+
+		this.headers = new ArrayList<String>( 20 );
+		for ( Map<String,Object> header : (List<Map<String,Object>>) response.get( "headers" ) ) {
+			headers.add( header.get( "name" ) + ": " + header.get( "value" ) );
+		}
+
+		this.map = new HashMap<String,String>( 10 );
+
+		this.map.put( "url", "" + request.get( "url" ) );
+
+		this.map.put( "content", "" + content.get( "text" ) );
+		this.map.put( "content_comment", content.containsKey( "comment" ) ? "" + content.get( "comment" ) : "" );
+		this.map.put( "content_compression", content.containsKey( "compression" ) ? "" + content.get( "compression" ) : "" );
+		this.map.put( "content_encoding", content.containsKey( "encoding" ) ? "" + content.get( "encoding" ) : "" );
+		this.map.put( "content_mimetype", "" + content.get( "mimeType" ) );
+		this.map.put( "content_size", "" + content.get( "size" ) );
+
+		this.map.put( "response_additional", "" );
+		this.map.put( "response_bodysize", "" + response.get( "bodySize" ) );
+		this.map.put( "response_comment", response.containsKey( "comment" ) ? "" + response.get( "comment" ) : "" );
+		this.map.put( "response_redirecturl", "" + response.get( "redirectURL" ) );
+		this.map.put( "response_status", "response_status " + response.get( "status" ) );
+		this.map.put( "response_statustext", "" + response.get( "statusText" ) );
 	}
 
 	@Override
@@ -94,5 +124,10 @@ final class BrowserProxyLogEntry implements IBrowserProxyLogEntry {
 	@Override
 	public List<String> getHeaders() {
 		return headers;
+	}
+
+	@Override
+	public String toString() {
+		return "content=" + StringUtils.substring( getContent(), 0, 30 ) + " of type " + getMimeType() + " from URL=" + getURL();
 	}
 }

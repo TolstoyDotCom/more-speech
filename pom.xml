@@ -26,11 +26,12 @@
 		<maven.compiler.source>17</maven.compiler.source>
 		<maven.compiler.target>17</maven.compiler.target>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<selenium.java.version>3.141.59</selenium.java.version>							<!-- 3.9.0 -->
-		<selenium.firefox.driver.version>3.141.59</selenium.firefox.driver.version>		<!-- 3.9.0 -->
+		<selenium.java.version>4.5.0</selenium.java.version>							<!-- 3.141.59, 3.9.0, 4.5.0 -->
+		<selenium.firefox.driver.version>4.5.0</selenium.firefox.driver.version>		<!-- 3.141.59, 3.9.0, 4.5.0, works: 4.1.1 -->
 		<log4j.version>2.17.1</log4j.version>
 		<jackson.version>[2.9.9.1,)</jackson.version>
 		<derby.version>10.16.1.1</derby.version>
+		<webdrivermanager.version>5.0.3</webdrivermanager.version>
 	</properties>
 
 	<repositories>
@@ -136,7 +137,7 @@
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
-			<version>28.1-jre</version>
+			<version>31.0.1-jre</version>
 		</dependency>
 <!--
 		<dependency>
@@ -163,9 +164,21 @@
 		</dependency>
 		<dependency>
 			<groupId>org.seleniumhq.selenium</groupId>
+			<artifactId>selenium-api</artifactId>
+			<version>${selenium.java.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.seleniumhq.selenium</groupId>
 			<artifactId>selenium-firefox-driver</artifactId>
 			<version>${selenium.firefox.driver.version}</version>
 		</dependency>
+		<!--for selenium 4.5.0-->		
+		<dependency>
+			<groupId>org.seleniumhq.selenium</groupId>
+			<artifactId>selenium-http-jdk-client</artifactId>
+			<version>${selenium.firefox.driver.version}</version>
+		</dependency>
+		<!---->
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-api</artifactId>
@@ -221,7 +234,7 @@
 		<dependency>
 			<groupId>io.github.bonigarcia</groupId>
 			<artifactId>webdrivermanager</artifactId>
-			<version>3.7.1</version>
+			<version>${webdrivermanager.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>

@@ -191,7 +191,7 @@ public final class Start {
 
 		try {
 			//	@todo: put all mentions of jbus into an interface
-			browserProxyFactory = new BrowserProxyFactory( prefs, bundle, new JBus() );
+			browserProxyFactory = new BrowserProxyFactory( prefs, bundle, new JBus(), browserScriptFactory );
 
 			webDriverFactoryFactory = new WebDriverFactoryFactory( snapshotFactory,
 																	tweetFactory,

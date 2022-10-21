@@ -146,7 +146,7 @@ public final class QuickStart implements IStatusMessageReceiver {
 		this.searchRunFactory = new SearchRunFactory( this.tweetFactory );
 		this.analysisReportFactory = new AnalysisReportFactory( this.tweetFactory, this.appDirectories, this.prefs, this.bundle );
 
-		this.browserProxyFactory = new BrowserProxyFactory( this.prefs, this.bundle, new JBus() );
+		this.browserProxyFactory = new BrowserProxyFactory( this.prefs, this.bundle, new JBus(), browserScriptFactory );
 
 		this.browserProxy = browserProxyFactory.makeBrowserProxy();
 
@@ -181,10 +181,13 @@ public final class QuickStart implements IStatusMessageReceiver {
 		LoginToSite loginToSite = null;
 		String loginName = null;
 		String loginPassword = null;
+		boolean bSkipLogin;
 
 		try {
 			loginName = prefs.getValue( "prefs.testing_account_name_private" );
 			loginPassword = prefs.getValue( "prefs.testing_account_password_private" );
+
+			bSkipLogin = Utils.isStringTrue( prefs.getValue( "prefs.skip_login" ) );
 
 			webDriver = webDriverFactory.makeWebDriver( browserProxy );
 			final int positionX = Utils.parseIntDefault( prefs.getValue( "prefs.firefox_screen_position_x" ) );
@@ -193,8 +196,10 @@ public final class QuickStart implements IStatusMessageReceiver {
 
 			webDriverUtils = webDriverFactory.makeWebDriverUtils( webDriver );
 
-			loginToSite = new LoginToSite( loginName, loginPassword, prefs );
-			loginToSite.perform( webDriver, webDriverUtils );
+			if ( !bSkipLogin ) {
+				loginToSite = new LoginToSite( loginName, loginPassword, prefs );
+				loginToSite.perform( webDriver, webDriverUtils );
+			}
 
 			webDriver.get( url );
 

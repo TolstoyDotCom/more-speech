@@ -352,6 +352,20 @@ public final class Utils {
 		return s == null ? defaultValue : s.trim();
 	}
 
+	public static String trimDefault( final String s, final String defaultValue, final boolean bReturnDefaultIfEmpty ) {
+		if ( s == null ) {
+			return defaultValue;
+		}
+
+		String temp = s.trim();
+
+		if ( bReturnDefaultIfEmpty && Utils.isEmpty( temp ) ) {
+			return defaultValue;
+		}
+
+		return temp;
+	}
+
 	public static Instant currentInstant() {
 		return Instant.now().truncatedTo( ChronoUnit.MICROS );
 	}

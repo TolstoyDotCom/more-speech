@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Chris Kelly
+ * Copyright 2022 Chris Kelly
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -23,16 +23,10 @@ import org.apache.logging.log4j.Logger;
 import org.dizitart.jbus.JBus;
 import org.openqa.selenium.Proxy;
 import org.openqa.selenium.WebDriver;
-
-import com.browserup.bup.BrowserUpProxy;
-import com.browserup.bup.BrowserUpProxyServer;
-import com.browserup.bup.client.ClientUtil;
-import com.browserup.bup.filters.ResponseFilter;
-import com.browserup.bup.util.HttpMessageContents;
-import com.browserup.bup.util.HttpMessageInfo;
-import com.browserup.bup.proxy.CaptureType;
+import org.openqa.selenium.JavascriptExecutor;
+import com.browserup.harreader.HarReader;
+import com.browserup.harreader.HarReaderMode;
 import com.browserup.harreader.model.Har;
-import com.browserup.harreader.model.HarLog;
 import com.browserup.harreader.model.HarEntry;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -41,104 +35,69 @@ import com.tolstoy.censorship.twitter.checker.api.browserproxy.IBrowserProxy;
 import com.tolstoy.censorship.twitter.checker.api.browserproxy.IBrowserProxyResponseListener;
 import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
 import com.tolstoy.censorship.twitter.checker.api.browserproxy.IBrowserProxyLogEntry;
+import com.tolstoy.censorship.twitter.checker.api.installation.IBrowserScriptFactory;
 
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.DecoderResult;
 
-public class BrowserProxyBUP implements IBrowserProxy, ResponseFilter {
+public class BrowserProxyHAR implements IBrowserProxy {
 	@JsonIgnore
-	private static final Logger logger = LogManager.getLogger( BrowserProxyBUP.class );
+	private static final Logger logger = LogManager.getLogger( BrowserProxyHAR.class );
 
 	private final IPreferences prefs;
 	private final IResourceBundleWithFormatting bundle;
-	private BrowserUpProxy proxy = null;
-	private Proxy seleniumProxy = null;
-	private JBus jbus = null;
+	private final IBrowserScriptFactory browserScriptFactory;
+	private final JBus jbus;
 
-	public BrowserProxyBUP( final IPreferences prefs, final IResourceBundleWithFormatting bundle, final JBus jbus ) {
+	public BrowserProxyHAR( final IPreferences prefs, final IResourceBundleWithFormatting bundle, final JBus jbus, IBrowserScriptFactory browserScriptFactory ) {
 		this.prefs = prefs;
 		this.bundle = bundle;
 		this.jbus = jbus;
+		this.browserScriptFactory = browserScriptFactory;
 	}
 
 	@Override
 	public boolean start() throws Exception {
-		if ( proxy != null && seleniumProxy != null ) {
-			return false;
-		}
-
-		try {
-			proxy = new BrowserUpProxyServer();
-
-			proxy.addResponseFilter( this );
-
-			proxy.start();
-
-			seleniumProxy = ClientUtil.createSeleniumProxy( proxy );
-
-			return true;
-		}
-		catch ( final Exception e ) {
-			proxy = null;
-			seleniumProxy = null;
-			logger.error( "PROXY ERROR", e );
-			throw e;
-		}
+		return true;
 	}
 
 	@Override
 	public void stop() throws Exception {
-		proxy.stop();
 	}
 
 	@Override
 	public void beginRecording( WebDriver driver, String name ) {
 		logger.info( "beginning recording..." );
-
-		Har unusedHAR = proxy.endHar();
-
-		proxy.enableHarCaptureTypes( CaptureType.REQUEST_HEADERS,
-										CaptureType.REQUEST_CONTENT,
-										CaptureType.RESPONSE_HEADERS,
-										CaptureType.RESPONSE_CONTENT,
-										CaptureType.RESPONSE_BINARY_CONTENT );
-
-		proxy.newHar( name );
 	}
 
 	@Override
 	public List<IBrowserProxyLogEntry> endRecording( WebDriver driver ) throws Exception {
 		logger.info( "end recording" );
 
-		Har har = proxy.endHar();
-		HarLog log = har.getLog();
+		final String suedeDenimHARRetrieverScript = browserScriptFactory.getScript( "har_retriever" ).getScript();
 
-		List<IBrowserProxyLogEntry> list = new ArrayList<IBrowserProxyLogEntry>( 100 );
+		JavascriptExecutor javascriptExecutor = (JavascriptExecutor) driver;
 
-		for ( HarEntry entry : log.getEntries() ) {
-			list.add( new BrowserProxyLogEntry( entry ) );
+		Map<String,Object> resultsData = (Map<String,Object>) javascriptExecutor.executeAsyncScript( suedeDenimHARRetrieverScript, new HashMap<String,Object>() );
+
+		List<Map<String,Object>> entries = (List<Map<String,Object>>) resultsData.get( "entries" );
+
+		List<IBrowserProxyLogEntry> list = new ArrayList<IBrowserProxyLogEntry>( entries.size() );
+
+		for ( Map<String,Object> entry : entries ) {
+			IBrowserProxyLogEntry logEntry = new BrowserProxyLogEntry( entry );
+			logger.info( "  created log entry=" + logEntry );
+			list.add( logEntry );
 		}
+
+		logger.info( "returning recording" );
 
 		return list;
 	}
 
 	@Override
 	public Proxy getSeleniumProxy() {
-		return seleniumProxy;
-	}
-
-	@Override
-	public void filterResponse( final HttpResponse response, final HttpMessageContents contents, final HttpMessageInfo messageInfo ) {
-		DecoderResult res = response.getDecoderResult();
-
-		try {
-			final BrowserProxyResponseEventBUP event = new BrowserProxyResponseEventBUP( response, contents, messageInfo );
-
-			jbus.post( event );
-		}
-		catch ( final Exception e ) {
-			logger.error( e );
-		}
+		return null;
 	}
 
 	@Override
@@ -152,6 +111,6 @@ public class BrowserProxyBUP implements IBrowserProxy, ResponseFilter {
 
 	@Override
 	public String toString() {
-		return "proxy is " + ( proxy == null ? "null" : "active" ) + ", seleniumProxy is " + ( seleniumProxy == null ? "null" : "active" );
+		return "proxy is waiting";
 	}
 }

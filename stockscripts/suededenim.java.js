@@ -76,6 +76,10 @@
 	if (typeof window.com.tolstoy.basic.app.tweetparser.json.helper === 'undefined') {
 		window.com.tolstoy.basic.app.tweetparser.json.helper = {};
 	}
+
+	if (typeof window.com.tolstoy.basic.app.harretriever === 'undefined') {
+		window.com.tolstoy.basic.app.harretriever = {};
+	}
 })();
 
 com.tolstoy.basic.app.utils.DebugLevel = function( debugLevel ) {
@@ -222,6 +226,41 @@ com.tolstoy.basic.app.utils.NumericPhrase = function( text ) {
 com.tolstoy.basic.app.utils.Utils = function( $ ) {
 	var numberOnlyRegex = new RegExp( '^\\d+$' );
 	var newlinesRegex = new RegExp( '/\r?\n|\r/g' );
+
+	this.extend = function( dest, src ) {
+		dest = dest || {};
+		src = src || {};
+
+		$.each( src, function( index, val ) {
+			if ( !dest[ index ] ) {
+				dest[ index ] = val;
+			}
+		});
+
+		return dest;
+	};
+
+	this.getNestedJSON = function( json, keys ) {
+		for ( var i = 0; i < keys.length; i++ ) {
+			var key = keys[ i ];
+			if ( typeof json[ key ] === 'undefined' ) {
+				return null;
+			}
+			json = json[ key ];
+		}
+
+		return json;
+	};
+
+	this.swapUserID = function( user ) {
+		if ( user.id && user.rest_id && /^\d+$/.test( user.rest_id ) ) {
+			var rest_id = user.id;
+			user.id = user.rest_id;
+			user.rest_id = rest_id;
+		}
+
+		return user;
+	};
 
 	this.simplifyText = function( text, maxLen, defaultValue ) {
 		maxLen = maxLen || 20;
@@ -1198,7 +1237,7 @@ com.tolstoy.basic.app.tweetparser.html.helper.Debug = function( $, $elem, tweetF
 	});
 };
 
-com.tolstoy.basic.app.tweetparser.html.helper.AuthorAvatar = function( $, $elem, tweetFactory, utils, logger ) {
+com.tolstoy.basic.app.tweetparser.html.helper.AuthorAvatar = function( $, $elem, tweetFactory, utils, logger ) {//DONE
 	var valid = false, src = '';
 
 	this.isValid = function() {
@@ -1209,7 +1248,7 @@ com.tolstoy.basic.app.tweetparser.html.helper.AuthorAvatar = function( $, $elem,
 		return src;
 	};
 
-	var $img = $( 'div > div > a > div > div > div > img', $elem );
+	var $img = $( 'div > div > div > div > div > div > div > div > div > div > div > div > div > a > div > div > div > div > img', $elem );
 
 	if ( $img.length < 1 ) {
 		valid = false;
@@ -1225,7 +1264,7 @@ com.tolstoy.basic.app.tweetparser.html.helper.AuthorAvatar = function( $, $elem,
 	valid = true;
 };
 
-com.tolstoy.basic.app.tweetparser.html.helper.AuthorNames = function( $, $elem, tweetFactory, utils, logger ) {
+com.tolstoy.basic.app.tweetparser.html.helper.AuthorNames = function( $, $elem, tweetFactory, utils, logger ) {//DONE
 	var valid = false, displayName = '', handle = '';
 
 	this.isValid = function() {
@@ -1240,27 +1279,21 @@ com.tolstoy.basic.app.tweetparser.html.helper.AuthorNames = function( $, $elem, 
 		return handle;
 	};
 
-	var texts = [];
-	$( 'div > div > a > div > div > div > span', $elem ).each( function() {
-		var text = $(this).text();
-		if ( text && text.trim() ) {
-			texts.push( text.trim() );
-		}
-	});
+	displayName = $( 'div > div > div > div > div > div > div > div > div > div > div > div > div > a > div > div > span > span', $elem ).text();
+	handle = $( 'div > div > div > div > div > div > div > div > div > div > div > div > div > div > a > div > span', $elem ).text();
 
-	texts.filter( function(x) {
-		return x.trim();
-	});
+	displayName = displayName ? displayName.trim() : '';
+	handle = handle ? handle.trim() : '';
 
-	//[ "Massimo", "@Rainmaker1973" ]
-	if ( texts.length > 1 && texts[ 1 ].indexOf( '@' ) === 0 ) {
-		displayName = texts[ 0 ];
-		handle = texts[ 1 ];
+	if ( handle ) {
 		valid = true;
+	}
+	if ( !displayName ) {
+		displayName = handle;
 	}
 };
 
-com.tolstoy.basic.app.tweetparser.html.helper.Date1 = function( $, $elem, tweetFactory, utils, logger ) {
+com.tolstoy.basic.app.tweetparser.html.helper.Date1 = function( $, $elem, tweetFactory, utils, logger ) {//DONE
 	var valid = false, dateString = '';
 
 	this.isValid = function() {
@@ -1276,7 +1309,7 @@ com.tolstoy.basic.app.tweetparser.html.helper.Date1 = function( $, $elem, tweetF
 	valid = !!dateString;
 };
 
-com.tolstoy.basic.app.tweetparser.html.helper.Date2 = function( $, $elem, tweetFactory, utils, logger ) {
+com.tolstoy.basic.app.tweetparser.html.helper.Date2 = function( $, $elem, tweetFactory, utils, logger ) {//NOTWORKING
 	var valid = false, dateString = '';
 
 	this.isValid = function() {
@@ -1309,7 +1342,7 @@ com.tolstoy.basic.app.tweetparser.html.helper.Date2 = function( $, $elem, tweetF
 	});
 };
 
-com.tolstoy.basic.app.tweetparser.html.helper.Tweetid1 = function( $, $elem, tweetFactory, utils, logger ) {
+com.tolstoy.basic.app.tweetparser.html.helper.Tweetid1 = function( $, $elem, tweetFactory, utils, logger ) {//DONE
 	var valid = false, id = '';
 
 	this.isValid = function() {
@@ -1335,7 +1368,7 @@ com.tolstoy.basic.app.tweetparser.html.helper.Tweetid1 = function( $, $elem, twe
 	valid = !!id;
 };
 
-com.tolstoy.basic.app.tweetparser.html.helper.Tweetid2 = function( $, $elem, tweetFactory, utils, logger ) {
+com.tolstoy.basic.app.tweetparser.html.helper.Tweetid2 = function( $, $elem, tweetFactory, utils, logger ) {//NOTWORKING
 	var valid = false, id = '';
 
 	this.isValid = function() {
@@ -1359,7 +1392,7 @@ com.tolstoy.basic.app.tweetparser.html.helper.Tweetid2 = function( $, $elem, twe
 	});
 };
 
-com.tolstoy.basic.app.tweetparser.html.helper.Tweettext1 = function( $, $elem, tweetFactory, utils, logger ) {
+com.tolstoy.basic.app.tweetparser.html.helper.Tweettext1 = function( $, $elem, tweetFactory, utils, logger ) {//DONE
 	var valid = false, text = '', lang = '', html = '';
 
 	this.isValid = function() {
@@ -1395,7 +1428,7 @@ com.tolstoy.basic.app.tweetparser.html.helper.Tweettext1 = function( $, $elem, t
 };
 
 
-com.tolstoy.basic.app.tweetparser.html.helper.Interaction1 = function( $, $elem, tweetFactory, utils, logger ) {
+com.tolstoy.basic.app.tweetparser.html.helper.Interaction1 = function( $, $elem, tweetFactory, utils, logger ) {//DONE
 	var valid = false, replyCount = '', retweetCount = '', likesCount = '', regex = /(\d+) .*, (\d+) .*, (\d+) /g;
 
 	this.isValid = function() {
@@ -1431,7 +1464,7 @@ com.tolstoy.basic.app.tweetparser.html.helper.Interaction1 = function( $, $elem,
 	});
 };
 
-com.tolstoy.basic.app.tweetparser.html.helper.Interaction2 = function( $, $elem, tweetFactory, utils, logger ) {
+com.tolstoy.basic.app.tweetparser.html.helper.Interaction2 = function( $, $elem, tweetFactory, utils, logger ) {//NOTWORKING
 	var valid = false, replyCount = '', retweetCount = '', likesCount = '';
 	var repliesRegex = /(\d+) reply/gi;
 	var retweetsRegex = /(\d+) retweet/gi;
@@ -1484,7 +1517,7 @@ com.tolstoy.basic.app.tweetparser.html.helper.Interaction2 = function( $, $elem,
 	});
 };
 
-com.tolstoy.basic.app.tweetparser.html.helper.Permalink1 = function( $, $elem, tweetFactory, utils, logger ) {
+com.tolstoy.basic.app.tweetparser.html.helper.Permalink1 = function( $, $elem, tweetFactory, utils, logger ) {//DONE
 	var valid = false, permalink = '';
 
 	this.isValid = function() {
@@ -1508,7 +1541,7 @@ com.tolstoy.basic.app.tweetparser.html.helper.Permalink1 = function( $, $elem, t
 	valid = !!permalink;
 };
 
-com.tolstoy.basic.app.tweetparser.html.helper.Permalink2 = function( $, $elem, tweetFactory, utils, logger ) {
+com.tolstoy.basic.app.tweetparser.html.helper.Permalink2 = function( $, $elem, tweetFactory, utils, logger ) {//DONE
 	var valid = false, permalink = '';
 
 	this.isValid = function() {
@@ -1532,7 +1565,7 @@ com.tolstoy.basic.app.tweetparser.html.helper.Permalink2 = function( $, $elem, t
 	valid = !!permalink;
 };
 
-com.tolstoy.basic.app.tweetparser.html.helper.Photo1 = function( $, $elem, tweetFactory, utils, logger ) {
+com.tolstoy.basic.app.tweetparser.html.helper.Photo1 = function( $, $elem, tweetFactory, utils, logger ) {//DONE
 	var valid = false, photoLink = '', photoImage = '';
 
 	this.isValid = function() {
@@ -1553,7 +1586,7 @@ com.tolstoy.basic.app.tweetparser.html.helper.Photo1 = function( $, $elem, tweet
 		var link = tweetFactory.makeTweetLink( { source: $t.attr( 'href' ) } );
 
 		if ( link && link.isPhotoLink() ) {
-			$( 'div > div > div > div > img', $par ).each( function () {
+			$( 'div > div > img', $par ).each( function () {
 				var style = $(this).prev().attr( 'style' );
 				var src = $(this).attr( 'src' );
 				if ( src && style && style.indexOf( 'background-image' ) > -1 ) {
@@ -1688,7 +1721,7 @@ com.tolstoy.basic.app.tweetparser.html.ParsedTweetFactory = function( $, tweetFa
 		}
 
 		if ( !tweet.getAttribute( 'permalinkpath' ) ) {
-			logger.info( 'BAD HTML, no permalinkpath:' + $article.html() );
+			//logger.info( 'BAD HTML, no permalinkpath:' + $article.html() );
 		}
 
 		return tweet;
@@ -1722,10 +1755,97 @@ com.tolstoy.basic.app.tweetparser.html.ParsedTweetFactory = function( $, tweetFa
 };
 
 com.tolstoy.basic.app.tweetparser.json.helper.InstructionAddEntriesHelper = function( $, tweetFactory, utils, logger ) {
-	this.makeInstructionAddEntries = function( json, errorCallback ) {
+	var moi = this;
+
+	this.makeInstructionTimelineCursor = function( entry, errorCallback ) {
+	}
+
+	this.makeInstructionTimelineItem = function( entry, ret, errorCallback ) {
+		var result, result2;
+		result = utils.getNestedJSON( entry, [ 'content', 'itemContent', 'tweet_results', 'result' ] );
+		if ( result && result.__typename && result.__typename == 'Tweet' ) {
+			if ( utils.getNestedJSON( result, [ 'core', 'user_results', 'result', '__typename' ] == 'User' ) ) {
+				utils.swapUserID( result.core.user_results.result );
+				ret.users.push( result.core.user_results.result );
+				delete result.core.user_results.result;
+			}
+			ret.tweets.push( result );
+			delete entry.content.itemContent.tweet_results.result;
+		}
+
+		result = utils.getNestedJSON( entry, [ 'core', 'user_results', 'result' ] );
+		if ( result && result.__typename && result.__typename == 'User' ) {
+			ret.users.push( result );
+			delete entry.core.user_results.result;
+		}
+
+		result = utils.getNestedJSON( entry, [ 'content', 'items' ] );
+		if ( result && Array.isArray( result ) ) {
+			$.each( result, function( inner_index, inner_val ) {
+				if ( inner_val.entryId && inner_val.entryId.indexOf( 'whoToFollow' ) > -1 ) {
+					delete entry.content.items[ inner_index ];
+				}
+				else {
+					result2 = utils.getNestedJSON( inner_val, [ 'item', 'itemContent', 'tweet_results', 'result' ] );
+					if ( result2 && utils.getNestedJSON( result2, [ 'core', 'user_results', 'result', '__typename' ] ) == 'User' ) {
+						ret.users.push( entry.entries[ index ].content.items[ inner_index ].item.itemContent.tweet_results.result.core.user_results.result );
+						delete entry.content.items[ inner_index ].item.itemContent.tweet_results.result.core.user_results.result;
+					}
+
+					if ( result2 && result2.__typename && result2.__typename == 'Tweet' ) {
+						ret.tweets.push( result2 );
+						delete entry.content.items[ inner_index ].item.itemContent.tweet_results.result;
+					}
+				}
+			});
+		}
+	}
+
+	this.makeInstructionTimelineModule = function( entry, ret, errorCallback ) {
+		var items = utils.getNestedJSON( entry, [ 'content', 'items' ] );
+		if ( !items ) {
+			return;
+		}
+
+		var displayType = utils.getNestedJSON( entry, [ 'content', 'displayType' ] )
+		$.each( items, function( index, item ) {
+			var tweetID = utils.getNestedJSON( item, [ 'item', 'itemContent', 'tweet_results', 'result', 'rest_id' ] );
+			var supposedQuality = utils.getNestedJSON( item, [ 'item', 'clientEventInfo', 'details', 'conversationDetails', 'conversationSection' ] );
+
+			if ( tweetID && supposedQuality ) {
+				ret.timelineItems.push({
+					tweetID: tweetID,
+					displayType: displayType ? displayType : '',
+					conversationSection: supposedQuality
+				});
+
+				delete entry.content.items[ index ].item.clientEventInfo.details.conversationDetails.conversationSection;
+			}
+
+			var rawUser = utils.getNestedJSON( item, [ 'item', 'itemContent', 'tweet_results', 'result', 'core', 'user_results', 'result' ] );
+			if ( rawUser && rawUser.__typename && rawUser.__typename == 'User' ) {
+				ret[ 'users' ].push( rawUser );
+
+				delete entry.content.items[ index ].item.itemContent.tweet_results.result.core.user_results.result;
+			}
+
+			var rawTweet = utils.getNestedJSON( item, [ 'item', 'itemContent', 'tweet_results', 'result' ] );
+			if ( rawTweet && rawTweet.__typename && rawTweet.__typename == 'Tweet' ) {
+				ret[ 'tweets' ].push( rawTweet );
+
+				delete entry.content.items[ index ].item.itemContent.tweet_results.result;
+			}
+		});
+
+		console.log( "timelineItems=", ret.timelineItems );
+	}
+
+	this.makeInstructionAddEntries = function( json, ret, errorCallback ) {
 		var ret = {
 			type: 'AddEntries',
 			timelineItems: [],
+			tweets: [],
+			users: [],
 			otherItems: []
 		};
 
@@ -1734,49 +1854,18 @@ com.tolstoy.basic.app.tweetparser.json.helper.InstructionAddEntriesHelper = func
 			return ret;
 		}
 
-		$.each( json.entries, function() {
-			if ( !this.content ) {
-				errorCallback( 'InstructionAddEntries: no content' );
-				return true;
+		$.each( json.entries, function( index, entry ) {
+			if ( entry.content && entry.content.entryType ) {
+				if ( entry.content.entryType == 'TimelineTimelineCursor' ) {
+					moi.makeInstructionTimelineCursor( entry, ret, errorCallback );
+				}
+				else if ( entry.content.entryType == 'TimelineTimelineItem' ) {
+					moi.makeInstructionTimelineItem( entry, ret, errorCallback );
+				}
+				else if ( entry.content.entryType == 'TimelineTimelineModule' ) {
+					moi.makeInstructionTimelineModule( entry, ret, errorCallback );
+				}
 			}
-
-			if ( this.content && this.content.operation && this.content.operation.cursor ) {
-				errorCallback( 'InstructionAddEntries: CURSOR' );
-				return true;
-			}
-
-			if ( !this.content.timelineModule || !this.content.timelineModule.items ) {
-				errorCallback( 'InstructionAddEntries: no content.timelineModule.items' );
-				return true;
-			}
-
-			$.each( this.content.timelineModule.items, function() {
-				if ( !this.item ) {
-					errorCallback( 'InstructionAddEntries: no item', this );
-					return true;
-				}
-
-				if ( this.item.content && this.item.content.tweet && this.item.content.tweet.id ) {
-					ret.timelineItems.push({
-						tweetID: this.item.content.tweet.id,
-						displayType: this.item.content.tweet.displayType,
-						conversationSection: this.item.clientEventInfo.details.conversationDetails.conversationSection
-					});
-				}
-				else if ( this.item.clientEventInfo &&
-						this.item.clientEventInfo.details &&
-						this.item.clientEventInfo.details.conversationDetails &&
-						this.item.clientEventInfo.details.conversationDetails.conversationSection ) {
-					ret.otherItems.push({
-						section: this.item.clientEventInfo.details.conversationDetails.conversationSection
-					});
-				}
-				else {
-					errorCallback( 'InstructionAddEntries: not found', this );
-					return true;
-				}
-
-			});
 		});
 
 		return ret;
@@ -1925,9 +2014,27 @@ com.tolstoy.basic.app.tweetparser.json.helper.TweetHelper = function( $, tweetFa
 */
 
 	this.makeTweet = function( json, errorCallback ) {
-		var input = {};
+		var input = {}, legacyInput = {};
 
 		utils.importDataUsingDescriptors( input, json, descriptors );
+
+		if ( json.legacy ) {
+			utils.importDataUsingDescriptors( legacyInput, json.legacy, descriptors );
+		}
+
+		input = utils.extend( input, legacyInput );
+
+		if ( !input.id ) {
+			if ( json.id && /^\d+$/.test( json.id ) ) {
+				input.id = json.id;
+			}
+			else if ( json.rest_id && /^\d+$/.test( json.rest_id ) ) {
+				input.id = json.rest_id;
+			}
+		}
+
+		input.innertweetid = utils.getNestedJSON( json, [ 'quoted_status_result', 'result', 'rest_id' ] );
+		input.innertweetrawhref = utils.getNestedJSON( json, [ 'legacy', 'quoted_status_permalink', 'expanded' ] );
 
 		return tweetFactory.makeTweet( input );
 	};
@@ -1946,9 +2053,24 @@ com.tolstoy.basic.app.tweetparser.json.helper.UserHelper = function( $, tweetFac
 	];
 
 	this.makeUser = function( json, errorCallback ) {
-		var input = {};
+		var input = {}, legacyInput = {};
 
 		utils.importDataUsingDescriptors( input, json, descriptors );
+
+		if ( json.legacy ) {
+			utils.importDataUsingDescriptors( legacyInput, json.legacy, descriptors );
+		}
+
+		input = utils.extend( input, legacyInput );
+
+		if ( !input.id ) {
+			if ( json.id && /^\d+$/.test( json.id ) ) {
+				input.id = json.id;
+			}
+			else if ( json.rest_id && /^\d+$/.test( json.rest_id ) ) {
+				input.id = json.rest_id;
+			}
+		}
 
 		input.verifiedStatus = input.verifiedStatus ? 'VERIFIED' : 'UNKNOWN';
 
@@ -1978,45 +2100,442 @@ com.tolstoy.basic.app.tweetparser.json.ParsedJSONFactory = function( $, tweetFac
 			ret.errors.push( msg );
 		}
 
+		function addInstructions( instructionsResult ) {
+			$.each( instructionsResult[ 'tweets' ], function( index, val ) {
+				ret.tweets.push( tweetHelper.makeTweet( val, addError ) );
+			});
+
+			$.each( instructionsResult[ 'users' ], function( index, val ) {
+				ret.users.push( userHelper.makeUser( val, addError ) );
+			});
+
+			instructionsResult[ 'tweets' ] = [];
+			instructionsResult[ 'users' ] = [];
+
+			ret.instructions.push( instructionsResult );
+		}
+
+		var parser = this.createParser( json );
+		if ( !parser || !parser.isValid() ) {
+			return ret;
+		}
+
+		console.log( 'parser=' + parser.getName() );
+
+		$.each( parser.getRawTweets(), function( index, val ) {
+			ret.tweets.push( tweetHelper.makeTweet( val, addError ) );
+		});
+
+		$.each( parser.getRawUsers(), function( index, val ) {
+			ret.users.push( userHelper.makeUser( val, addError ) );
+		});
+
+		$.each( parser.getRawInstructions(), function( index, val ) {
+			if ( val.type ) {
+				if ( val.type == 'TimelineAddEntries' ) {
+					addInstructions( addEntriesHelper.makeInstructionAddEntries( val, addError ) );
+					
+				}
+				else if ( val.type == 'TimelineTerminateTimeline' ) {
+					addInstructions( terminateTimelineHelper.makeInstructionTerminateTimeline( val, addError ) );
+				}
+			}
+			else if ( val.terminateTimeline ) {
+				addInstructions( terminateTimelineHelper.makeInstructionTerminateTimeline( val.terminateTimeline, addError ) );
+			}
+			else if ( val.addEntries ) {
+				//	ignore
+			}
+			else if ( val.clearCache ) {
+				//	ignore
+			}
+			else if ( val.clearEntriesUnreadState ) {
+				//	ignore
+			}
+			else if ( val.markEntriesUnreadGreaterThanSortIndex ) {
+				//	ignore
+			}
+			else {
+				addError( 'ParsedJSONFactory: unknown instruction' );
+			}
+		});
+
+		return ret;
+	};
+
+	this.createParser = function( json ) {
+		if ( !json || json.length < 4 ) {
+			return null;
+		}
+
 		if ( json.JSON ) {
 			json = json.JSON;
 		}
 
-		if ( json.globalObjects && json.globalObjects.tweets ) {
-			$.each( json.globalObjects.tweets, function() {
-				ret.tweets.push( tweetHelper.makeTweet( this, addError ) );
-			});
+		//	??
+		if ( json.data && json.data.user_result_by_screen_name ) {
+			return new com.tolstoy.basic.app.tweetparser.json.JSONParserIgnored( json, $, tweetFactory, utils, logger );
 		}
 
-		if ( json.globalObjects && json.globalObjects.users ) {
-			$.each( json.globalObjects.users, function() {
-				ret.users.push( userHelper.makeUser( this, addError ) );
-			});
+		//	something to do with media; one file had a nm of 'DownVote_02_C'
+		if ( json.w  && json.h && ( json.nm || json.assets ) ) {
+			return new com.tolstoy.basic.app.tweetparser.json.JSONParserIgnored( json, $, tweetFactory, utils, logger );
 		}
 
-		if ( json.timeline && json.timeline.instructions ) {
-			$.each( json.timeline.instructions, function() {
-				if ( this.addEntries ) {
-					ret.instructions.push( addEntriesHelper.makeInstructionAddEntries( this.addEntries, addError ) );
-				}
-				else if ( this.terminateTimeline ) {
-					ret.instructions.push( terminateTimelineHelper.makeInstructionTerminateTimeline( this.terminateTimeline, addError ) );
-				}
-				else if ( this.clearEntriesUnreadState ) {
-					//	ignore
-				}
-				else if ( this.markEntriesUnreadGreaterThanSortIndex ) {
-					//	ignore
-				}
-				else {
-					addError( 'ParsedJSONFactory: unknown instruction' );
-				}
-			});
+		//	user settings
+		if ( typeof json[ 'discoverable_by_email' ] !== 'undefined' ) {
+			return new com.tolstoy.basic.app.tweetparser.json.JSONParserIgnored( json, $, tweetFactory, utils, logger );
 		}
 
-		return ret;
+		//	list of domain names to promote?
+		if ( utils.getNestedJSON( json, [ 'data', 'viewer', 'article_nudge_domains' ] ) ) {
+			return new com.tolstoy.basic.app.tweetparser.json.JSONParserIgnored( json, $, tweetFactory, utils, logger );
+		}
+
+		//	hashflags
+		if ( Array.isArray( json ) && json.length > 0 && json[ 0 ].starting_timestamp_ms ) {
+			return new com.tolstoy.basic.app.tweetparser.json.JSONParserIgnored( json, $, tweetFactory, utils, logger );
+		}
+
+		if ( json.data && json.data.users && Array.isArray( json.data.users ) && json.data.users.length > 0 && json.data.users[ 0 ].result ) {
+			return new com.tolstoy.basic.app.tweetparser.json.JSONParserIncompleteUserList( json, $, tweetFactory, utils, logger );
+		}
+
+		if ( json.data && json.data.user && json.data.user.result && !json.data.user.result.timeline_v2 ) {
+			return new com.tolstoy.basic.app.tweetparser.json.JSONParserIncompleteUser( json, $, tweetFactory, utils, logger );
+		}
+
+		if ( json.globalObjects || json.timeline ) {
+			return new com.tolstoy.basic.app.tweetparser.json.JSONParserGlobalTimeline( json, $, tweetFactory, utils, logger );
+		}
+
+		if ( Array.isArray( json ) && json.length > 0 && json[ 0 ].token ) {
+			return new com.tolstoy.basic.app.tweetparser.json.JSONParserUserList( json, $, tweetFactory, utils, logger );
+		}
+
+		if ( json.data && json.data.threaded_conversation_with_injections_v2 ) {
+			return new com.tolstoy.basic.app.tweetparser.json.JSONParserThreadedConversation( json, $, tweetFactory, utils, logger );
+		}
+
+		if ( utils.getNestedJSON( json, [ 'data', 'user', 'result', 'timeline_v2', 'timeline' ] ) ) {
+			return new com.tolstoy.basic.app.tweetparser.json.JSONParserTimelineV2( json, $, tweetFactory, utils, logger );
+		}
+
+		logger.info( 'ParsedJSONFactory: unrecognized JSON ' + json );
+
+		return null;
 	};
 };
+
+com.tolstoy.basic.app.tweetparser.json.JSONParserGlobalTimeline = function( input, $, tweetFactory, utils, logger ) {
+	var valid = false, tweets = [], users = [], instructions = [];
+
+	this.getName = function() {
+		return 'GlobalTimeline';
+	};
+
+	this.isValid = function() {
+		return valid;
+	};
+
+	this.getRemaining = function() {
+		return input;
+	}
+
+	this.getRawTweets = function() {
+		return tweets;
+	}
+
+	this.getRawUsers = function() {
+		return users;
+	}
+
+	this.getRawInstructions = function() {
+		return instructions;
+	}
+
+	if ( input.globalObjects.tweets ) {
+		for ( var k in input.globalObjects.tweets ) {
+			tweets.push( input.globalObjects.tweets[ k ] );
+		}
+
+		delete input.globalObjects.tweets;
+	}
+
+	if ( input.globalObjects.users ) {
+		for ( var k in input.globalObjects.users ) {
+			users.push( input.globalObjects.users[ k ] );
+		}
+
+		delete input.globalObjects.users;
+	}
+
+	if ( input.timeline.tweets ) {
+		for ( var k in input.timeline.tweets ) {
+			tweets.push( input.timeline.tweets[ k ] );
+		}
+
+		delete input.timeline.tweets;
+	}
+
+	if ( input.timeline.users ) {
+		for ( var k in input.timeline.users ) {
+			users.push( input.timeline.users[ k ] );
+		}
+
+		delete input.timeline.users;
+	}
+
+	if ( input.timeline.instructions ) {
+		for ( var k in input.timeline.instructions ) {
+			instructions.push( input.timeline.instructions[ k ] );
+		}
+
+		delete input.timeline.instructions;
+	}
+
+	if ( input.globalObjects.media ) {
+		delete input.globalObjects.media;
+	}
+
+	if ( input.globalObjects.moments ) {
+		delete input.globalObjects.moments;
+	}
+
+	if ( input.globalObjects.notifications ) {
+		delete input.globalObjects.notifications;
+	}
+
+	if ( input.timeline.responseObjects ) {
+		delete input.timeline.responseObjects;
+	}
+
+	valid = true;
+}
+
+com.tolstoy.basic.app.tweetparser.json.JSONParserIncompleteUser = function( input, $, tweetFactory, utils, logger ) {
+	var valid = false, tweets = [], users = [], instructions = [];
+
+	this.getName = function() {
+		return 'IncompleteUser';
+	};
+
+	this.isValid = function() {
+		return valid;
+	};
+
+	this.getRemaining = function() {
+		return input;
+	}
+
+	this.getRawTweets = function() {
+		return tweets;
+	}
+
+	this.getRawUsers = function() {
+		return users;
+	}
+
+	this.getRawInstructions = function() {
+		return instructions;
+	}
+
+	var user = input.data.user.result;
+	utils.swapUserID( user );
+
+	users.push( user );
+
+	delete input.data.user.result;
+
+	valid = true;
+}
+
+com.tolstoy.basic.app.tweetparser.json.JSONParserIncompleteUserList = function( input, $, tweetFactory, utils, logger ) {
+	var valid = false, tweets = [], users = [], instructions = [];
+
+	this.getName = function() {
+		return 'IncompleteUserList';
+	};
+
+	this.isValid = function() {
+		return valid;
+	};
+
+	this.getRemaining = function() {
+		return input;
+	}
+
+	this.getRawTweets = function() {
+		return tweets;
+	}
+
+	this.getRawUsers = function() {
+		return users;
+	}
+
+	this.getRawInstructions = function() {
+		return instructions;
+	}
+
+	for ( var k in input.data.users ) {
+		var user = input.data.users[ k ].result ? input.data.users[ k ].result : null;
+		if ( !user ) {
+			continue;
+		}
+
+		utils.swapUserID( user );
+
+		users.push( user );
+
+		delete input.data.users[ k ].result;
+	}
+
+	valid = true;
+}
+
+com.tolstoy.basic.app.tweetparser.json.JSONParserUserList = function( input, $, tweetFactory, utils, logger ) {
+	var valid = false, tweets = [], users = [], instructions = [];
+
+	this.getName = function() {
+		return 'UserList';
+	};
+
+	this.isValid = function() {
+		return valid;
+	};
+
+	this.getRemaining = function() {
+		return input;
+	}
+
+	this.getRawTweets = function() {
+		return tweets;
+	}
+
+	this.getRawUsers = function() {
+		return users;
+	}
+
+	this.getRawInstructions = function() {
+		return instructions;
+	}
+
+	for ( var k in input ) {
+		if ( input[ k ].user ) {
+			users.push( input[ k ].user );
+		}
+
+		delete input[ k ].user;
+	}
+
+	valid = true;
+}
+
+com.tolstoy.basic.app.tweetparser.json.JSONParserThreadedConversation = function( input, $, tweetFactory, utils, logger ) {
+	var valid = false, tweets = [], users = [], instructions = [];
+
+	this.getName = function() {
+		return 'ThreadedConversation';
+	};
+
+	this.isValid = function() {
+		return valid;
+	};
+
+	this.getRemaining = function() {
+		return input;
+	}
+
+	this.getRawTweets = function() {
+		return tweets;
+	}
+
+	this.getRawUsers = function() {
+		return users;
+	}
+
+	this.getRawInstructions = function() {
+		return instructions;
+	}
+
+	var ary = utils.getNestedJSON( input, [ 'data', 'threaded_conversation_with_injections_v2', 'instructions' ] );
+	if ( ary ) {
+		for ( var k in ary ) {
+			instructions.push( ary[ k ] );
+
+			delete input.data.threaded_conversation_with_injections_v2.instructions[ k ];
+		}
+	}
+
+	valid = true;
+}
+
+com.tolstoy.basic.app.tweetparser.json.JSONParserTimelineV2 = function( input, $, tweetFactory, utils, logger ) {
+	var valid = false, tweets = [], users = [], instructions = [];
+
+	this.getName = function() {
+		return 'TimelineV2';
+	};
+
+	this.isValid = function() {
+		return valid;
+	};
+
+	this.getRemaining = function() {
+		return input;
+	}
+
+	this.getRawTweets = function() {
+		return tweets;
+	}
+
+	this.getRawUsers = function() {
+		return users;
+	}
+
+	this.getRawInstructions = function() {
+		return instructions;
+	}
+
+	var base = input.data.user.result.timeline_v2.timeline;
+	if ( base.instructions ) {
+		for ( var k in base.instructions ) {
+			instructions.push( base.instructions[ k ] );
+
+			delete base.instructions[ k ];
+		}
+	}
+
+	valid = true;
+}
+
+com.tolstoy.basic.app.tweetparser.json.JSONParserIgnored = function( input, $, tweetFactory, utils, logger ) {
+	var valid = false, tweets = [], users = [], instructions = [];
+
+	this.getName = function() {
+		return 'Ignored';
+	};
+
+	this.isValid = function() {
+		return false;
+	};
+
+	this.getRemaining = function() {
+		return input;
+	}
+
+	this.getRawTweets = function() {
+		return tweets;
+	}
+
+	this.getRawUsers = function() {
+		return users;
+	}
+
+	this.getRawInstructions = function() {
+		return instructions;
+	}
+}
 
 com.tolstoy.basic.app.retriever.StateStatus = {
 	READY: 'ready',
@@ -2212,7 +2731,7 @@ com.tolstoy.basic.app.retriever.StateFindUncensoredTweets = function( $, tweetSe
 
 		tweetCollection.addTweets( tweets );
 
-		logger.info( 'StateFindUncensoredTweets: ' + count + ' tweet elements, afterwards collection=' + tweetCollection.toDebugString( '  ' ) );
+		//logger.info( 'StateFindUncensoredTweets: ' + count + ' tweet elements, afterwards collection=' + tweetCollection.toDebugString( '  ' ) );
 
 		scroller.step();
 
@@ -2435,18 +2954,20 @@ com.tolstoy.basic.app.retriever.StateClickShowHiddenReplies2 = function( $, afte
 
 		var $button = null;
 
-		$( 'section > div > div > div > div > div > div > div > div > div[role="button"]' ).each( function() {
+		$( 'article > div > div > div > div > div > div > div > div > div[role="button"]' ).each( function() {
 			var $t = $(this);
 			var $gpar = $t.parent().parent();
 
-			var t_spans = $t.find( 'div > span' ).length;
-			var prev_text = $.trim( $t.prev().text() );
-			var gpar_prev_div_len = $gpar.prev().find( 'div' ).length;
-			var gpar_next_div_len = $gpar.next().find( 'div' ).length;
-			var gpar_prev_text = $.trim( $gpar.prev().text() );
-			var gpar_next_text = $.trim( $gpar.next().text() );
+			var $message = $gpar.find( 'div:not([role]) > div > span' );
+			var $btn = $gpar.find( 'div[role="button"] > div > span' );
 
-			if ( prev_text && t_spans && gpar_prev_div_len && gpar_next_div_len && !gpar_prev_text && !gpar_next_text ) {
+			var message_num_kids = $message.find('*').length;
+			var message_text = $message.text().trim();
+
+			var btn_num_kids = $btn.find('span').length;
+			var btn_text = $btn.text().trim();
+
+			if ( !message_num_kids && btn_num_kids == 1 && message_text && btn_text && message_text.length > btn_text.length ) {
 				$button = $t;
 			}
 		});
@@ -3022,6 +3543,26 @@ com.tolstoy.basic.app.jsonparser.Starter = function( jsParams, jsonStrings, data
 				logger.info( 'jsonparser.Starter NO USERS' );
 			}
 
+			if ( combined.instructions ) {
+				logger.info( 'jsonparser.Starter instructions:' );
+				for ( i = 0; i < combined.instructions.length; i++ ) {
+					logger.info( '  ' + combined.instructions[ i ] );
+				}
+			}
+			else {
+				logger.info( 'jsonparser.Starter NO INSTRUCTIONS' );
+			}
+
+			if ( combined.errors ) {
+				logger.info( 'jsonparser.Starter errors:' );
+				for ( i = 0; i < combined.errors.length; i++ ) {
+					logger.info( '  ' + combined.errors[ i ] );
+				}
+			}
+			else {
+				logger.info( 'jsonparser.Starter NO ERRORS' );
+			}
+
 			logger.info( 'jsonparser.Starter instructions:', combined.instructions );
 			logger.info( 'jsonparser.Starter errors:', combined.errors );
 
@@ -3038,3 +3579,50 @@ com.tolstoy.basic.app.jsonparser.Starter = function( jsParams, jsonStrings, data
 		}
 	}, 100 );
 };
+
+com.tolstoy.basic.app.harretriever.Starter = function( jsParams, dataCallback ) {
+	if ( typeof HAR === 'undefined' ) {
+		dataCallback({ '_error': 'HAR IS UNDEFINED' });
+		return;
+	}
+
+	if ( typeof HAR.triggerExport !== 'function' ) {
+		dataCallback({ '_error': 'HAR METHOD IS UNDEFINED' });
+		return;
+	}
+
+	HAR.triggerExport().then( function( results ) {
+		if ( !results || !results.version ) {
+			dataCallback({ '_error': 'BAD RESULTS' });
+			return;
+		}
+
+		var ret = {
+			'version': results.version,
+			'creator': {},
+			'browser': {},
+			'pages': results.pages,
+			'entries': [],
+			'comment': results.comment,
+			'_error': ''
+		};
+
+		for ( var k in results.entries ) {
+			var entry = results.entries[ k ];
+			if ( !entry.request.url || !entry.response.content.text || entry.response.content.text.length < 1 ) {
+				continue;
+			}
+
+			var content = entry.response.content.text.trim();
+
+			if ( content.startsWith( '{' ) || content.startsWith( '[' ) || entry.response.content.mimeType == 'application/json' ) {
+				ret.entries.push( entry );
+			}
+		}
+
+		dataCallback( ret );
+
+		return;
+	});
+};
+
