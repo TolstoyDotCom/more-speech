@@ -168,7 +168,7 @@ public final class JavascriptInterchangeContainer {
 			text = "[EMPTY]";
 		}
 
-		text = Utils.removeNewlines( Utils.trimDefault( StringEscapeUtils.escapeHtml4( Utils.removeAllEmojis( text ) ) ) );
+		text = Utils.removeNewlines( Utils.trimDefault( StringEscapeUtils.escapeHtml4( Utils.replaceAllEmojis( text ) ) ) );
 		newMap.put( "tweettext", StringUtils.substring( text, 0, 20 ) );
 
 		text = newMap.get( "tweethtml" );
@@ -176,7 +176,7 @@ public final class JavascriptInterchangeContainer {
 			text = "[EMPTY]";
 		}
 
-		text = Utils.removeNewlines( Utils.trimDefault( StringEscapeUtils.escapeHtml4( Utils.removeAllEmojis( text ) ) ) );
+		text = Utils.removeNewlines( Utils.trimDefault( StringEscapeUtils.escapeHtml4( Utils.replaceAllEmojis( text ) ) ) );
 		newMap.put( "tweethtml", StringUtils.substring( text, 0, 20 ) );
 
 		return Utils.prettyPrintMap( "  ", newMap );

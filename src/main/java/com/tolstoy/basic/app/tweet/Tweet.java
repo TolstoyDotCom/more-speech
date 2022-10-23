@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.time.Instant;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -282,6 +283,19 @@ class Tweet implements ITweet {
 				attributes.put( descriptor.getKey(), value );
 			}
 		}
+
+		String tempTime = attributes.get( "time" );
+		String tempDateString = sourceMap.get( "datestring" );
+
+		if ( !Utils.isEmpty( tempDateString ) && ( Utils.isEmpty( tempTime ) || "0".equals( tempTime ) ) ) {
+			try {
+				long seconds = Instant.parse( tempDateString ).getEpochSecond();
+				attributes.put( "time", "" + seconds );
+			}
+			catch ( Exception e ) {
+				logger.info( "cannot parse date " + tempDateString );
+			}
+		}
 	}
 
 	@JsonIgnore
@@ -446,7 +460,7 @@ class Tweet implements ITweet {
 			return TWEETTEXT_EMPTY_MARKER;
 		}
 
-		text = Utils.removeNewlines( Utils.trimDefault( StringEscapeUtils.escapeHtml4( Utils.removeAllEmojis( text ) ) ) );
+		text = Utils.removeNewlines( Utils.trimDefault( StringEscapeUtils.escapeHtml4( Utils.replaceAllEmojis( text ) ) ) );
 
 		return maxLen > 0 ? StringUtils.substring( text, 0, 20 ) : text;
 	}

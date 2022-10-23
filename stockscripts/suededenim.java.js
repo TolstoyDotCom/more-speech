@@ -2221,7 +2221,7 @@ com.tolstoy.basic.app.tweetparser.json.ParsedJSONFactory = function( $, tweetFac
 			return new com.tolstoy.basic.app.tweetparser.json.JSONParserTimelineV2( json, $, tweetFactory, utils, logger );
 		}
 
-		logger.info( 'ParsedJSONFactory: unrecognized JSON ' + json );
+		logger.info( 'ParsedJSONFactory: unrecognized JSON ' + JSON.stringify( json ) );
 
 		return null;
 	};

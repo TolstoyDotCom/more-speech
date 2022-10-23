@@ -415,7 +415,7 @@ class WebDriverFactoryNT implements IWebDriverFactory {
 			setFirefoxProfilePreferences( firefoxProfile );
 			addFirefoxExtensions( firefoxProfile );
 
-			firefoxOptions.setLogLevel( FirefoxDriverLogLevel.INFO );
+			firefoxOptions.setLogLevel( FirefoxDriverLogLevel.WARN );
 			firefoxOptions.addPreference( "toolkit.asyncshutdown.log", true );
 			firefoxOptions.addArguments( "--devtools" );
 

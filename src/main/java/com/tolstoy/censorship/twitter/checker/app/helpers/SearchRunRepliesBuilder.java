@@ -189,7 +189,7 @@ final public class SearchRunRepliesBuilder {
 																			maxReplies );
 
 			ret.setAttribute( "handle_to_check", handleToCheck );
-			ret.setAttribute( "loggedin", loginToSite != null ? "true" : "false" );
+			ret.setAttribute( "loggedin", ( bUsingLogin || bSkipLogin ) ? "true" : "false" );
 
 			return ret;
 		}

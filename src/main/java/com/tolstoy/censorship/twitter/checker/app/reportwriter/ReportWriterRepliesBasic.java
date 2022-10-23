@@ -178,6 +178,6 @@ public class ReportWriterRepliesBasic {
 			.with( "handle", tweet.getUser().getHandle() )
 			.with( "link", String.format( prefs.getValue( "targetsite.pattern.individual" ), tweet.getUser().getHandle(), tweet.getID() ) )
 			.with( "dateStr", Utils.formatTimestampString( tweet.getAttribute( "time" ), "date unknown" ) )
-			.with( "text", Utils.removeNewlines( Utils.trimDefault( Utils.removeAllEmojis( ObjectUtils.firstNonNull( tweet.getAttribute( "tweettext" ), "" ) ) ) ) );
+			.with( "text", Utils.removeNewlines( Utils.trimDefault( Utils.replaceAllEmojis( ObjectUtils.firstNonNull( tweet.getAttribute( "tweettext" ), "" ) ) ) ) );
 	}
 }

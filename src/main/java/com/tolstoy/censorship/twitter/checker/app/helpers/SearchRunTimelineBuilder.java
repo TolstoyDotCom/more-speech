@@ -191,7 +191,7 @@ final public class SearchRunTimelineBuilder /*implements IBrowserProxyResponseLi
 																			maxReplies );
 
 			ret.setAttribute( "handle_to_check", handleToCheck );
-			ret.setAttribute( "loggedin", loginToSite != null ? "true" : "false" );
+			ret.setAttribute( "loggedin", ( bUsingLogin || bSkipLogin ) ? "true" : "false" );
 
 			logger.info( "SearchRunTimelineBuilder: buildSearchRunTimeline end=" + ret );
 

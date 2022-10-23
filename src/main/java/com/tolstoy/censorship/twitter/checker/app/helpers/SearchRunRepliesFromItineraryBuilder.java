@@ -167,7 +167,7 @@ final public class SearchRunRepliesFromItineraryBuilder {
 																			maxReplies );
 
 			ret.setAttribute( "handle_to_check", handleToCheck );
-			ret.setAttribute( "loggedin", bUsingLogin ? "true" : "false" );
+			ret.setAttribute( "loggedin", ( bUsingLogin || bSkipLogin ) ? "true" : "false" );
 
 			return ret;
 		}

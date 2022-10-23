@@ -43,6 +43,7 @@ import org.nibor.autolink.LinkType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
+import com.vdurmont.emoji.EmojiParser;
 import com.github.cliftonlabs.json_simple.Jsoner;
 import com.github.cliftonlabs.json_simple.JsonObject;
 
@@ -163,7 +164,11 @@ public final class Utils {
 	}
 
 	public static String removeAllEmojis( final String s ) {
-		return emoji4j.EmojiUtils.removeAllEmojis( s );
+		return EmojiParser.removeAllEmojis( s );
+	}
+
+	public static String replaceAllEmojis( final String s ) {
+		return EmojiParser.parseToAliases( s );
 	}
 
 	public static String removeNewlines( final String s ) {
