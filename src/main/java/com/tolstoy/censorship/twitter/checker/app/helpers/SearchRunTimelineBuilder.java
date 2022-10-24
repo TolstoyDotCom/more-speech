@@ -147,7 +147,7 @@ final public class SearchRunTimelineBuilder /*implements IBrowserProxyResponseLi
 			}
 		}
 		catch ( final Exception e ) {
-			logger.error( "error getting testing_account_name or creating webDriverFactory", e );
+			logWarn( "error getting testing_account_name or creating webDriverFactory", e );
 			throw e;
 		}
 
@@ -157,7 +157,7 @@ final public class SearchRunTimelineBuilder /*implements IBrowserProxyResponseLi
 			browserProxy.start();
 		}
 		catch ( final Exception e ) {
-			logger.error( "cannot create browserProxy", e );
+			logWarn( "cannot create browserProxy", e );
 			statusMessageReceiver.addMessage( new StatusMessage( "cannot create browserProxy", StatusMessageSeverity.ERROR ) );
 			throw e;
 		}
@@ -169,7 +169,7 @@ final public class SearchRunTimelineBuilder /*implements IBrowserProxyResponseLi
 			webDriver.manage().window().setPosition( new Point( positionX, positionY ) );
 		}
 		catch ( final Exception e ) {
-			logger.error( "cannot create webDriver", e );
+			logWarn( "cannot create webDriver", e );
 			statusMessageReceiver.addMessage( new StatusMessage( "cannot create webDriver", StatusMessageSeverity.ERROR ) );
 			throw e;
 		}
@@ -198,7 +198,7 @@ final public class SearchRunTimelineBuilder /*implements IBrowserProxyResponseLi
 			return ret;
 		}
 		catch ( final Exception e ) {
-			logger.error( "error logging in or building searchRun", e );
+			logWarn( "error logging in or building searchRun", e );
 			throw e;
 		}
 		finally {
@@ -209,7 +209,7 @@ final public class SearchRunTimelineBuilder /*implements IBrowserProxyResponseLi
 					logger.info( "stopped browserProxy" );
 				}
 				catch ( final Exception e ) {
-					logger.error( "cannot stop browserProxy", e );
+					logWarn( "cannot stop browserProxy", e );
 				}
 			}
 
@@ -218,7 +218,7 @@ final public class SearchRunTimelineBuilder /*implements IBrowserProxyResponseLi
 					webDriver.close();
 				}
 				catch ( final Exception e ) {
-					logger.error( "cannot close webDriver", e );
+					logWarn( "cannot close webDriver", e );
 					statusMessageReceiver.addMessage( new StatusMessage( "cannot close webDriver", StatusMessageSeverity.ERROR ) );
 				}
 			}
@@ -386,7 +386,7 @@ final public class SearchRunTimelineBuilder /*implements IBrowserProxyResponseLi
 	}
 
 	private void logWarn( final String s, final Exception e ) {
-		logger.error( e.getMessage() + ", trace=" + StringUtils.substring( ExceptionUtils.getStackTrace( e ), 0, 3000 ) );
+		Utils.logException( logger, s, e );
 		statusMessageReceiver.addMessage( new StatusMessage( s, StatusMessageSeverity.WARN ) );
 	}
 

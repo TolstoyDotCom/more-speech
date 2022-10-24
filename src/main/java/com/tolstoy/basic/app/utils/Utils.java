@@ -33,6 +33,7 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.commons.lang.time.FastDateFormat;
@@ -54,6 +55,8 @@ public final class Utils {
 
 	private static final Format humanDateFormat_EN_US = FastDateFormat.getInstance( "MM/dd/yy hh:mm:ss" );	//	TODO i18n
 	private static final Format directoryDateFormat = FastDateFormat.getInstance( "yyyyMMdd_hhmmss_SSS" );
+	private static final int EXCEPTION_MESSAGE_LEN = 2000;
+	private static final int EXCEPTION_STACKTRACE_LEN = -5000;
 
 	private static ObjectMapper mapper, plainMapper;
 
@@ -451,6 +454,12 @@ public final class Utils {
 		}
 		catch ( final Exception e ) {
 		}
+	}
+
+	public static void logException( Logger logger, String message, Exception e ) {
+		logger.error( message +
+						",\nmessage=" + StringUtils.substring( e.getMessage(), 0, EXCEPTION_MESSAGE_LEN ) +
+						",\ntrace=" + StringUtils.substring( ExceptionUtils.getStackTrace( e ), EXCEPTION_STACKTRACE_LEN, -1 ) );
 	}
 
 	private Utils() {

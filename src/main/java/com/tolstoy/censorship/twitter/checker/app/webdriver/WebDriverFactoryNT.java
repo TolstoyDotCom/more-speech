@@ -47,6 +47,7 @@ import org.openqa.selenium.logging.LoggingPreferences;
 import org.openqa.selenium.logging.LogEntry;
 import io.github.bonigarcia.wdm.WebDriverManager;
 //import net.jsourcerer.webdriver.jserrorcollector.JavaScriptError;
+import org.openqa.selenium.remote.http.ClientConfig;
 
 import com.tolstoy.basic.api.installation.DebugLevel;
 import com.tolstoy.basic.api.tweet.ITweet;
@@ -421,7 +422,19 @@ class WebDriverFactoryNT implements IWebDriverFactory {
 
 			firefoxOptions.setProfile( firefoxProfile );
 
+			/*	doesn't work for local drivers
+			ClientConfig config = ClientConfig.defaultConfig()
+									.readTimeout( TIMEOUT )
+									.connectionTimeout( TIMEOUT );
+
+			WebDriver driver = FirefoxDriver.builder()
+									.config( config )
+									.oneOf( firefoxOptions )
+									.build();
+			*/
+
 			WebDriver driver = new FirefoxDriver( firefoxOptions );
+
 			driver.manage().timeouts().scriptTimeout( TIMEOUT );
 			logger.info( "WEBDRIVER SCRIPT TIMEOUT=" + driver.manage().timeouts().getScriptTimeout() );
 

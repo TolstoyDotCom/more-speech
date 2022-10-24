@@ -294,6 +294,10 @@ com.tolstoy.basic.app.utils.Utils = function( $ ) {
 		return !input || input.length < 1;
 	};
 
+	this.isEmptyOrZero = function( input ) {
+		return !input || input === '0' || input.length < 1;
+	};
+
 	this.prettyPrint = function( input, indent ) {
 		var ary = [];
 
@@ -803,6 +807,8 @@ com.tolstoy.basic.app.tweet.TweetUser = function( $, input, utils, logger ) {
 com.tolstoy.basic.app.tweet.Tweet = function( $, input, utils, logger ) {
 	input = input || {};
 
+	var moi = this;
+
 	var TWEETTEXT_EMPTY_MARKER = '[empty]';
 
 	var descriptors = [
@@ -904,6 +910,20 @@ com.tolstoy.basic.app.tweet.Tweet = function( $, input, utils, logger ) {
 		this.errors.push( message );
 	};
 
+	this.mergeFrom = function( other ) {
+		if ( !other ) {
+			return false;
+		}
+		
+		$.each( descriptors, function( index, descriptor ) {
+			var thisValue = moi.getAttribute( descriptor.targetKey );
+			var otherValue = other.getAttribute( descriptor.targetKey );
+			if ( utils.isEmptyOrZero( thisValue ) && !utils.isEmptyOrZero( otherValue ) ) {
+				moi.setAttribute( descriptor.targetKey, otherValue );
+			}
+		});
+	}
+
 	this.export = function() {
 		var ret = {};
 
@@ -1003,11 +1023,7 @@ com.tolstoy.basic.app.tweet.TweetCollection = function( $, input, utils, logger 
 			return 1;
 		}
 
-		var previoustweetid = existing.getAttribute( 'previoustweetid' ) || newTweet.getAttribute( 'previoustweetid' );
-		var nexttweetid = existing.getAttribute( 'nexttweetid' ) || newTweet.getAttribute( 'nexttweetid' );
-
-		existing.setAttribute( 'previoustweetid', previoustweetid );
-		existing.setAttribute( 'nexttweetid', nexttweetid );
+		existing.mergeFrom( newTweet );
 
 		return 2;
 	};
@@ -1896,9 +1912,9 @@ com.tolstoy.basic.app.tweetparser.json.helper.TweetHelper = function( $, tweetFa
 		{ targetKey: 'repliedtohandle', sourceKey: 'in_reply_to_screen_name', defaultValue: '' },
 		{ targetKey: 'repliedtouserid', sourceKey: 'in_reply_to_user_id_str', defaultValue: '' },
 
-		{ targetKey: 'favoritecount', sourceKey: 'favorite_count', defaultValue: '0' },
-		{ targetKey: 'replycount', sourceKey: 'reply_count', defaultValue: '0' },
-		{ targetKey: 'retweetcount', sourceKey: 'retweet_count', defaultValue: '0' },
+		{ targetKey: 'favoritecount', sourceKey: 'favoritecount', defaultValue: '0' },
+		{ targetKey: 'replycount', sourceKey: 'replycount', defaultValue: '0' },
+		{ targetKey: 'retweetcount', sourceKey: 'retweetcount', defaultValue: '0' },
 
 		{ targetKey: 'conversationid', sourceKey: 'conversation_id_str', defaultValue: '' },
 

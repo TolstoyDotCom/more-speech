@@ -126,7 +126,7 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 						}
 						catch ( final Exception e ) {
 							final String s = bundle.getString( "exc_srp", processor.getDescription(), e.getMessage() );
-							logger.error( s, e );
+							Utils.logException( logger, s, e );
 							gui.addMessage( new StatusMessage( s, StatusMessageSeverity.ERROR ) );
 						}
 					}
@@ -134,7 +134,7 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 			}
 			catch ( final Exception e ) {
 				final String s = bundle.getString( "exc_getresults", e.getMessage() );
-				logger.error( s, e );
+				Utils.logException( logger, s, e );
 				gui.addMessage( new StatusMessage( s, StatusMessageSeverity.ERROR ) );
 			}
 
@@ -176,7 +176,7 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 				return searchRunReplies;
 			}
 			catch ( final Exception e ) {
-				logger.error( bundle.getString( "exc_start", e.getMessage() ), e );
+				Utils.logException( logger, bundle.getString( "exc_start", e.getMessage() ), e );
 				publish( new StatusMessage( bundle.getString( "exc_start", e.getMessage() ), StatusMessageSeverity.ERROR ) );
 
 				return null;
@@ -217,7 +217,7 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 				return searchRunTimeline;
 			}
 			catch ( final Exception e ) {
-				logger.error( bundle.getString( "exc_start", e.getMessage() ), e );
+				Utils.logException( logger, bundle.getString( "exc_start", e.getMessage() ), e );
 				publish( new StatusMessage( bundle.getString( "exc_start", e.getMessage() ), StatusMessageSeverity.ERROR ) );
 
 				return null;
@@ -264,7 +264,7 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 				return searchRunReplies;
 			}
 			catch ( final Exception e ) {
-				logger.error( bundle.getString( "exc_start", e.getMessage() ), e );
+				Utils.logException( logger, bundle.getString( "exc_start", e.getMessage() ), e );
 				publish( new StatusMessage( bundle.getString( "exc_start", e.getMessage() ), StatusMessageSeverity.ERROR ) );
 
 				return null;
@@ -288,7 +288,7 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 				}
 			}
 			catch ( final Exception e ) {
-				logger.error( bundle.getString( "exc_start", e.getMessage() ), e );
+				Utils.logException( logger, bundle.getString( "exc_start", e.getMessage() ), e );
 				publish( new StatusMessage( bundle.getString( "exc_start", e.getMessage() ), StatusMessageSeverity.ERROR ) );
 
 			}
@@ -392,7 +392,7 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 		}
 		catch ( final Exception e ) {
 			final String s = bundle.getString( "exc_cannot_save_prefs", "" + Utils.prettyPrintMap( "", Utils.sanitizeMap( prefs.getValues() ) ) );
-			logger.error( s, e );
+			Utils.logException( logger, s, e );
 			gui.addMessage( new StatusMessage( s, StatusMessageSeverity.ERROR ) );
 		}
 	}
@@ -412,7 +412,7 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 		}
 		catch ( final Exception e ) {
 			final String s = bundle.getString( "exc_bad_itinerary_file", itineraryFile.getAbsolutePath() );
-			logger.error( s, e );
+			Utils.logException( logger, s, e );
 			gui.addMessage( new StatusMessage( s, StatusMessageSeverity.ERROR ) );
 			gui.enableRunFunction( true );
 			gui.enablePreferencesFunction( true );
