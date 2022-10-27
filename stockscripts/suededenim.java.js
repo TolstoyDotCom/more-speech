@@ -1241,7 +1241,7 @@ com.tolstoy.basic.app.scroller.ScrollerFactory = function( $, utils, logger ) {
 	};
 };
 
-com.tolstoy.basic.app.tweetparser.html.helper.Debug = function( $, $elem, tweetFactory, utils, logger ) {
+com.tolstoy.basic.app.tweetparser.html.helper.Debug = function( $, $elem, tweetID, tweetFactory, utils, logger ) {
 	var valid = false;
 
 	this.isValid = function() {
@@ -1253,7 +1253,7 @@ com.tolstoy.basic.app.tweetparser.html.helper.Debug = function( $, $elem, tweetF
 	});
 };
 
-com.tolstoy.basic.app.tweetparser.html.helper.AuthorAvatar = function( $, $elem, tweetFactory, utils, logger ) {//DONE
+com.tolstoy.basic.app.tweetparser.html.helper.AuthorAvatar = function( $, $elem, tweetID, tweetFactory, utils, logger ) {//DONE
 	var valid = false, src = '';
 
 	this.isValid = function() {
@@ -1280,7 +1280,7 @@ com.tolstoy.basic.app.tweetparser.html.helper.AuthorAvatar = function( $, $elem,
 	valid = true;
 };
 
-com.tolstoy.basic.app.tweetparser.html.helper.AuthorNames = function( $, $elem, tweetFactory, utils, logger ) {//DONE
+com.tolstoy.basic.app.tweetparser.html.helper.AuthorNames = function( $, $elem, tweetID, tweetFactory, utils, logger ) {//DONE
 	var valid = false, displayName = '', handle = '';
 
 	this.isValid = function() {
@@ -1309,7 +1309,7 @@ com.tolstoy.basic.app.tweetparser.html.helper.AuthorNames = function( $, $elem, 
 	}
 };
 
-com.tolstoy.basic.app.tweetparser.html.helper.Date1 = function( $, $elem, tweetFactory, utils, logger ) {//DONE
+com.tolstoy.basic.app.tweetparser.html.helper.Date1 = function( $, $elem, tweetID, tweetFactory, utils, logger ) {//DONE
 	var valid = false, dateString = '';
 
 	this.isValid = function() {
@@ -1325,7 +1325,7 @@ com.tolstoy.basic.app.tweetparser.html.helper.Date1 = function( $, $elem, tweetF
 	valid = !!dateString;
 };
 
-com.tolstoy.basic.app.tweetparser.html.helper.Date2 = function( $, $elem, tweetFactory, utils, logger ) {//NOTWORKING
+com.tolstoy.basic.app.tweetparser.html.helper.Date2 = function( $, $elem, tweetID, tweetFactory, utils, logger ) {//NOTWORKING
 	var valid = false, dateString = '';
 
 	this.isValid = function() {
@@ -1358,7 +1358,7 @@ com.tolstoy.basic.app.tweetparser.html.helper.Date2 = function( $, $elem, tweetF
 	});
 };
 
-com.tolstoy.basic.app.tweetparser.html.helper.Tweetid1 = function( $, $elem, tweetFactory, utils, logger ) {//DONE
+com.tolstoy.basic.app.tweetparser.html.helper.Tweetid1 = function( $, $elem, tweetID, tweetFactory, utils, logger ) {//DONE
 	var valid = false, id = '';
 
 	this.isValid = function() {
@@ -1384,7 +1384,7 @@ com.tolstoy.basic.app.tweetparser.html.helper.Tweetid1 = function( $, $elem, twe
 	valid = !!id;
 };
 
-com.tolstoy.basic.app.tweetparser.html.helper.Tweetid2 = function( $, $elem, tweetFactory, utils, logger ) {//NOTWORKING
+com.tolstoy.basic.app.tweetparser.html.helper.Tweetid2 = function( $, $elem, tweetID, tweetFactory, utils, logger ) {//NOTWORKING
 	var valid = false, id = '';
 
 	this.isValid = function() {
@@ -1408,7 +1408,7 @@ com.tolstoy.basic.app.tweetparser.html.helper.Tweetid2 = function( $, $elem, twe
 	});
 };
 
-com.tolstoy.basic.app.tweetparser.html.helper.Tweettext1 = function( $, $elem, tweetFactory, utils, logger ) {//DONE
+com.tolstoy.basic.app.tweetparser.html.helper.Tweettext1 = function( $, $elem, tweetID, tweetFactory, utils, logger ) {//DONE
 	var valid = false, text = '', lang = '', html = '';
 
 	this.isValid = function() {
@@ -1444,7 +1444,7 @@ com.tolstoy.basic.app.tweetparser.html.helper.Tweettext1 = function( $, $elem, t
 };
 
 
-com.tolstoy.basic.app.tweetparser.html.helper.Interaction1 = function( $, $elem, tweetFactory, utils, logger ) {//DONE
+com.tolstoy.basic.app.tweetparser.html.helper.Interaction1 = function( $, $elem, tweetID, tweetFactory, utils, logger ) {
 	var valid = false, replyCount = '', retweetCount = '', likesCount = '', regex = /(\d+) .*, (\d+) .*, (\d+) /g;
 
 	this.isValid = function() {
@@ -1478,9 +1478,16 @@ com.tolstoy.basic.app.tweetparser.html.helper.Interaction1 = function( $, $elem,
 			replyCount = retweetCount = likesCount = '';
 		}
 	});
+
+	if ( this.isValid ) {
+		logger.info( 'Interaction1 for ' + tweetID + ', replies=' + this.getReplyCount() + ', RT=' + this.getRetweetCount() + ', like=' + this.getLikesCount() );
+	}
+	else {
+		logger.info( 'Interaction1 for ' + tweetID + ': NOT VALID' );
+	}
 };
 
-com.tolstoy.basic.app.tweetparser.html.helper.Interaction2 = function( $, $elem, tweetFactory, utils, logger ) {//NOTWORKING
+com.tolstoy.basic.app.tweetparser.html.helper.Interaction2 = function( $, $elem, tweetID, tweetFactory, utils, logger ) {
 	var valid = false, replyCount = '', retweetCount = '', likesCount = '';
 	var repliesRegex = /(\d+) reply/gi;
 	var retweetsRegex = /(\d+) retweet/gi;
@@ -1531,9 +1538,73 @@ com.tolstoy.basic.app.tweetparser.html.helper.Interaction2 = function( $, $elem,
 			replyCount = retweetCount = likesCount = '';
 		}
 	});
+
+	if ( this.isValid ) {
+		logger.info( 'Interaction2 for ' + tweetID + ', replies=' + this.getReplyCount() + ', RT=' + this.getRetweetCount() + ', like=' + this.getLikesCount() );
+	}
+	else {
+		logger.info( 'Interaction2 for ' + tweetID + ': NOT VALID' );
+	}
 };
 
-com.tolstoy.basic.app.tweetparser.html.helper.Permalink1 = function( $, $elem, tweetFactory, utils, logger ) {//DONE
+com.tolstoy.basic.app.tweetparser.html.helper.Interaction3 = function( $, $elem, tweetID, tweetFactory, utils, logger ) {
+	var valid = false, replyCount = '', retweetCount = '', likesCount = '', quoteTweetCount = '';
+
+	this.isValid = function() {
+		return valid;
+	};
+
+	this.getReplyCount = function() {
+		return replyCount;
+	};
+
+	this.getRetweetCount = function() {
+		return retweetCount;
+	};
+
+	this.getQuoteTweetCount = function() {
+		return quoteTweetCount;
+	};
+
+	this.getLikesCount = function() {
+		return likesCount;
+	};
+
+	$( 'article > div > div > div > div > div > div > div > div > a[role="link"]', $elem ).each( function() {
+		var $t = $(this);
+		var href = $t.attr( 'href' );
+		var $valContainer = $t.find( 'div > span > span > span' );
+		var val = $valContainer.text();
+
+		if ( !href || $valContainer.length < 1 || !val ) {
+			return;
+		}
+
+		val = val.trim( '/' );
+
+		if ( val.endsWith( 'retweets' ) ) {
+			retweetCount = val;
+			valid = true;
+		}
+		else if ( val.endsWith( 'retweets/with_comments' ) ) {
+			quoteTweetCount = val;
+			valid = true;
+		}
+		else if ( val.endsWith( 'likes' ) ) {
+			likesCount = val;
+			valid = true;
+		}
+	});
+
+	if ( this.isValid ) {
+		logger.info( 'Interaction3 for ' + tweetID + ', replies=' + this.getReplyCount() + ', RT=' + this.getRetweetCount() + ', like=' + this.getLikesCount() );
+	}
+	else {
+		logger.info( 'Interaction3 for ' + tweetID + ': NOT VALID' );
+	}
+};
+
+com.tolstoy.basic.app.tweetparser.html.helper.Permalink1 = function( $, $elem, tweetID, tweetFactory, utils, logger ) {//DONE
 	var valid = false, permalink = '';
 
 	this.isValid = function() {
@@ -1557,7 +1628,7 @@ com.tolstoy.basic.app.tweetparser.html.helper.Permalink1 = function( $, $elem, t
 	valid = !!permalink;
 };
 
-com.tolstoy.basic.app.tweetparser.html.helper.Permalink2 = function( $, $elem, tweetFactory, utils, logger ) {//DONE
+com.tolstoy.basic.app.tweetparser.html.helper.Permalink2 = function( $, $elem, tweetID, tweetFactory, utils, logger ) {//DONE
 	var valid = false, permalink = '';
 
 	this.isValid = function() {
@@ -1581,7 +1652,7 @@ com.tolstoy.basic.app.tweetparser.html.helper.Permalink2 = function( $, $elem, t
 	valid = !!permalink;
 };
 
-com.tolstoy.basic.app.tweetparser.html.helper.Photo1 = function( $, $elem, tweetFactory, utils, logger ) {//DONE
+com.tolstoy.basic.app.tweetparser.html.helper.Photo1 = function( $, $elem, tweetID, tweetFactory, utils, logger ) {//DONE
 	var valid = false, photoLink = '', photoImage = '';
 
 	this.isValid = function() {
@@ -1643,7 +1714,8 @@ com.tolstoy.basic.app.tweetparser.html.ParsedTweetFactory = function( $, tweetFa
 	];
 	var interactionHelpers = [
 		helpers.Interaction1,
-		helpers.Interaction2
+		helpers.Interaction2,
+		helpers.Interaction3
 	];
 	var photoHelpers = [
 		helpers.Photo1
@@ -1660,12 +1732,21 @@ com.tolstoy.basic.app.tweetparser.html.ParsedTweetFactory = function( $, tweetFa
 
 		var user = tweet.getAttribute( 'user' );
 
-		this.runImplementations( debugHelpers, [ $, $article, tweetFactory, utils, logger ], function( impl ) {
+		this.runImplementations( debugHelpers, [ $, $article, 0, tweetFactory, utils, logger ], function( impl ) {
 		},
 		function() {
 		});
 
-		this.runImplementations( interactionHelpers, [ $, $article, tweetFactory, utils, logger ], function( impl ) {
+		this.runImplementations( tweetidHelpers, [ $, $article, 0, tweetFactory, utils, logger ], function( impl ) {
+			tweet.setAttribute( 'tweetid', impl.getID() );
+		},
+		function() {
+			tweet.addError( 'cannot find tweetid' );
+		});
+
+		var tweetID = tweet.getAttribute( 'tweetid' );
+
+		this.runImplementations( interactionHelpers, [ $, $article, tweetID, tweetFactory, utils, logger ], function( impl ) {
 			tweet.setAttribute( 'replycount', impl.getReplyCount() );
 			tweet.setAttribute( 'retweetcount', impl.getRetweetCount() );
 			tweet.setAttribute( 'favoritecount', impl.getLikesCount() );
@@ -1674,7 +1755,7 @@ com.tolstoy.basic.app.tweetparser.html.ParsedTweetFactory = function( $, tweetFa
 			tweet.addError( 'cannot find interactions' );
 		});
 
-		this.runImplementations( tweettextHelpers, [ $, $article, tweetFactory, utils, logger ], function( impl ) {
+		this.runImplementations( tweettextHelpers, [ $, $article, tweetID, tweetFactory, utils, logger ], function( impl ) {
 			tweet.setAttribute( 'tweettext', impl.getTweettext() );
 			tweet.setAttribute( 'tweethtml', impl.getTweetHTML() );
 			tweet.setAttribute( 'tweetlanguage', impl.getLang() );
@@ -1683,7 +1764,7 @@ com.tolstoy.basic.app.tweetparser.html.ParsedTweetFactory = function( $, tweetFa
 			tweet.addError( 'cannot find tweettext' );
 		});
 
-		this.runImplementations( photoHelpers, [ $, $article, tweetFactory, utils, logger ], function( impl ) {
+		this.runImplementations( photoHelpers, [ $, $article, tweetID, tweetFactory, utils, logger ], function( impl ) {
 			tweet.setAttribute( 'tweetphoto_link', impl.getPhotoLink() );
 			tweet.setAttribute( 'tweetphoto_image', impl.getPhotoImage() );
 		},
@@ -1691,28 +1772,21 @@ com.tolstoy.basic.app.tweetparser.html.ParsedTweetFactory = function( $, tweetFa
 			tweet.addError( 'cannot find photos' );
 		});
 
-		this.runImplementations( tweetidHelpers, [ $, $article, tweetFactory, utils, logger ], function( impl ) {
-			tweet.setAttribute( 'tweetid', impl.getID() );
-		},
-		function() {
-			tweet.addError( 'cannot find tweetid' );
-		});
-
-		this.runImplementations( permalinkHelpers, [ $, $article, tweetFactory, utils, logger ], function( impl ) {
+		this.runImplementations( permalinkHelpers, [ $, $article, tweetID, tweetFactory, utils, logger ], function( impl ) {
 			tweet.setAttribute( 'permalinkpath', impl.getPermalink() );
 		},
 		function() {
 			tweet.addError( 'cannot find permalinkpath' );
 		});
 
-		this.runImplementations( dateHelpers, [ $, $article, tweetFactory, utils, logger ], function( impl ) {
+		this.runImplementations( dateHelpers, [ $, $article, tweetID, tweetFactory, utils, logger ], function( impl ) {
 			tweet.setAttribute( 'datestring', impl.getDateString() );
 		},
 		function() {
 			tweet.addError( 'cannot find datestring' );
 		});
 
-		this.runImplementations( authorAvatarHelpers, [ $, $article, tweetFactory, utils, logger ], function( impl ) {
+		this.runImplementations( authorAvatarHelpers, [ $, $article, tweetID, tweetFactory, utils, logger ], function( impl ) {
 			tweet.setAttribute( 'avatarURL', impl.getImage() );
 			user.setAttribute( 'avatarURL', impl.getImage() );
 		},
@@ -1720,7 +1794,7 @@ com.tolstoy.basic.app.tweetparser.html.ParsedTweetFactory = function( $, tweetFa
 			user.addError( 'cannot find avatarURL' );
 		});
 
-		this.runImplementations( authorNameHelpers, [ $, $article, tweetFactory, utils, logger ], function( impl ) {
+		this.runImplementations( authorNameHelpers, [ $, $article, tweetID, tweetFactory, utils, logger ], function( impl ) {
 			user.setAttribute( 'handle', impl.getHandle() );
 			user.setAttribute( 'displayName', impl.getDisplayName() );
 		},
