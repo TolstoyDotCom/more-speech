@@ -224,9 +224,6 @@ class AnalysisReportTimelineBasic extends AnalysisReportBasicBase implements IAn
 
 		ret.setAttribute( "rankingFunctionName", tweetRanker.getFunctionName() );
 
-		ret.setAttribute( "totalReplies", "" + ret.getTotalReplies() );
-		ret.setAttribute( "totalRepliesActual", "" + ret.getTotalRepliesActual() );
-
 		return ret;
 	}
 

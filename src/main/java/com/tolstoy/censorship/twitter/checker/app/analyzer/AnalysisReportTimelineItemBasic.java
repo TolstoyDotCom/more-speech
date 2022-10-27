@@ -49,7 +49,6 @@ class AnalysisReportTimelineItemBasic implements IAnalysisReportTimelineItemBasi
 		this.tweetFactory = tweetFactory;
 		this.sourceTweet = sourceTweet;
 		this.individualPage = individualPage;
-		this.totalReplies = individualPage.getNumReplies();
 		this.totalRepliesActual = individualPage.getTweetCollection().getTweets().size();
 		this.isComplete = individualPage.getComplete();
 		this.numSuppressed = 0;
@@ -59,6 +58,16 @@ class AnalysisReportTimelineItemBasic implements IAnalysisReportTimelineItemBasi
 		this.anomalousSuppressedOrHiddenTweets = new ArrayList<IAnalyzedTweet>();
 		this.hiddenTweets = new ArrayList<IAnalyzedTweet>();
 		this.attributes = new HashMap<String,String>();
+
+		int tempTotalReplies;
+		try {
+			tempTotalReplies = Integer.parseInt( sourceTweet.getAttribute( "replycount" ) );
+		}
+		catch ( Exception e ) {
+			tempTotalReplies = individualPage.getNumReplies();
+		}
+
+		this.totalReplies = tempTotalReplies;
 	}
 
 	@Override

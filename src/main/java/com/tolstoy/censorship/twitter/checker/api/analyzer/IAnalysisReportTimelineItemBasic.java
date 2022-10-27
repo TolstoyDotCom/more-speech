@@ -26,6 +26,9 @@ public interface IAnalysisReportTimelineItemBasic {
 	AnalysisReportItemBasicTimelineRepliesStatus getTimelineRepliesStatus();
 	void setTimelineRepliesStatus( final AnalysisReportItemBasicTimelineRepliesStatus status );
 
+	/**
+	 * @TODO: note that getTotalRepliesActual includes replies to replies on an individual tweet, when the reply is shown. Decide if those should be included.
+	 */
 	int getTotalReplies();
 	int getTotalRepliesActual();
 	boolean getListIsComplete();
