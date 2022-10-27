@@ -64,6 +64,8 @@ You could also first enter the required data into quickstart.prefs.json and then
 
 suededenim.java.js in the stockscripts directory is from the [SuedeDenim](https://github.com/TolstoyDotCom/SuedeDenim) project. You should be able to replace that with newer versions of the script.
 
+There are currently at least two issues. The major issue is the app might time out if loading the tweets from a page takes more than 3 minutes; that's being looked into [here](https://github.com/SeleniumHQ/selenium/issues/11158). A minor bug/feature is that on individual tweet pages, sometimes second-level replies are shown. (That is, a reply to a reply). Those replies-to-replies are currently counted as if they were a reply itself, and that leads to the counts being off (such as an Available value of 108%). A later version will deal with that.
+
 Examples
 ------
 Here are several [sample Twitter censorship reports](http://tolstoy.com/twittercensorship/) showing replies to a variety of sources: politicians, pundits, NASA, sports figures, musicians, etc. A couple of major politicians have no replies censored; others are higher or much higher. More will be added occasionally. (Almost all were as a logged-in user, and we aren't affiliated with/endorsing them/unendorsing them, they're only presented as examples.)
