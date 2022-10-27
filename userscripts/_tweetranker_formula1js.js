@@ -44,9 +44,9 @@ if ( typeof console === "undefined" && typeof print === "function" ) {
 
 function rankTweet( analyzedTweet, count, referenceAnalyzedTweet ) {
 	var RANKING_FUNCTION_NAME = "formula1js";
-	var FEW_WORDS_LIMIT = 5;
-	var FEW_WORDS_PENALTY = -5.0;
-	var FEW_WORDS_AND_PIC_PENALTY = -10.0;
+	var FEW_WORDS_LIMIT = 8;
+	var FEW_WORDS_PENALTY = -10.0;
+	var FEW_WORDS_AND_PIC_PENALTY = -15.0;
 	var MOSTLY_CAPS_PENALTY = -3.0;
 	var FUZZY_DIVISOR = 10.0;
 	var FUZZY_LIMIT = 2.8;
