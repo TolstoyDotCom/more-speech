@@ -206,10 +206,12 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 				final int numTimelinePagesToCheck = Utils.parseIntDefault( prefs.getValue( "prefs.num_timeline_pages_to_check" ), 1 );
 				final int numIndividualPagesToCheck = Utils.parseIntDefault( prefs.getValue( "prefs.num_individual_pages_to_check" ), 3 );
 				final int maxTweets = Utils.parseIntDefault( prefs.getValue( "prefs.num_tweets_to_check" ), 5 );
+				final int numTimelineTweetsToSkip = Utils.parseIntDefault( prefs.getValue( "prefs.num_timeline_tweets_to_skip" ), 0 );
 
 				final ISearchRunTimeline searchRunTimeline = builder.buildSearchRunTimeline( numTimelinePagesToCheck,
 																						numIndividualPagesToCheck,
-																						maxTweets );
+																						maxTweets,
+																						numTimelineTweetsToSkip );
 
 				//logger.info( searchRunTimeline );
 				logger.info( "VALUENEXT" );
@@ -498,6 +500,9 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 		guiElements.add( new ElementDescriptor( "textfield", "prefs.num_individual_pages_to_check",
 													bundle.getString( "prefs_element_num_individual_pages_to_check_name" ),
 													bundle.getString( "prefs_element_num_individual_pages_to_check_help" ), 30 ) );
+		guiElements.add( new ElementDescriptor( "textfield", "prefs.num_timeline_tweets_to_skip",
+													bundle.getString( "prefs_element_num_timeline_tweets_to_skip_name" ),
+													bundle.getString( "prefs_element_num_timeline_tweets_to_skip_help" ), 30 ) );
 		guiElements.add( new ElementDescriptor( "checkbox", "prefs.upload_results",
 													bundle.getString( "prefs_element_upload_results_name" ),
 													bundle.getString( "prefs_element_upload_results_help" ), 30 ) );

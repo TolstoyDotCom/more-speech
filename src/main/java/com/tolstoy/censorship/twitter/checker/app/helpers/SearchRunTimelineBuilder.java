@@ -117,7 +117,10 @@ final public class SearchRunTimelineBuilder /*implements IBrowserProxyResponseLi
 		*/
 	}
 
-	public ISearchRunTimeline buildSearchRunTimeline( final int numberOfTimelinePagesToCheck, final int numberOfReplyPagesToCheck, final int maxReplies ) throws Exception {
+	public ISearchRunTimeline buildSearchRunTimeline( final int numberOfTimelinePagesToCheck,
+														final int numberOfReplyPagesToCheck,
+														final int maxReplies,
+														final int numberOfTimelineTweetsToSkip ) throws Exception {
 		IWebDriverFactory webDriverFactory = null;
 		WebDriver webDriver = null;
 		IBrowserProxy browserProxy = null;
@@ -188,7 +191,8 @@ final public class SearchRunTimelineBuilder /*implements IBrowserProxyResponseLi
 																			webDriverUtils,
 																			numberOfTimelinePagesToCheck,
 																			numberOfReplyPagesToCheck,
-																			maxReplies );
+																			maxReplies,
+																			numberOfTimelineTweetsToSkip );
 
 			ret.setAttribute( "handle_to_check", handleToCheck );
 			ret.setAttribute( "loggedin", ( bUsingLogin || bSkipLogin ) ? "true" : "false" );
@@ -233,7 +237,8 @@ final public class SearchRunTimelineBuilder /*implements IBrowserProxyResponseLi
 																final IWebDriverUtils webDriverUtils,
 																final int numberOfTimelinePagesToCheck,
 																final int numberOfReplyPagesToCheck,
-																final int maxReplies ) throws Exception {
+																final int maxReplies,
+																final int numberOfTimelineTweetsToSkip ) throws Exception {
 		logger.info( "SearchRunTimelineBuilder: buildSearchRunTimelineInternal start" );
 
 		final Instant startTime = Instant.now();
@@ -286,7 +291,8 @@ final public class SearchRunTimelineBuilder /*implements IBrowserProxyResponseLi
 													tweetCollection.getTweets(),
 													user,
 													numberOfReplyPagesToCheck,
-													maxReplies );
+													maxReplies,
+													numberOfTimelineTweetsToSkip );
 
 			logger.info( "SearchRunTimelineBuilder: buildSearchRunTimelineInternal got getIndividualPages=" + individualPages );
 		}
@@ -305,7 +311,8 @@ final public class SearchRunTimelineBuilder /*implements IBrowserProxyResponseLi
 																			final List<ITweet> tweets,
 																			final ITweetUser user,
 																			final int numberOfReplyPagesToCheck,
-																			final int maxReplies )
+																			final int maxReplies,
+																			int numberOfTimelineTweetsToSkip )
 																				throws Exception {
 		final Map<Long,ISnapshotUserPageIndividualTweet> individualPages = new HashMap<Long,ISnapshotUserPageIndividualTweet>();
 
@@ -314,6 +321,11 @@ final public class SearchRunTimelineBuilder /*implements IBrowserProxyResponseLi
 		logger.info( "SearchRunTimelineBuilder, handleToCheck=" + handleToCheck + ", handle=" + handle );
 
 		for ( final ITweet tweet : tweets ) {
+			if ( numberOfTimelineTweetsToSkip > 0 ) {
+				numberOfTimelineTweetsToSkip--;
+				continue;
+			}
+
 			String temp = Utils.trimDefault( tweet.getUser().getHandle() ).toLowerCase();
 
 			logger.info( "SearchRunTimelineBuilder, comparing handle with " + temp + " and getting individual page for " + tweet.toDebugString( "" ) );
