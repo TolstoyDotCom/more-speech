@@ -1714,8 +1714,8 @@ com.tolstoy.basic.app.tweetparser.html.ParsedTweetFactory = function( $, tweetFa
 	];
 	var interactionHelpers = [
 		helpers.Interaction1,
-		helpers.Interaction2,
-		helpers.Interaction3
+		helpers.Interaction3,
+		helpers.Interaction2
 	];
 	var photoHelpers = [
 		helpers.Photo1

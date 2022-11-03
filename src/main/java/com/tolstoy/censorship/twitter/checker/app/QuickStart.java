@@ -95,6 +95,7 @@ public final class QuickStart implements IStatusMessageReceiver {
 	private static final Logger logger = LogManager.getLogger( QuickStart.class );
 
 	private static final String[] TABLE_NAMES = { "searchrun", "preferences" };
+	private static final int WEBDRIVER_CLOSE_DELAY_MILLIS = 5000;
 
 	private final IResourceBundleWithFormatting bundle;
 	private final Map<String,String> defaultAppPrefs;
@@ -249,6 +250,7 @@ public final class QuickStart implements IStatusMessageReceiver {
 			if ( webDriver != null ) {
 				try {
 					logger.info( "about to close webDriver" );
+					Utils.delay( WEBDRIVER_CLOSE_DELAY_MILLIS );
 					webDriver.close();
 					logger.info( "closed webDriver" );
 				}

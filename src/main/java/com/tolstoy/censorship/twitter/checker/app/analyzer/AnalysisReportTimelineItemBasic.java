@@ -24,6 +24,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.tolstoy.basic.api.tweet.ITweet;
 import com.tolstoy.basic.api.tweet.ITweetFactory;
+import com.tolstoy.basic.app.utils.Utils;
 import com.tolstoy.censorship.twitter.checker.api.analyzer.AnalysisReportItemBasicTimelineRepliesStatus;
 import com.tolstoy.censorship.twitter.checker.api.analyzer.IAnalysisReportTimelineItemBasic;
 import com.tolstoy.censorship.twitter.checker.api.analyzer.IAnalyzedTweet;
@@ -59,15 +60,7 @@ class AnalysisReportTimelineItemBasic implements IAnalysisReportTimelineItemBasi
 		this.hiddenTweets = new ArrayList<IAnalyzedTweet>();
 		this.attributes = new HashMap<String,String>();
 
-		int tempTotalReplies;
-		try {
-			tempTotalReplies = Integer.parseInt( sourceTweet.getAttribute( "replycount" ) );
-		}
-		catch ( Exception e ) {
-			tempTotalReplies = individualPage.getNumReplies();
-		}
-
-		this.totalReplies = tempTotalReplies;
+		this.totalReplies = Math.max( Utils.parseIntDefault( sourceTweet.getAttribute( "replycount" ) ), individualPage.getNumReplies() );
 	}
 
 	@Override

@@ -67,6 +67,7 @@ import com.tolstoy.censorship.twitter.checker.api.webdriver.WebDriverFactoryType
  */
 final public class SearchRunTimelineBuilder /*implements IBrowserProxyResponseListener*/ {
 	private static final Logger logger = LogManager.getLogger( SearchRunTimelineBuilder.class );
+	private static final int WEBDRIVER_CLOSE_DELAY_MILLIS = 5000;
 
 	private final IResourceBundleWithFormatting bundle;
 	private final IStorage storage;
@@ -219,6 +220,7 @@ final public class SearchRunTimelineBuilder /*implements IBrowserProxyResponseLi
 
 			if ( webDriver != null ) {
 				try {
+					Utils.delay( WEBDRIVER_CLOSE_DELAY_MILLIS );
 					webDriver.close();
 				}
 				catch ( final Exception e ) {
@@ -331,17 +333,23 @@ final public class SearchRunTimelineBuilder /*implements IBrowserProxyResponseLi
 			logger.info( "SearchRunTimelineBuilder, comparing handle with " + temp + " and getting individual page for " + tweet.toDebugString( "" ) );
 
 				//	if it's not an RT, etc.
-			if ( handleToCheck.equals( Utils.trimDefault( tweet.getUser().getHandle() ).toLowerCase() ) ) {
-				final ISnapshotUserPageIndividualTweet individualPage = getIndividualPage( webDriverFactory, webDriver, browserProxy, webDriverUtils,
-																							tweet, user, numberOfReplyPagesToCheck );
+			if ( !handleToCheck.equals( Utils.trimDefault( tweet.getUser().getHandle() ).toLowerCase() ) ) {
+				continue;
+			}
 
-				if ( individualPage != null ) {
-					individualPages.put( tweet.getID(), individualPage );
-				}
+			if ( Utils.parseIntDefault( tweet.getAttribute( "replycount" ) ) < 1 ) {
+				continue;
+			}
 
-				if ( individualPages.size() >= maxReplies ) {
-					break;
-				}
+			final ISnapshotUserPageIndividualTweet individualPage = getIndividualPage( webDriverFactory, webDriver, browserProxy, webDriverUtils,
+																						tweet, user, numberOfReplyPagesToCheck );
+
+			if ( individualPage != null ) {
+				individualPages.put( tweet.getID(), individualPage );
+			}
+
+			if ( individualPages.size() >= maxReplies ) {
+				break;
 			}
 		}
 

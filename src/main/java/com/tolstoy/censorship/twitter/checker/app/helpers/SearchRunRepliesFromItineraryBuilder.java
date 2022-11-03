@@ -50,6 +50,7 @@ import com.tolstoy.censorship.twitter.checker.api.webdriver.WebDriverFactoryType
 
 final public class SearchRunRepliesFromItineraryBuilder {
 	private static final Logger logger = LogManager.getLogger( SearchRunRepliesFromItineraryBuilder.class );
+	private static final int WEBDRIVER_CLOSE_DELAY_MILLIS = 5000;
 
 	private final IResourceBundleWithFormatting bundle;
 	private final IStorage storage;
@@ -189,6 +190,7 @@ final public class SearchRunRepliesFromItineraryBuilder {
 
 			if ( webDriver != null ) {
 				try {
+					Utils.delay( WEBDRIVER_CLOSE_DELAY_MILLIS );
 					webDriver.close();
 				}
 				catch ( final Exception e ) {
