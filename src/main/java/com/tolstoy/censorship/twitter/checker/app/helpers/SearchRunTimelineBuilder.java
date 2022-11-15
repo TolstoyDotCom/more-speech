@@ -16,12 +16,15 @@ package com.tolstoy.censorship.twitter.checker.app.helpers;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.io.IOUtils;
 import org.openqa.selenium.Point;
 import org.openqa.selenium.WebDriver;
 
@@ -55,6 +58,17 @@ import com.tolstoy.censorship.twitter.checker.api.webdriver.IWebDriverFactoryFac
 import com.tolstoy.censorship.twitter.checker.api.webdriver.IWebDriverUtils;
 import com.tolstoy.censorship.twitter.checker.api.webdriver.InfiniteScrollingActivatorType;
 import com.tolstoy.censorship.twitter.checker.api.webdriver.WebDriverFactoryType;
+import com.tolstoy.censorship.twitter.checker.app.jboto.timeline.SearchRunTimelineData;
+import com.tolstoy.censorship.twitter.checker.app.jboto.OurEnvironment;
+import com.tolstoy.censorship.twitter.checker.api.installation.IBrowserScriptFactory;
+import com.tolstoy.jboto.api.framework.IFrameworkFactory;
+import com.tolstoy.jboto.api.framework.IFramework;
+import com.tolstoy.jboto.app.framework.FrameworkFactory;
+import com.tolstoy.jboto.api.framework.IPackageAlias;
+import com.tolstoy.jboto.api.framework.IFQNResolverFactory;
+import com.tolstoy.jboto.api.framework.IFQNResolver;
+import com.tolstoy.jboto.app.framework.FQNResolverFactory;
+import com.tolstoy.jboto.app.framework.FrameworkFactory;
 
 /**
  * Utility that uses WebDriver to build an ISearchRunTimeline object.
@@ -67,7 +81,9 @@ import com.tolstoy.censorship.twitter.checker.api.webdriver.WebDriverFactoryType
  */
 final public class SearchRunTimelineBuilder /*implements IBrowserProxyResponseListener*/ {
 	private static final Logger logger = LogManager.getLogger( SearchRunTimelineBuilder.class );
-	private static final int WEBDRIVER_CLOSE_DELAY_MILLIS = 5000;
+	private static final String JBOTO_DEFAULT_PACKAGE_NAME = "com.tolstoy.censorship.twitter.checker.app.jboto";
+	private static final String JBOTO_COMMON_PACKAGE_NAME = "com.tolstoy.censorship.twitter.checker.app.jboto.common";
+	private static final String JBOTO_TIMELINE_PACKAGE_NAME = "com.tolstoy.censorship.twitter.checker.app.jboto.timeline";
 
 	private final IResourceBundleWithFormatting bundle;
 	private final IStorage storage;
@@ -81,20 +97,22 @@ final public class SearchRunTimelineBuilder /*implements IBrowserProxyResponseLi
 	private final IBrowserProxyFactory browserProxyFactory;
 	private final IArchiveDirectory archiveDirectory;
 	/*private final KeyedLists<IBrowserProxyResponseEvent> proxyEvents;*/
+	private final IBrowserScriptFactory browserScriptFactory;
 	private final String handleToCheck;
 
 	public SearchRunTimelineBuilder( final IResourceBundleWithFormatting bundle,
-						final IStorage storage,
-						final IPreferencesFactory prefsFactory,
-						final IPreferences prefs,
-						final IWebDriverFactoryFactory webDriverFactoryFactory,
-						final ISearchRunFactory searchRunFactory,
-						final ISnapshotFactory snapshotFactory,
-						final ITweetFactory tweetFactory,
-						final IBrowserProxyFactory browserProxyFactory,
-						final IArchiveDirectory archiveDirectory,
-						final IStatusMessageReceiver statusMessageReceiver,
-						final String handleToCheck ) throws Exception {
+										final IStorage storage,
+										final IPreferencesFactory prefsFactory,
+										final IPreferences prefs,
+										final IWebDriverFactoryFactory webDriverFactoryFactory,
+										final ISearchRunFactory searchRunFactory,
+										final ISnapshotFactory snapshotFactory,
+										final ITweetFactory tweetFactory,
+										final IBrowserProxyFactory browserProxyFactory,
+										final IArchiveDirectory archiveDirectory,
+										final IStatusMessageReceiver statusMessageReceiver,
+										final IBrowserScriptFactory browserScriptFactory,
+										final String handleToCheck ) throws Exception {
 		this.bundle = bundle;
 		this.storage = storage;
 		this.prefsFactory = prefsFactory;
@@ -106,21 +124,17 @@ final public class SearchRunTimelineBuilder /*implements IBrowserProxyResponseLi
 		this.statusMessageReceiver = statusMessageReceiver;
 		this.browserProxyFactory = browserProxyFactory;
 		this.archiveDirectory = archiveDirectory;
+		this.browserScriptFactory = browserScriptFactory;
 		this.handleToCheck = Utils.trimDefault( handleToCheck ).toLowerCase();
 
 		if ( webDriverFactoryFactory == null ) {
 			throw new RuntimeException( bundle.getString( "exc_no_webdriverfactory" ) );
 		}
-
-		/*
-		this.proxyEvents = new KeyedLists<IBrowserProxyResponseEvent>();
-		this.browserProxy.addBrowserProxyResponseListener( this );
-		*/
 	}
 
-	public ISearchRunTimeline buildSearchRunTimeline( final int numberOfTimelinePagesToCheck,
+	public ISearchRunTimeline buildSearchRunTimeline( final int numberOfTimelinePagesToScroll,
+														final int numberOfIndividualPagesToScroll,
 														final int numberOfReplyPagesToCheck,
-														final int maxReplies,
 														final int numberOfTimelineTweetsToSkip ) throws Exception {
 		IWebDriverFactory webDriverFactory = null;
 		WebDriver webDriver = null;
@@ -131,310 +145,73 @@ final public class SearchRunTimelineBuilder /*implements IBrowserProxyResponseLi
 		String loginPassword = null;
 		boolean bSkipLogin = false, bUsingLogin = false;
 
-		logger.info( "SearchRunTimelineBuilder: buildSearchRunTimeline start" );
-
 		try {
-			loginName = prefs.getValue( "prefs.testing_account_name_private" );
-			loginPassword = prefs.getValue( "prefs.testing_account_password_private" );
+			SearchRunTimelineData searchRunTimelineData = new SearchRunTimelineData( prefs,
+																				handleToCheck,
+																				numberOfTimelinePagesToScroll,
+																				numberOfIndividualPagesToScroll,
+																				numberOfReplyPagesToCheck,
+																				numberOfTimelineTweetsToSkip );
 
-			bSkipLogin = Utils.isStringTrue( prefs.getValue( "prefs.skip_login" ) );
+			OurEnvironment env = new OurEnvironment( bundle,
+														storage,
+														prefsFactory,
+														prefs,
+														webDriverFactoryFactory,
+														searchRunFactory,
+														snapshotFactory,
+														tweetFactory,
+														browserProxyFactory,
+														archiveDirectory,
+														statusMessageReceiver,
+														browserScriptFactory,
+														DebugLevel.VERBOSE );
 
-			if ( !Utils.isEmpty( loginName ) && !Utils.isEmpty( loginPassword ) ) {
-				bUsingLogin = true;
-			}
+			String testJSON = IOUtils.toString( getClass().getResource( "/jboto-timeline.json" ), StandardCharsets.UTF_8 );
 
-			if ( bUsingLogin || bSkipLogin ) {
-				webDriverFactory = webDriverFactoryFactory.makeWebDriverFactory( WebDriverFactoryType.NEWTWITTER_WITH_JAVASCRIPT );
-			}
-			else {
-				webDriverFactory = webDriverFactoryFactory.makeWebDriverFactory( WebDriverFactoryType.ORIGINAL_WITH_JAVASCRIPT );
-			}
-		}
-		catch ( final Exception e ) {
-			logWarn( "error getting testing_account_name or creating webDriverFactory", e );
-			throw e;
-		}
+			IFrameworkFactory factory = new FrameworkFactory( createResolver() );
 
-		try {
-			browserProxy = browserProxyFactory.makeBrowserProxy();
+			IFramework framework = factory.makeFrameworkFromJSON( "test", testJSON );
 
-			browserProxy.start();
-		}
-		catch ( final Exception e ) {
-			logWarn( "cannot create browserProxy", e );
-			statusMessageReceiver.addMessage( new StatusMessage( "cannot create browserProxy", StatusMessageSeverity.ERROR ) );
-			throw e;
-		}
+			logger.info( "\n" + framework.toDebugString( "" ) );
 
-		try {
-			webDriver = webDriverFactory.makeWebDriver( browserProxy );
-			final int positionX = Utils.parseIntDefault( prefs.getValue( "prefs.firefox_screen_position_x" ) );
-			final int positionY = Utils.parseIntDefault( prefs.getValue( "prefs.firefox_screen_position_y" ) );
-			webDriver.manage().window().setPosition( new Point( positionX, positionY ) );
-		}
-		catch ( final Exception e ) {
-			logWarn( "cannot create webDriver", e );
-			statusMessageReceiver.addMessage( new StatusMessage( "cannot create webDriver", StatusMessageSeverity.ERROR ) );
-			throw e;
-		}
+			logger.info( "searchRunTimelineData BEFORE: " + searchRunTimelineData );
 
-		try {
-			webDriverUtils = webDriverFactory.makeWebDriverUtils( webDriver );
+			framework.run( searchRunTimelineData, env, null, 0 );
 
-			if ( bUsingLogin && !bSkipLogin ) {
-				loginToSite = new LoginToSite( loginName, loginPassword, prefs );
-				loginToSite.perform( webDriver, webDriverUtils );
-			}
+			logger.info( "searchRunTimelineData AFTER: " + searchRunTimelineData );
 
-			final ISearchRunTimeline ret = buildSearchRunTimelineInternal( webDriverFactory,
-																			webDriver,
-																			browserProxy,
-																			webDriverUtils,
-																			numberOfTimelinePagesToCheck,
-																			numberOfReplyPagesToCheck,
-																			maxReplies,
-																			numberOfTimelineTweetsToSkip );
+			final ISearchRunTimeline ret = searchRunFactory.makeSearchRunTimeline( 0,
+																					searchRunTimelineData.getUser(),
+																					searchRunTimelineData.getStartTime(),
+																					Instant.now(),
+																					searchRunTimelineData.getTimeline(),
+																					searchRunTimelineData.getIndividualPages() );
 
 			ret.setAttribute( "handle_to_check", handleToCheck );
-			ret.setAttribute( "loggedin", ( bUsingLogin || bSkipLogin ) ? "true" : "false" );
-
-			logger.info( "SearchRunTimelineBuilder: buildSearchRunTimeline end=" + ret );
+			ret.setAttribute( "loggedin", ( searchRunTimelineData.isUsingLogin() || searchRunTimelineData.isSkipLogin() ) ? "true" : "false" );
 
 			return ret;
 		}
 		catch ( final Exception e ) {
-			logWarn( "error logging in or building searchRun", e );
+			String message = "error logging in or building searchRun";
+
+			Utils.logException( logger, message, e );
+			statusMessageReceiver.addMessage( new StatusMessage( message, StatusMessageSeverity.WARN ) );
+
 			throw e;
 		}
-		finally {
-			if ( browserProxy != null ) {
-				try {
-					logger.info( "about to stop browserProxy" );
-					browserProxy.stop();
-					logger.info( "stopped browserProxy" );
-				}
-				catch ( final Exception e ) {
-					logWarn( "cannot stop browserProxy", e );
-				}
-			}
-
-			if ( webDriver != null ) {
-				try {
-					Utils.delay( WEBDRIVER_CLOSE_DELAY_MILLIS );
-					webDriver.close();
-				}
-				catch ( final Exception e ) {
-					logWarn( "cannot close webDriver", e );
-					statusMessageReceiver.addMessage( new StatusMessage( "cannot close webDriver", StatusMessageSeverity.ERROR ) );
-				}
-			}
-
-			logInfo( bundle.getString( "srb_done", handleToCheck ) );
-		}
 	}
 
-	private ISearchRunTimeline buildSearchRunTimelineInternal( final IWebDriverFactory webDriverFactory,
-																final WebDriver webDriver,
-																final IBrowserProxy browserProxy,
-																final IWebDriverUtils webDriverUtils,
-																final int numberOfTimelinePagesToCheck,
-																final int numberOfReplyPagesToCheck,
-																final int maxReplies,
-																final int numberOfTimelineTweetsToSkip ) throws Exception {
-		logger.info( "SearchRunTimelineBuilder: buildSearchRunTimelineInternal start" );
+	private IFQNResolver createResolver() throws Exception {
+		IFQNResolverFactory resolverFactory = new FQNResolverFactory();
+		List<IPackageAlias> aliases = new ArrayList<IPackageAlias>( 1 );
 
-		final Instant startTime = Instant.now();
+		aliases.add( resolverFactory.makePackageAlias( "common", JBOTO_COMMON_PACKAGE_NAME ) );
+		aliases.add( resolverFactory.makePackageAlias( "timeline", JBOTO_TIMELINE_PACKAGE_NAME ) );
 
-		final String url = String.format( prefs.getValue( "targetsite.pattern.timeline" ), handleToCheck );
+		IFQNResolver resolver = resolverFactory.makeResolver( JBOTO_DEFAULT_PACKAGE_NAME, aliases );
 
-		logInfo( bundle.getString( "srb_loading_timeline", url ) );
-
-		webDriver.get( url );
-
-		final IInfiniteScrollingActivator scroller = webDriverFactory.makeInfiniteScrollingActivator( webDriver,
-																										webDriverUtils,
-																										InfiniteScrollingActivatorType.TIMELINE );
-
-		logger.info( "SearchRunTimelineBuilder: buildSearchRunTimelineInternal about to makeSnapshotUserPageTimelineFromURL" );
-
-		final ISnapshotUserPageTimeline timeline = webDriverFactory.makeSnapshotUserPageTimelineFromURL( webDriver,
-																											webDriverUtils,
-																											scroller,
-																											browserProxy,
-																											archiveDirectory,
-																											url,
-																											numberOfTimelinePagesToCheck,
-																											10 * maxReplies );
-
-		logger.info( "SearchRunTimelineBuilder: buildSearchRunTimelineInternal done with makeSnapshotUserPageTimelineFromURL" );
-
-		final ITweetUser user = timeline.getUser();
-		if ( user == null || Utils.isEmpty( user.getHandle() ) ) {
-			throw new RuntimeException( "timeline does not have a user" );
-		}
-
-		logger.info( "SearchRunTimelineBuilder: buildSearchRunTimelineInternal user=" + user.toDebugString( "" ) );
-
-		Map<Long,ISnapshotUserPageIndividualTweet> individualPages;
-		final ITweetCollection tweetCollection = timeline.getTweetCollection();
-		if ( tweetCollection == null || tweetCollection.getTweets() == null || tweetCollection.getTweets().isEmpty() ) {
-			logWarn( bundle.getString( "srb_bad_timeline", url ) );
-			individualPages = new HashMap<Long,ISnapshotUserPageIndividualTweet>();
-		}
-		else {
-			logInfo( bundle.getString( "srb_loaded_timeline", tweetCollection.getTweets().size() ) );
-
-			logger.info( "SearchRunTimelineBuilder: buildSearchRunTimelineInternal about to getIndividualPages" );
-
-			individualPages = getIndividualPages( webDriverFactory,
-													webDriver,
-													browserProxy,
-													webDriverUtils,
-													tweetCollection.getTweets(),
-													user,
-													numberOfReplyPagesToCheck,
-													maxReplies,
-													numberOfTimelineTweetsToSkip );
-
-			logger.info( "SearchRunTimelineBuilder: buildSearchRunTimelineInternal got getIndividualPages=" + individualPages );
-		}
-
-		final ISearchRunTimeline ret = searchRunFactory.makeSearchRunTimeline( 0, user, startTime, Instant.now(), timeline, individualPages );
-
-		logger.info( "SearchRunTimelineBuilder: buildSearchRunTimelineInternal build ISearchRunTimeline=" + ret );
-
-		return ret;
+		return resolver;
 	}
-
-	private Map<Long,ISnapshotUserPageIndividualTweet> getIndividualPages( final IWebDriverFactory webDriverFactory,
-																			final WebDriver webDriver,
-																			final IBrowserProxy browserProxy,
-																			final IWebDriverUtils webDriverUtils,
-																			final List<ITweet> tweets,
-																			final ITweetUser user,
-																			final int numberOfReplyPagesToCheck,
-																			final int maxReplies,
-																			int numberOfTimelineTweetsToSkip )
-																				throws Exception {
-		final Map<Long,ISnapshotUserPageIndividualTweet> individualPages = new HashMap<Long,ISnapshotUserPageIndividualTweet>();
-
-		final String handle = user.getHandle();
-
-		logger.info( "SearchRunTimelineBuilder, handleToCheck=" + handleToCheck + ", handle=" + handle );
-
-		for ( final ITweet tweet : tweets ) {
-			if ( numberOfTimelineTweetsToSkip > 0 ) {
-				numberOfTimelineTweetsToSkip--;
-				continue;
-			}
-
-			String temp = Utils.trimDefault( tweet.getUser().getHandle() ).toLowerCase();
-
-			logger.info( "SearchRunTimelineBuilder, comparing handle with " + temp + " and getting individual page for " + tweet.toDebugString( "" ) );
-
-				//	if it's not an RT, etc.
-			if ( !handleToCheck.equals( Utils.trimDefault( tweet.getUser().getHandle() ).toLowerCase() ) ) {
-				continue;
-			}
-
-			if ( Utils.parseIntDefault( tweet.getAttribute( "replycount" ) ) < 1 ) {
-				continue;
-			}
-
-			final ISnapshotUserPageIndividualTweet individualPage = getIndividualPage( webDriverFactory, webDriver, browserProxy, webDriverUtils,
-																						tweet, user, numberOfReplyPagesToCheck );
-
-			if ( individualPage != null ) {
-				individualPages.put( tweet.getID(), individualPage );
-			}
-
-			if ( individualPages.size() >= maxReplies ) {
-				break;
-			}
-		}
-
-		return individualPages;
-	}
-
-	private ISnapshotUserPageIndividualTweet getIndividualPage( final IWebDriverFactory webDriverFactory,
-																final WebDriver webDriver,
-																final IBrowserProxy browserProxy,
-																final IWebDriverUtils webDriverUtils,
-																final ITweet sourceTweet,
-																final ITweetUser user,
-																final int numberOfReplyPagesToCheck )
-																	throws Exception {
-		ISnapshotUserPageIndividualTweet individualPage;
-
-		final String url = String.format( prefs.getValue( "targetsite.pattern.individual" ), sourceTweet.getUser().getHandle(), sourceTweet.getID() );
-
-		logInfo( bundle.getString( "srb_loading_replypage", url ) );
-
-		webDriver.get( url );
-
-		final IInfiniteScrollingActivator scroller = webDriverFactory.makeInfiniteScrollingActivator( webDriver,
-																										webDriverUtils,
-																										InfiniteScrollingActivatorType.INDIVIDUAL );
-
-		try {
-			individualPage = webDriverFactory.makeSnapshotUserPageIndividualTweetFromURL( webDriver,
-																							webDriverUtils,
-																							scroller,
-																							browserProxy,
-																							archiveDirectory,
-																							url,
-																							numberOfReplyPagesToCheck,
-																							0 );
-			logInfo( bundle.getString( "srb_loaded_replypage", individualPage.getTweetCollection().getTweets().size(), url ) );
-		}
-		catch ( final Exception e ) {
-			logWarn( bundle.getString( "srb_bad_replypage", url ), e );
-			throw e;
-		}
-
-		return individualPage;
-	}
-
-	private void logInfo( final String s ) {
-		logger.info( s );
-		statusMessageReceiver.addMessage( new StatusMessage( s, StatusMessageSeverity.INFO ) );
-	}
-
-	private void logWarn( final String s ) {
-		logger.info( s );
-		statusMessageReceiver.addMessage( new StatusMessage( s, StatusMessageSeverity.WARN ) );
-	}
-
-	private void logWarn( final String s, final Exception e ) {
-		Utils.logException( logger, s, e );
-		statusMessageReceiver.addMessage( new StatusMessage( s, StatusMessageSeverity.WARN ) );
-	}
-
-/*
-	@Override
-	public void responseEventFired( final IBrowserProxyResponseEvent event ) {
-		if ( webDriver == null ) {
-			return;
-		}
-
-		final String webDriverURL = webDriver.getCurrentUrl();
-		if ( webDriverURL == null || webDriverURL.length() < 1 ) {
-			logger.info( "rejected empty webDriverURL" );
-			return;
-		}
-
-		if ( !event.isJSON() ) {
-			logger.info( "rejected non JSON of type " + event.getContentType() );
-			return;
-		}
-
-		final String requestURL = event.getRequestURL();
-		if ( requestURL == null || requestURL.indexOf( "twitter.com" ) < 0 ) {
-			logger.info( "rejected requestURL of " + requestURL );
-			return;
-		}
-
-		proxyEvents.add( webDriverURL, event );
-	}
-*/
 }

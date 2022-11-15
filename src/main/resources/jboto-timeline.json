@@ -1,0 +1,33 @@
+{ "type": "container", "id": "main", "classname": "--none--", "finally": "common:CloseEverything", "commands": [
+	{ "type": "command", "classname": "timeline:BeginTimeline" },
+	{ "type": "command", "classname": "common:ChooseWebdriverFactory" },
+	{ "type": "command", "classname": "common:CreateBrowserDataRecorder" },
+	{ "type": "command", "classname": "common:CreateWebdriver" },
+	{ "type": "command", "classname": "common:CreateWebdriverUtils" },
+	{ "type": "if", "classname": "common:TestCreateLoginToSite", "commands": [
+		{ "type": "command", "classname": "common:CreateLoginToSite"}
+	]},
+
+	{ "type": "command", "classname": "timeline:LoadTimelineURL" },
+	{ "type": "command", "classname": "timeline:BeginTimelineBrowserDataRecorder" },
+	{ "type": "command", "classname": "timeline:RetrieveTimelineTweets" },
+	{ "type": "command", "classname": "timeline:EndTimelineBrowserDataRecorder" },
+	{ "type": "command", "classname": "timeline:SupplementTimelineTweets" },
+	{ "type": "command", "classname": "timeline:CreateTimelineSnapshot" },
+
+	{ "type": "foreach", "classname": "timeline:GetTimelineTweetsList", "commands": [
+		{ "type": "if", "classname": "timeline:HasEnoughReplies", "commands": [
+			{ "type": "break", "classname": "--none--"}
+		]},
+		{ "type": "if", "classname": "timeline:ReplyShouldBeProcessed", "commands": [
+			{ "type": "command", "classname": "timeline:SetReplyPageURL" },
+			{ "type": "command", "classname": "timeline:LoadReplyPageURL" },
+			{ "type": "command", "classname": "timeline:BeginReplyPageBrowserDataRecorder" },
+			{ "type": "command", "classname": "timeline:RetrieveReplyPageTweets" },
+			{ "type": "command", "classname": "timeline:EndReplyPageBrowserDataRecorder" },
+			{ "type": "command", "classname": "timeline:SupplementReplyPageTweets" },
+			{ "type": "command", "classname": "timeline:CreateReplyPageSnapshot" },
+		]},
+	]},
+	{ "type": "command", "classname": "timeline:EndTimeline" },
+]}

@@ -31,3 +31,6 @@ db
 reports
 dev
 extras
+.classpath
+.settings
+.project
