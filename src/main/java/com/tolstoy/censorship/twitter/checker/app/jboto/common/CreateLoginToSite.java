@@ -45,11 +45,11 @@ public class CreateLoginToSite implements IBasicCommand {
 	public CreateLoginToSite() {
 	}
 
-	public void run( IProduct product, IEnvironment env, Object extra, int index ) throws Exception {
-		SearchRunBaseData searchRunBaseData = (SearchRunBaseData) product;
+	public void run( IProduct prod, IEnvironment env, Object extra, int index ) throws Exception {
+		SearchRunBaseData product = (SearchRunBaseData) prod;
 		OurEnvironment ourEnv = (OurEnvironment) env;
 
-		LoginToSite loginToSite = new LoginToSite( searchRunBaseData.getLoginName(), searchRunBaseData.getLoginPassword(), ourEnv.getPrefs() );
+		LoginToSite loginToSite = new LoginToSite( product.getLoginName(), product.getLoginPassword(), ourEnv.getPrefs() );
 
 		loginToSite.perform( ourEnv.getWebDriver(), ourEnv.getWebDriverUtils() );
 	}

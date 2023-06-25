@@ -45,8 +45,8 @@ public class CreateWebdriverUtils implements IBasicCommand {
 	public CreateWebdriverUtils() {
 	}
 
-	public void run( IProduct product, IEnvironment env, Object extra, int index ) throws Exception {
-		SearchRunBaseData searchRunBaseData = (SearchRunBaseData) product;
+	public void run( IProduct prod, IEnvironment env, Object extra, int index ) throws Exception {
+		SearchRunBaseData product = (SearchRunBaseData) prod;
 		OurEnvironment ourEnv = (OurEnvironment) env;
 
 		try {

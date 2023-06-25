@@ -44,12 +44,12 @@ public class LoadTimelineURL implements IBasicCommand {
 	public LoadTimelineURL() {
 	}
 
-	public void run( IProduct product, IEnvironment env, Object extra, int index ) throws Exception {
-		SearchRunTimelineData searchRunTimelineData = (SearchRunTimelineData) product;
+	public void run( IProduct prod, IEnvironment env, Object extra, int index ) throws Exception {
+		SearchRunTimelineData product = (SearchRunTimelineData) prod;
 		OurEnvironment ourEnv = (OurEnvironment) env;
 
-		ourEnv.logInfo( logger, ourEnv.getBundle().getString( "srb_loading_timeline", searchRunTimelineData.getTimelineURL() ) );
+		ourEnv.logInfo( logger, ourEnv.getBundle().getString( "srb_loading_timeline", product.getTimelineURL() ) );
 
-		ourEnv.getWebDriver().get( searchRunTimelineData.getTimelineURL() );
+		ourEnv.getWebDriver().get( product.getTimelineURL() );
 	}
 }

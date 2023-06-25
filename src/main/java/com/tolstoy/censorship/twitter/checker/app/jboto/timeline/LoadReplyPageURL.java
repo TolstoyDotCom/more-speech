@@ -45,12 +45,12 @@ public class LoadReplyPageURL implements IBasicCommand {
 	public LoadReplyPageURL() {
 	}
 
-	public void run( IProduct product, IEnvironment env, Object extra, int index ) throws Exception {
-		SearchRunTimelineData searchRunTimelineData = (SearchRunTimelineData) product;
+	public void run( IProduct prod, IEnvironment env, Object extra, int index ) throws Exception {
+		SearchRunTimelineData product = (SearchRunTimelineData) prod;
 		OurEnvironment ourEnv = (OurEnvironment) env;
 		ITweet tweet = (ITweet) extra;
 
-		final String url = searchRunTimelineData.getIndividualPageURL( tweet.getID() );
+		final String url = product.getIndividualPageURL( tweet.getID() );
 
 		ourEnv.logInfo( logger, ourEnv.getBundle().getString( "srb_loading_replypage", url ) );
 

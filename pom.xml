@@ -26,8 +26,8 @@
 		<maven.compiler.source>17</maven.compiler.source>
 		<maven.compiler.target>17</maven.compiler.target>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<selenium.java.version>4.5.0</selenium.java.version>							<!-- 3.141.59, 3.9.0, 4.5.0 -->
-		<selenium.firefox.driver.version>4.5.0</selenium.firefox.driver.version>		<!-- 3.141.59, 3.9.0, 4.5.0, works: 4.1.1 -->
+		<selenium.java.version>4.9.0</selenium.java.version>							<!-- 3.141.59, 3.9.0, 4.5.0, 4.7.2 -->
+		<selenium.firefox.driver.version>4.9.0</selenium.firefox.driver.version>		<!-- 3.141.59, 3.9.0, 4.5.0, works: 4.1.1 -->
 		<log4j.version>2.17.1</log4j.version>
 		<jackson.version>[2.9.9.1,)</jackson.version>
 		<derby.version>10.16.1.1</derby.version>
@@ -50,7 +50,7 @@
 		<dependency>
 			<groupId>com.github.TolstoyDotCom</groupId>
 			<artifactId>basic</artifactId>
-			<version>0.0.1</version>
+			<version>0.0.11</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jtwig</groupId>
@@ -112,6 +112,7 @@
 			<artifactId>netty-codec-http</artifactId>
 			<version>4.1.77.Final</version>
 		</dependency>
+
 <!--
 		<dependency>
 			<groupId>io.netty</groupId>
@@ -325,11 +326,11 @@
 <!--
 					<mainClass>com.tolstoy.censorship.twitter.checker.app.Start</mainClass>
 					<mainClass>com.tolstoy.censorship.twitter.checker.app.QuickStart</mainClass>
--->
 					<arguments>
 						<argument>arg0</argument>
 						<argument>arg1</argument>
 					</arguments>
+-->
 					<systemProperties>
 						<systemProperty>
 							<key>io.netty.tryReflectionSetAccessible</key>

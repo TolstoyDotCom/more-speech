@@ -45,12 +45,12 @@ public class ChooseWebdriverFactory implements IBasicCommand {
 	public ChooseWebdriverFactory() {
 	}
 
-	public void run( IProduct product, IEnvironment env, Object extra, int index ) throws Exception {
-		SearchRunBaseData searchRunBaseData = (SearchRunBaseData) product;
+	public void run( IProduct prod, IEnvironment env, Object extra, int index ) throws Exception {
+		SearchRunBaseData product = (SearchRunBaseData) prod;
 		OurEnvironment ourEnv = (OurEnvironment) env;
 
 		try {
-			if ( searchRunBaseData.isUsingLogin() || searchRunBaseData.isSkipLogin() ) {
+			if ( product.isUsingLogin() || product.isSkipLogin() ) {
 				ourEnv.setWebDriverFactory( ourEnv.getWebDriverFactoryFactory().makeWebDriverFactory( WebDriverFactoryType.NEWTWITTER_WITH_JAVASCRIPT ) );
 			}
 			else {

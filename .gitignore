@@ -34,3 +34,6 @@ extras
 .classpath
 .settings
 .project
+test.php
+makeqs.php
+runqs.sh

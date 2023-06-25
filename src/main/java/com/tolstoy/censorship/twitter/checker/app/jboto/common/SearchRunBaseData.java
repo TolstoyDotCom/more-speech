@@ -21,6 +21,7 @@ import java.util.HashMap;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageTimeline;
 import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
@@ -35,18 +36,18 @@ public class SearchRunBaseData implements IProduct {
 
 	private final Instant startTime;
 	private final String handleToCheck, loginName, loginPassword;
-	private final int numberOfTimelinePagesToScroll, numberOfIndividualPagesToScroll, numberOfReplyPagesToCheck, numberOfTimelineTweetsToSkip;
+	private final int numberOfTimesToScrollOnTimeline, numberOfTimesToScrollOnIndividualPages, numberOfReplyPagesToCheck, numberOfTimelineTweetsToSkip;
 	private final boolean bUsingLogin, bSkipLogin;
 
 	public SearchRunBaseData( final IPreferences prefs,
 								final String handleToCheck,
-								final int numberOfTimelinePagesToScroll,
-								final int numberOfIndividualPagesToScroll,
+								final int numberOfTimesToScrollOnTimeline,
+								final int numberOfTimesToScrollOnIndividualPages,
 								final int numberOfReplyPagesToCheck,
 								final int numberOfTimelineTweetsToSkip ) {
 		this.handleToCheck = Utils.trimDefault( handleToCheck ).toLowerCase();
-		this.numberOfTimelinePagesToScroll = numberOfTimelinePagesToScroll;
-		this.numberOfIndividualPagesToScroll = numberOfIndividualPagesToScroll;
+		this.numberOfTimesToScrollOnTimeline = numberOfTimesToScrollOnTimeline;
+		this.numberOfTimesToScrollOnIndividualPages = numberOfTimesToScrollOnIndividualPages;
 		this.numberOfReplyPagesToCheck = numberOfReplyPagesToCheck;
 		this.numberOfTimelineTweetsToSkip = numberOfTimelineTweetsToSkip;
 
@@ -80,16 +81,16 @@ public class SearchRunBaseData implements IProduct {
 		return loginPassword;
 	}
 
-	public int getNumberOfTimelinePagesToScroll() {
-		return numberOfTimelinePagesToScroll;
+	public int getNumberOfTimesToScrollOnTimeline() {
+		return numberOfTimesToScrollOnTimeline;
 	}
 
 	public int getNumberOfReplyPagesToCheck() {
 		return numberOfReplyPagesToCheck;
 	}
 
-	public int getNumberOfIndividualPagesToScroll() {
-		return numberOfIndividualPagesToScroll;
+	public int getNumberOfTimesToScrollOnIndividualPages() {
+		return numberOfTimesToScrollOnIndividualPages;
 	}
 
 	public int getNumberOfTimelineTweetsToSkip() {
@@ -105,6 +106,14 @@ public class SearchRunBaseData implements IProduct {
 	}
 
 	public String toString() {
-		return "car with license plate number ";
+		return new ToStringBuilder( this )
+		.appendSuper( super.toString() )
+		.append( "startTime", startTime )
+		.append( "handleToCheck", handleToCheck )
+		.append( "numberOfTimesToScrollOnTimeline", numberOfTimesToScrollOnTimeline )
+		.append( "numberOfTimesToScrollOnIndividualPages", numberOfTimesToScrollOnIndividualPages )
+		.append( "numberOfReplyPagesToCheck", numberOfReplyPagesToCheck )
+		.append( "numberOfTimelineTweetsToSkip", numberOfTimelineTweetsToSkip )
+		.toString();
 	}
 }

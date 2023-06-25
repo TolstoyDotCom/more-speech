@@ -46,15 +46,15 @@ public class CloseEverything implements IBasicCommand {
 	public CloseEverything() {
 	}
 
-	public void run( IProduct product, IEnvironment env, Object extra, int index ) throws Exception {
-		SearchRunBaseData searchRunBaseData = (SearchRunBaseData) product;
+	public void run( IProduct prod, IEnvironment env, Object extra, int index ) throws Exception {
+		SearchRunBaseData product = (SearchRunBaseData) prod;
 		OurEnvironment ourEnv = (OurEnvironment) env;
 
-		IBrowserProxy browserProxy = ourEnv.getBrowserProxy();
+		IBrowserProxy browserProxy = ourEnv.getBrowserDataRecorder();
 		if ( browserProxy != null ) {
 			try {
 				logger.info( "about to stop browserProxy" );
-				ourEnv.setBrowserProxy( null );
+				ourEnv.setBrowserDataRecorder( null );
 				browserProxy.stop();
 				logger.info( "stopped browserProxy" );
 			}

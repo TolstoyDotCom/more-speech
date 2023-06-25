@@ -66,7 +66,7 @@ public class BrowserProxyHAR implements IBrowserProxy {
 	}
 
 	@Override
-	public void beginRecording( WebDriver driver, String name ) {
+	public void beginRecording( WebDriver driver, String name ) throws Exception {
 		logger.info( "beginning recording..." );
 	}
 
@@ -75,14 +75,20 @@ public class BrowserProxyHAR implements IBrowserProxy {
 		logger.info( "end recording" );
 
 		final String suedeDenimHARRetrieverScript = browserScriptFactory.getScript( "har_retriever" ).getScript();
+		logger.info( "got script, calling it" );
 
 		JavascriptExecutor javascriptExecutor = (JavascriptExecutor) driver;
 
 		Map<String,Object> resultsData = (Map<String,Object>) javascriptExecutor.executeAsyncScript( suedeDenimHARRetrieverScript, new HashMap<String,Object>() );
+		logger.info( "called script" );
 
 		List<Map<String,Object>> entries = (List<Map<String,Object>>) resultsData.get( "entries" );
 
-		List<IBrowserProxyLogEntry> list = new ArrayList<IBrowserProxyLogEntry>( entries.size() );
+		List<IBrowserProxyLogEntry> list = new ArrayList<IBrowserProxyLogEntry>( entries != null ? entries.size() : 1 );
+		if ( entries == null ) {
+			logger.info( "WARNING: EMPTY LIST" );
+			return list;
+		}
 
 		for ( Map<String,Object> entry : entries ) {
 			IBrowserProxyLogEntry logEntry = new BrowserProxyLogEntry( entry );

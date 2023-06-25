@@ -53,6 +53,8 @@ import com.tolstoy.censorship.twitter.checker.app.browserproxy.BrowserProxyFacto
 import com.tolstoy.censorship.twitter.checker.app.helpers.AppDirectories;
 import com.tolstoy.censorship.twitter.checker.api.installation.IAppDirectories;
 import com.tolstoy.censorship.twitter.checker.api.installation.IBrowserScriptFactory;
+import com.tolstoy.censorship.twitter.checker.api.installation.IBrowserExtensionFactory;
+import com.tolstoy.censorship.twitter.checker.app.installation.BrowserExtensionFactory;
 import com.tolstoy.censorship.twitter.checker.app.helpers.IOverridePreferences;
 import com.tolstoy.censorship.twitter.checker.app.helpers.OverridePreferencesFromEmbedPathsLinux;
 import com.tolstoy.censorship.twitter.checker.app.helpers.OverridePreferencesFromEmbedPathsWindows;
@@ -90,6 +92,7 @@ public final class Start {
 		List<ISearchRunProcessor> searchRunProcessors = null;
 		IAppDirectories appDirectories = null;
 		IBrowserScriptFactory browserScriptFactory = null;
+		IBrowserExtensionFactory browserExtensionFactory = null;
 		IBrowserProxyFactory browserProxyFactory = null;
 		IBrowserProxy browserProxy = null;
 		String databaseConnectionString = null;
@@ -121,6 +124,8 @@ public final class Start {
 										defaultAppPrefs.get( "storage.derby.connstring.end" );
 
 			browserScriptFactory = new BrowserScriptFactory( appDirectories.getSubdirectory( "stockscripts" ) );
+
+			browserExtensionFactory = new BrowserExtensionFactory();
 		}
 		catch ( final Exception e ) {
 			handleError( true, bundle.getString( "exc_install_loc" ), e );
@@ -183,7 +188,7 @@ public final class Start {
 
 			searchRunProcessors.add( new SearchRunProcessorUploadDataJson( bundle, prefs ) );
 
-			searchRunProcessors.add( new SearchRunProcessorWriteReport( bundle, prefs, appDirectories, analysisReportFactory, DebugLevel.VERBOSE ) );
+			searchRunProcessors.add( new SearchRunProcessorWriteReport( bundle, prefs, appDirectories, analysisReportFactory, DebugLevel.TERSE ) );
 		}
 		catch ( final Exception e ) {
 			handleError( false, bundle.getString( "exc_searchrunprocessors_init" ), e );
@@ -197,9 +202,10 @@ public final class Start {
 																	tweetFactory,
 																	appDirectories,
 																	browserScriptFactory,
+																	browserExtensionFactory,
 																	prefs,
 																	bundle,
-																	DebugLevel.VERBOSE );
+																	DebugLevel.TERSE );
 		}
 		catch ( final Exception e ) {
 			handleError( false, bundle.getString( "exc_webdriver_init" ), e );
@@ -211,17 +217,19 @@ public final class Start {
 		else {
 			try {
 				final AppGUI app = new AppGUI( bundle,
-											storage,
-											prefsFactory,
-											prefs,
-											webDriverFactoryFactory,
-											searchRunFactory,
-											snapshotFactory,
-											tweetFactory,
-											analysisReportFactory,
-											browserProxyFactory,
-											appDirectories,
-											searchRunProcessors );
+												storage,
+												prefsFactory,
+												prefs,
+												webDriverFactoryFactory,
+												searchRunFactory,
+												snapshotFactory,
+												tweetFactory,
+												analysisReportFactory,
+												browserProxyFactory,
+												appDirectories,
+												browserScriptFactory,
+												browserExtensionFactory,
+												searchRunProcessors );
 				app.run();
 			}
 			catch ( final Exception e ) {
