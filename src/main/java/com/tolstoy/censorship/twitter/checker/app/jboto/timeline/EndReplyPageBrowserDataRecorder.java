@@ -48,15 +48,16 @@ public class EndReplyPageBrowserDataRecorder implements IBasicCommand {
 	public EndReplyPageBrowserDataRecorder() {
 	}
 
-	public void run( IProduct product, IEnvironment env, Object extra, int index ) throws Exception {
-		SearchRunTimelineData searchRunTimelineData = (SearchRunTimelineData) product;
+	public void run( IProduct prod, IEnvironment env, Object extra, int index ) throws Exception {
+		SearchRunTimelineData product = (SearchRunTimelineData) prod;
 		OurEnvironment ourEnv = (OurEnvironment) env;
 		ITweet tweet = (ITweet) extra;
 
-		final List<IBrowserProxyLogEntry> responses = ourEnv.getBrowserProxy().endRecording( ourEnv.getWebDriver() );
+		final List<IBrowserProxyLogEntry> responses = ourEnv.getBrowserDataRecorder().endRecording( ourEnv.getWebDriver() );
+		logger.info( "number of log entries=" + responses.size() );
 
 		final List<String> jsonStrings = ourEnv.saveJSONStrings( responses, ourEnv.getArchiveDirectory() );
 
-		searchRunTimelineData.setIndividualPageJSONStringList( tweet.getID(), jsonStrings );
+		product.setIndividualPageJSONStringList( tweet.getID(), jsonStrings );
 	}
 }

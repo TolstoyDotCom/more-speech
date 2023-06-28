@@ -55,8 +55,8 @@ public class RetrieveReplyPageTweets implements IBasicCommand {
 	public RetrieveReplyPageTweets() {
 	}
 
-	public void run( IProduct product, IEnvironment env, Object extra, int index ) throws Exception {
-		SearchRunTimelineData searchRunTimelineData = (SearchRunTimelineData) product;
+	public void run( IProduct prod, IEnvironment env, Object extra, int index ) throws Exception {
+		SearchRunTimelineData product = (SearchRunTimelineData) prod;
 		OurEnvironment ourEnv = (OurEnvironment) env;
 		ITweet tweet = (ITweet) extra;
 
@@ -73,22 +73,26 @@ public class RetrieveReplyPageTweets implements IBasicCommand {
 
 		logger.info( "makeTweetCollectionFromURL: calling SuedeDenim tweet_retriever script" );
 
-		final JavascriptParams jsParams = new JavascriptParams( searchRunTimelineData.getIndividualPageURL( tweet.getID() ), TargetPageType.REPLYPAGE, ourEnv.getDebugLevel() );
-		jsParams.setValue( "scrollerNumTimesToScroll", "" + ( 5 * searchRunTimelineData.getNumberOfIndividualPagesToScroll() ) );
+		final JavascriptParams jsParams = new JavascriptParams( product.getIndividualPageURL( tweet.getID() ), TargetPageType.REPLYPAGE, ourEnv.getDebugLevel() );
+		jsParams.setValue( "scrollerNumTimesToScroll", "" + ( 5 * product.getNumberOfTimesToScrollOnIndividualPages() ) );
 		jsParams.setValue( "scrollerHeightMultiplier", "0.25" );
 
 		final String suedeDenimRetrieverScript = ourEnv.getBrowserScriptFactory().getScript( "tweet_retriever" ).getScript();
 
 		final List rawInterchangeData = (List) javascriptExecutor.executeAsyncScript( suedeDenimRetrieverScript, jsParams.getMap() );
+		if ( rawInterchangeData == null ) {
+			logger.info( "rawInterchangeData IS NULL, cannot retrieve tweets" );
+			return;
+		}
 
 		JavascriptInterchangeContainer interchangeContainer = new JavascriptInterchangeContainer( rawInterchangeData, ourEnv.getTweetFactory(), ourEnv.getBundle() );
-		searchRunTimelineData.setIndividualPageJIC( tweet.getID(), interchangeContainer );
+		product.setIndividualPageJIC( tweet.getID(), interchangeContainer );
 
 		logger.info( "makeTweetCollectionFromURL: SuedeDenim tweet_retriever script called, javascript interchange=\n" + interchangeContainer.toDebugString( "  " ) );
 
 		final ITweetCollection tweetCollection = interchangeContainer.getTweetCollection();
-		tweetCollection.setAttribute( "url", searchRunTimelineData.getIndividualPageURL( tweet.getID() ) );
-		tweetCollection.setAttribute( "numberOfPagesToCheck", "" + searchRunTimelineData.getNumberOfIndividualPagesToScroll() );
-		tweetCollection.setAttribute( "maxTweets", "" + searchRunTimelineData.getNumberOfIndividualPagesToScroll() );
+		tweetCollection.setAttribute( "url", product.getIndividualPageURL( tweet.getID() ) );
+		tweetCollection.setAttribute( "numberOfPagesToCheck", "" + product.getNumberOfTimesToScrollOnIndividualPages() );
+		tweetCollection.setAttribute( "maxTweets", "" + product.getNumberOfTimesToScrollOnIndividualPages() );
 	}
 }

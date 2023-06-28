@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Chris Kelly
+ * Copyright 2018 Chris Kelly
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,45 +13,38 @@
  */
 package com.tolstoy.censorship.twitter.checker.app.jboto.timeline;
 
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.interactions.Actions;
 
-import com.tolstoy.basic.app.utils.Utils;
-import com.tolstoy.basic.api.tweet.ITweet;
+import com.tolstoy.basic.api.statusmessage.IStatusMessageReceiver;
+import com.tolstoy.basic.api.statusmessage.StatusMessage;
+import com.tolstoy.basic.api.statusmessage.StatusMessageSeverity;
+import com.tolstoy.basic.api.storage.IStorable;
+import com.tolstoy.basic.api.storage.IStorage;
+import com.tolstoy.basic.api.utils.IResourceBundleWithFormatting;
 import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
-import com.tolstoy.censorship.twitter.checker.api.webdriver.IWebDriverUtils;
-import com.tolstoy.censorship.twitter.checker.api.webdriver.IWebDriverUtils;
-import com.tolstoy.jboto.api.framework.IFrameworkFactory;
-import com.tolstoy.jboto.api.framework.IFramework;
-import com.tolstoy.jboto.app.framework.FrameworkFactory;
+import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRun;
+import com.tolstoy.censorship.twitter.checker.app.storage.StorageTable;
 import com.tolstoy.jboto.api.IProduct;
 import com.tolstoy.jboto.api.IEnvironment;
-import com.tolstoy.jboto.api.IForeachCommand;
-import com.tolstoy.jboto.api.IIfCommand;
 import com.tolstoy.jboto.api.IBasicCommand;
 import com.tolstoy.censorship.twitter.checker.app.jboto.OurEnvironment;
 
-public class SetReplyPageURL implements IBasicCommand {
-	private static final Logger logger = LogManager.getLogger( SetReplyPageURL.class );
+public class InsertSearchRunToStorage implements IBasicCommand {
+	private static final Logger logger = LogManager.getLogger( InsertSearchRunToStorage.class );
 
-	public SetReplyPageURL() {
+	public InsertSearchRunToStorage() {
 	}
 
+	@Override
 	public void run( IProduct prod, IEnvironment env, Object extra, int index ) throws Exception {
 		SearchRunTimelineData product = (SearchRunTimelineData) prod;
 		OurEnvironment ourEnv = (OurEnvironment) env;
-		ITweet tweet = (ITweet) extra;
 
-		final String url = String.format( ourEnv.getPrefs().getValue( "targetsite.pattern.individual" ), tweet.getUser().getHandle(), tweet.getID() );
+		ourEnv.getStorage().saveRecord( StorageTable.SEARCHRUN, (IStorable) product.getSearchRun() );
 
-		product.setIndividualPageURL( tweet.getID(), url );
+		ourEnv.getStatusMessageReceiver().addMessage( new StatusMessage( "Wrote search run to storage", StatusMessageSeverity.INFO ) );
+
+		logger.info( "Wrote search run to storage" );
 	}
 }

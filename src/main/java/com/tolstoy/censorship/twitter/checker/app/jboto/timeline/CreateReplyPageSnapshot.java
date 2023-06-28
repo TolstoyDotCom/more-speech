@@ -52,21 +52,21 @@ public class CreateReplyPageSnapshot implements IBasicCommand {
 	public CreateReplyPageSnapshot() {
 	}
 
-	public void run( IProduct product, IEnvironment env, Object extra, int index ) throws Exception {
-		SearchRunTimelineData searchRunTimelineData = (SearchRunTimelineData) product;
+	public void run( IProduct prod, IEnvironment env, Object extra, int index ) throws Exception {
+		SearchRunTimelineData product = (SearchRunTimelineData) prod;
 		OurEnvironment ourEnv = (OurEnvironment) env;
 		ITweet tweet = (ITweet) extra;
 
-		final ITweetCollection tweetCollection = searchRunTimelineData.getIndividualPageJIC( tweet.getID() ).getTweetCollection();
+		final ITweetCollection tweetCollection = product.getIndividualPageJIC( tweet.getID() ).getTweetCollection();
 
 		final List<ITweet> tweets = tweetCollection.getTweets();
 		if ( tweets == null || tweets.isEmpty() ) {
 			throw new RuntimeException( "makeSnapshotUserPageIndividualTweetFromURL: individual page must have at least one tweet" );
 		}
 
-		final ISnapshotUserPageIndividualTweet snapshot = ourEnv.getSnapshotFactory().makeSnapshotUserPageIndividualTweet( searchRunTimelineData.getIndividualPageURL( tweet.getID() ), searchRunTimelineData.getStartTime() );
+		final ISnapshotUserPageIndividualTweet snapshot = ourEnv.getSnapshotFactory().makeSnapshotUserPageIndividualTweet( product.getIndividualPageURL( tweet.getID() ), product.getStartTime() );
 
-		searchRunTimelineData.setIndividualPage( tweet.getID(), snapshot );
+		product.setIndividualPage( tweet.getID(), snapshot );
 
 		final ITweet individualTweet = tweets.remove( 0 );
 		snapshot.setIndividualTweet( individualTweet );
@@ -78,13 +78,14 @@ public class CreateReplyPageSnapshot implements IBasicCommand {
 
 		snapshot.setTitle( ourEnv.getWebDriver().getTitle() );
 
-		final JavascriptInterchangeMetadata meta = searchRunTimelineData.getIndividualPageJIC( tweet.getID() ).getMetadata();
+		final JavascriptInterchangeMetadata meta = product.getIndividualPageJIC( tweet.getID() ).getMetadata();
 
 		snapshot.setComplete( meta != null ? meta.isCompleted() : false );
 
 		snapshot.setNumRetweets( Utils.parseIntDefault( individualTweet.getAttribute( "retweetcount" ) ) );
 		snapshot.setNumLikes( Utils.parseIntDefault( individualTweet.getAttribute( "favoritecount" ) ) );
 		snapshot.setNumReplies( Utils.parseIntDefault( individualTweet.getAttribute( "replycount" ) ) );
+		snapshot.setViewsCount( Utils.parseIntDefault( individualTweet.getAttribute( "viewscount" ) ) );
 
 		final ITweetUser user = snapshot.getUser();
 		if ( user == null || Utils.isEmpty( user.getHandle() ) ) {
@@ -94,7 +95,7 @@ public class CreateReplyPageSnapshot implements IBasicCommand {
 		logger.info( "user=" + user.toDebugString( "" ) );
 
 		if ( tweetCollection == null || tweetCollection.getTweets() == null || tweetCollection.getTweets().isEmpty() ) {
-			ourEnv.logWarn( logger, ourEnv.getBundle().getString( "srb_bad_timeline", searchRunTimelineData.getTimelineURL() ) );
+			ourEnv.logWarn( logger, ourEnv.getBundle().getString( "srb_bad_timeline", product.getTimelineURL() ) );
 		}
 		else {
 			ourEnv.logInfo( logger, ourEnv.getBundle().getString( "srb_loaded_timeline", tweetCollection.getTweets().size() ) );

@@ -44,10 +44,10 @@ public class BeginTimelineBrowserDataRecorder implements IBasicCommand {
 	public BeginTimelineBrowserDataRecorder() {
 	}
 
-	public void run( IProduct product, IEnvironment env, Object extra, int index ) throws Exception {
-		SearchRunTimelineData searchRunTimelineData = (SearchRunTimelineData) product;
+	public void run( IProduct prod, IEnvironment env, Object extra, int index ) throws Exception {
+		SearchRunTimelineData product = (SearchRunTimelineData) prod;
 		OurEnvironment ourEnv = (OurEnvironment) env;
 
-		ourEnv.getBrowserProxy().beginRecording( ourEnv.getWebDriver(), searchRunTimelineData.getTimelineURL() );
+		ourEnv.getBrowserDataRecorder().beginRecording( ourEnv.getWebDriver(), product.getTimelineURL() );
 	}
 }

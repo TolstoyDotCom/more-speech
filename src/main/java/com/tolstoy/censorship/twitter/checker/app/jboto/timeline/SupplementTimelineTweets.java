@@ -57,11 +57,11 @@ public class SupplementTimelineTweets implements IBasicCommand {
 	public SupplementTimelineTweets() {
 	}
 
-	public void run( IProduct product, IEnvironment env, Object extra, int index ) throws Exception {
-		SearchRunTimelineData searchRunTimelineData = (SearchRunTimelineData) product;
+	public void run( IProduct prod, IEnvironment env, Object extra, int index ) throws Exception {
+		SearchRunTimelineData product = (SearchRunTimelineData) prod;
 		OurEnvironment ourEnv = (OurEnvironment) env;
 
-		final ITweetCollection tweetCollection = searchRunTimelineData.getTimelineJIC().getTweetCollection();
+		final ITweetCollection tweetCollection = product.getTimelineJIC().getTweetCollection();
 
 		final JavascriptExecutor javascriptExecutor = (JavascriptExecutor) ourEnv.getWebDriver();
 
@@ -69,11 +69,15 @@ public class SupplementTimelineTweets implements IBasicCommand {
 
 		logger.info( "calling SuedeDenim json_parser script" );
 
-		final JavascriptParams jsParams = new JavascriptParams( searchRunTimelineData.getTimelineURL(), TargetPageType.TIMELINE, ourEnv.getDebugLevel() );
+		final JavascriptParams jsParams = new JavascriptParams( product.getTimelineURL(), TargetPageType.TIMELINE, ourEnv.getDebugLevel() );
 
 		final String suedeDenimJSONParserScript = ourEnv.getBrowserScriptFactory().getScript( "json_parser" ).getScript();
 
-		final List<? extends Object> rawInterchangeData = (List<? extends Object>) javascriptExecutor.executeAsyncScript( suedeDenimJSONParserScript, jsParams.getMap(), searchRunTimelineData.getTimelineJSONStringList() );
+		final List<? extends Object> rawInterchangeData = (List<? extends Object>) javascriptExecutor.executeAsyncScript( suedeDenimJSONParserScript, jsParams.getMap(), product.getTimelineJSONStringList() );
+		if ( rawInterchangeData == null ) {
+			logger.info( "rawInterchangeData IS NULL, cannot supplement tweets" );
+			return;
+		}
 
 		final JavascriptInterchangeContainer interchangeContainer = new JavascriptInterchangeContainer( rawInterchangeData, ourEnv.getTweetFactory(), ourEnv.getBundle() );
 
@@ -81,7 +85,7 @@ public class SupplementTimelineTweets implements IBasicCommand {
 
 		final List<String> tweetSupplementMessages = tweetCollection.supplementFrom( interchangeContainer.getTweetCollection() );
 
-		final ITweetUserCollection users = ourEnv.getTweetFactory().makeTweetUserCollection( tweetCollection.getTweetUsers(), searchRunTimelineData.getStartTime(), new HashMap<String,String>( 1 ) );
+		final ITweetUserCollection users = ourEnv.getTweetFactory().makeTweetUserCollection( tweetCollection.getTweetUsers(), product.getStartTime(), new HashMap<String,String>( 1 ) );
 
 		users.supplementFrom( interchangeContainer.getTweetUserCollection() );
 

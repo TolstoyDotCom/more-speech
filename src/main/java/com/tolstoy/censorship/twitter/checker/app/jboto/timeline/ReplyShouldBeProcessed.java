@@ -52,20 +52,20 @@ public class ReplyShouldBeProcessed implements IIfCommand {
 	public ReplyShouldBeProcessed() {
 	}
 
-	public boolean test( IProduct product, IEnvironment env, Object extra, int index ) throws Exception {
-		SearchRunTimelineData searchRunTimelineData = (SearchRunTimelineData) product;
+	public boolean test( IProduct prod, IEnvironment env, Object extra, int index ) throws Exception {
+		SearchRunTimelineData product = (SearchRunTimelineData) prod;
 		OurEnvironment ourEnv = (OurEnvironment) env;
 		ITweet tweet = (ITweet) extra;
 
-		if ( index < searchRunTimelineData.getNumberOfTimelineTweetsToSkip() ) {
-			logger.info( "skipped tweet #" + index + " because that's < " + searchRunTimelineData.getNumberOfTimelineTweetsToSkip() );
+		if ( index < product.getNumberOfTimelineTweetsToSkip() ) {
+			logger.info( "skipped tweet #" + index + " because that's < " + product.getNumberOfTimelineTweetsToSkip() );
 			return false;
 		}
 
 		String temp = Utils.trimDefault( tweet.getUser().getHandle() ).toLowerCase();
 
 			//	if it's not an RT, etc.
-		if ( !searchRunTimelineData.getHandleToCheck().equals( temp ) ) {
+		if ( !product.getHandleToCheck().equals( temp ) ) {
 			logger.info( "skipping tweet by " + temp );
 			return false;
 		}

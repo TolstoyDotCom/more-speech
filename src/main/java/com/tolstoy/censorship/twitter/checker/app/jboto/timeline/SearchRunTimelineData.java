@@ -21,9 +21,11 @@ import java.util.HashMap;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageTimeline;
 import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
+import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunTimeline;
 import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageIndividualTweet;
 import com.tolstoy.censorship.twitter.checker.app.webdriver.ntjs.JavascriptInterchangeContainer;
 import com.tolstoy.basic.api.tweet.ITweetUser;
@@ -34,6 +36,7 @@ import com.tolstoy.censorship.twitter.checker.app.jboto.common.SearchRunBaseData
 public class SearchRunTimelineData extends SearchRunBaseData {
 	private static final Logger logger = LogManager.getLogger( SearchRunTimelineData.class );
 
+	private ISearchRunTimeline searchRun;
 	private ISnapshotUserPageTimeline timeline;
 	private JavascriptInterchangeContainer timelineJIC;
 	private List<String> timelineJSONStringList;
@@ -48,11 +51,11 @@ public class SearchRunTimelineData extends SearchRunBaseData {
 
 	public SearchRunTimelineData( final IPreferences prefs,
 								final String handleToCheck,
-								final int numberOfTimelinePagesToScroll,
-								final int numberOfIndividualPagesToScroll,
+								final int numberOfTimesToScrollOnTimeline,
+								final int numberOfTimesToScrollOnIndividualPages,
 								final int numberOfReplyPagesToCheck,
 								final int numberOfTimelineTweetsToSkip ) {
-		super( prefs, handleToCheck, numberOfTimelinePagesToScroll, numberOfIndividualPagesToScroll, numberOfReplyPagesToCheck, numberOfTimelineTweetsToSkip );
+		super( prefs, handleToCheck, numberOfTimesToScrollOnTimeline, numberOfTimesToScrollOnIndividualPages, numberOfReplyPagesToCheck, numberOfTimelineTweetsToSkip );
 
 		this.timelineURL = String.format( prefs.getValue( "targetsite.pattern.timeline" ), getHandleToCheck() );
 
@@ -66,12 +69,20 @@ public class SearchRunTimelineData extends SearchRunBaseData {
 		return timelineURL;
 	}
 
+	public ISearchRunTimeline getSearchRun() {
+		return searchRun;
+	}
+
+	public void setSearchRun( ISearchRunTimeline val ) {
+		searchRun = val;
+	}
+
 	public ISnapshotUserPageTimeline getTimeline() {
 		return timeline;
 	}
 
 	public void setTimeline( ISnapshotUserPageTimeline val ) {
-		this.timeline = val;
+		timeline = val;
 	}
 
 	public List<String> getTimelineJSONStringList() {
@@ -143,10 +154,21 @@ public class SearchRunTimelineData extends SearchRunBaseData {
 	}
 
 	public void setUser( ITweetUser val ) {
-		this.user = val;
+		user = val;
 	}
 
 	public String toString() {
-		return "car with license plate number ";
+		return new ToStringBuilder( this )
+		.appendSuper( super.toString() )
+		.append( "timelineURL", timelineURL )
+		.append( "user", user )
+		.append( "timelineJSONStringList", timelineJSONStringList != null ? timelineJSONStringList.size() : "[null]" )
+		.append( "individualPages", individualPages != null ? individualPages.keySet().size() : "[null]" )
+		.append( "individualPageJICs", individualPageJICs != null ? individualPageJICs.keySet().size() : "[null]" )
+		.append( "individualPageJSONStringList", individualPageJSONStringList != null ? individualPageJSONStringList.keySet().size() : "[null]" )
+		.append( "individualPageURLs", individualPageURLs != null ? individualPageURLs.keySet().size() : "[null]" )
+		//.append( "timeline", timeline )
+		//.append( "timelineJIC", timelineJIC )
+		.toString();
 	}
 }

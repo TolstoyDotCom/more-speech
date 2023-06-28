@@ -29,6 +29,7 @@ import com.tolstoy.basic.api.statusmessage.StatusMessage;
 import com.tolstoy.basic.api.statusmessage.StatusMessageSeverity;
 import com.tolstoy.basic.api.tweet.ITweetCollection;
 import com.tolstoy.basic.api.tweet.ITweetUser;
+import com.tolstoy.basic.api.tweet.ITweet;
 import com.tolstoy.basic.app.utils.Utils;
 import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
 import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageTimeline;
@@ -51,48 +52,65 @@ public class CreateTimelineSnapshot implements IBasicCommand {
 	public CreateTimelineSnapshot() {
 	}
 
-	public void run( IProduct product, IEnvironment env, Object extra, int index ) throws Exception {
-		SearchRunTimelineData searchRunTimelineData = (SearchRunTimelineData) product;
+	public void run( IProduct prod, IEnvironment env, Object extra, int index ) throws Exception {
+		SearchRunTimelineData product = (SearchRunTimelineData) prod;
 		OurEnvironment ourEnv = (OurEnvironment) env;
 
-		final ITweetCollection tweetCollection = searchRunTimelineData.getTimelineJIC().getTweetCollection();
+		final ITweetCollection tweetCollection = product.getTimelineJIC().getTweetCollection();
 
-		final ISnapshotUserPageTimeline snapshot = ourEnv.getSnapshotFactory().makeSnapshotUserPageTimeline( searchRunTimelineData.getTimelineURL(), searchRunTimelineData.getStartTime() );
+		final ISnapshotUserPageTimeline snapshot = ourEnv.getSnapshotFactory().makeSnapshotUserPageTimeline( product.getTimelineURL(), product.getStartTime() );
 
-		searchRunTimelineData.setTimeline( snapshot );
+		product.setTimeline( snapshot );
 
 		snapshot.setTweetCollection( tweetCollection );
 
 		snapshot.setTitle( ourEnv.getWebDriver().getTitle() );
 
-		final JavascriptInterchangeMetadata meta = searchRunTimelineData.getTimelineJIC().getMetadata();
+		final JavascriptInterchangeMetadata meta = product.getTimelineJIC().getMetadata();
 
 		snapshot.setComplete( meta != null ? meta.isCompleted() : false );
 
-		if ( tweetCollection.getTweets() != null && !tweetCollection.getTweets().isEmpty() ) {
-			ITweetUser tweetUser = tweetCollection.getTweets().get( 0 ).getUser();
-			if ( tweetUser != null ) {
-				snapshot.setUser( tweetUser );
-				snapshot.setNumTotalTweets( tweetUser.getNumTotalTweets() );
-				snapshot.setNumFollowers( tweetUser.getNumFollowers() );
-				snapshot.setNumFollowing( tweetUser.getNumFollowing() );
-			}
+		ITweetUser tweetUser = getTimelineUser( product, tweetCollection );
+		if ( tweetUser != null ) {
+			snapshot.setUser( tweetUser );
+			snapshot.setNumTotalTweets( tweetUser.getNumTotalTweets() );
+			snapshot.setNumFollowers( tweetUser.getNumFollowers() );
+			snapshot.setNumFollowing( tweetUser.getNumFollowing() );
 		}
 
 		final ITweetUser user = snapshot.getUser();
 		if ( user == null || Utils.isEmpty( user.getHandle() ) ) {
-			throw new RuntimeException( "timeline snapshot does not have a user" );
+			throw new RuntimeException( "Timeline snapshot does not have a user. Are there tweets from the user being checked on their timeline, or just RTs?" );
 		}
 
-		searchRunTimelineData.setUser( user );
+		product.setUser( user );
 
 		logger.info( "user=" + user.toDebugString( "" ) );
 
 		if ( tweetCollection == null || tweetCollection.getTweets() == null || tweetCollection.getTweets().isEmpty() ) {
-			ourEnv.logWarn( logger, ourEnv.getBundle().getString( "srb_bad_timeline", searchRunTimelineData.getTimelineURL() ) );
+			ourEnv.logWarn( logger, ourEnv.getBundle().getString( "srb_bad_timeline", product.getTimelineURL() ) );
 		}
 		else {
 			ourEnv.logInfo( logger, ourEnv.getBundle().getString( "srb_loaded_timeline", tweetCollection.getTweets().size() ) );
 		}
+	}
+
+	protected ITweetUser getTimelineUser( SearchRunTimelineData product, ITweetCollection tweetCollection ) throws Exception {
+		if ( tweetCollection.getTweets() == null || tweetCollection.getTweets().isEmpty() ) {
+			return null;
+		}
+
+		for ( ITweet tweet : tweetCollection.getTweets() ) {
+			ITweetUser tweetUser = tweet.getUser();
+			if ( tweetUser == null ) {
+				return null;
+			}
+
+			if ( product.getHandleToCheck().equals( tweetUser.getHandle() ) ) {
+				return tweetUser;
+			}
+		}
+
+		return null;
 	}
 }

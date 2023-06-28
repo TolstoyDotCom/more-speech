@@ -28,7 +28,6 @@ import com.tolstoy.basic.api.tweet.ITweet;
 import com.tolstoy.basic.app.utils.Utils;
 import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
 import com.tolstoy.censorship.twitter.checker.api.webdriver.IWebDriverUtils;
-import com.tolstoy.censorship.twitter.checker.api.webdriver.IWebDriverUtils;
 import com.tolstoy.jboto.api.framework.IFrameworkFactory;
 import com.tolstoy.jboto.api.framework.IFramework;
 import com.tolstoy.jboto.app.framework.FrameworkFactory;
@@ -45,11 +44,11 @@ public class BeginReplyPageBrowserDataRecorder implements IBasicCommand {
 	public BeginReplyPageBrowserDataRecorder() {
 	}
 
-	public void run( IProduct product, IEnvironment env, Object extra, int index ) throws Exception {
-		SearchRunTimelineData searchRunTimelineData = (SearchRunTimelineData) product;
+	public void run( IProduct prod, IEnvironment env, Object extra, int index ) throws Exception {
+		SearchRunTimelineData product = (SearchRunTimelineData) prod;
 		OurEnvironment ourEnv = (OurEnvironment) env;
 		ITweet tweet = (ITweet) extra;
 
-		ourEnv.getBrowserProxy().beginRecording( ourEnv.getWebDriver(), searchRunTimelineData.getIndividualPageURL( tweet.getID() ) );
+		ourEnv.getBrowserDataRecorder().beginRecording( ourEnv.getWebDriver(), product.getIndividualPageURL( tweet.getID() ) );
 	}
 }

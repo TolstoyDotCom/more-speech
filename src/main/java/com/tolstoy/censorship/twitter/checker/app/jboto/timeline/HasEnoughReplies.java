@@ -52,13 +52,13 @@ public class HasEnoughReplies implements IIfCommand {
 	public HasEnoughReplies() {
 	}
 
-	public boolean test( IProduct product, IEnvironment env, Object extra, int index ) throws Exception {
-		SearchRunTimelineData searchRunTimelineData = (SearchRunTimelineData) product;
+	public boolean test( IProduct prod, IEnvironment env, Object extra, int index ) throws Exception {
+		SearchRunTimelineData product = (SearchRunTimelineData) prod;
 		OurEnvironment ourEnv = (OurEnvironment) env;
 		ITweet tweet = (ITweet) extra;
 
-		int numIndividualPages = searchRunTimelineData.getIndividualPages().keySet().size();
-		int max = searchRunTimelineData.getNumberOfReplyPagesToCheck();
+		int numIndividualPages = product.getIndividualPages().keySet().size();
+		int max = product.getNumberOfReplyPagesToCheck();
 		boolean ret = numIndividualPages >= max;
 
 		logger.info( "numIndividualPages=" + numIndividualPages + ", max=" + max + ", returning " + ret );

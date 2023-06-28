@@ -11,9 +11,8 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.tolstoy.censorship.twitter.checker.app.jboto.timeline;
+package com.tolstoy.censorship.twitter.checker.app.jboto.common;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -24,8 +23,10 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.Point;
 
-import com.tolstoy.basic.api.tweet.ITweetCollection;
+import com.tolstoy.basic.api.statusmessage.StatusMessage;
+import com.tolstoy.basic.api.statusmessage.StatusMessageSeverity;
 import com.tolstoy.basic.app.utils.Utils;
 import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
 import com.tolstoy.censorship.twitter.checker.api.webdriver.IWebDriverUtils;
@@ -40,25 +41,26 @@ import com.tolstoy.jboto.api.IIfCommand;
 import com.tolstoy.jboto.api.IBasicCommand;
 import com.tolstoy.censorship.twitter.checker.app.jboto.OurEnvironment;
 
-public class GetTimelineTweetsList implements IForeachCommand {
-	private static final Logger logger = LogManager.getLogger( GetTimelineTweetsList.class );
+public class CreateWebdriverBasic implements IBasicCommand {
+	private static final Logger logger = LogManager.getLogger( CreateWebdriverBasic.class );
 
-	public GetTimelineTweetsList() {
+	public CreateWebdriverBasic() {
 	}
 
-	public List<? extends Object> getList( IProduct prod, IEnvironment env, Object extra, int index ) throws Exception {
-		SearchRunTimelineData product = (SearchRunTimelineData) prod;
+	public void run( IProduct prod, IEnvironment env, Object extra, int index ) throws Exception {
+		SearchRunBaseData product = (SearchRunBaseData) prod;
 		OurEnvironment ourEnv = (OurEnvironment) env;
 
-		ITweetCollection tweetCollection = product.getTimeline().getTweetCollection();
-
-		if ( tweetCollection == null || tweetCollection.getTweets() == null || tweetCollection.getTweets().isEmpty() ) {
-			ourEnv.logWarn( logger, ourEnv.getBundle().getString( "srb_bad_timeline", product.getTimelineURL() ) );
-			return new ArrayList<Object>();
+		try {
+			ourEnv.setWebDriver( ourEnv.getWebDriverFactory().makeWebDriver( ourEnv.getBrowserDataRecorder() ) );
+			final int positionX = Utils.parseIntDefault( ourEnv.getPrefs().getValue( "prefs.firefox_screen_position_x" ) );
+			final int positionY = Utils.parseIntDefault( ourEnv.getPrefs().getValue( "prefs.firefox_screen_position_y" ) );
+			ourEnv.getWebDriver().manage().window().setPosition( new Point( positionX, positionY ) );
 		}
-
-		logger.info( "returning " + tweetCollection.getTweets().size() + " tweets" );
-
-		return tweetCollection.getTweets();
+		catch ( final Exception e ) {
+			ourEnv.logWarn( logger, "cannot create ourEnv.getWebDriver()", e );
+			ourEnv.getStatusMessageReceiver().addMessage( new StatusMessage( "cannot create ourEnv.getWebDriver()", StatusMessageSeverity.ERROR ) );
+			throw e;
+		}
 	}
 }

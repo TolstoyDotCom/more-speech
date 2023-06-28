@@ -47,14 +47,16 @@ public class EndTimelineBrowserDataRecorder implements IBasicCommand {
 	public EndTimelineBrowserDataRecorder() {
 	}
 
-	public void run( IProduct product, IEnvironment env, Object extra, int index ) throws Exception {
-		SearchRunTimelineData searchRunTimelineData = (SearchRunTimelineData) product;
+	public void run( IProduct prod, IEnvironment env, Object extra, int index ) throws Exception {
+		SearchRunTimelineData product = (SearchRunTimelineData) prod;
 		OurEnvironment ourEnv = (OurEnvironment) env;
 
-		final List<IBrowserProxyLogEntry> responses = ourEnv.getBrowserProxy().endRecording( ourEnv.getWebDriver() );
+		final List<IBrowserProxyLogEntry> responses = ourEnv.getBrowserDataRecorder().endRecording( ourEnv.getWebDriver() );
 
 		final List<String> jsonStrings = ourEnv.saveJSONStrings( responses, ourEnv.getArchiveDirectory() );
 
-		searchRunTimelineData.setTimelineJSONStringList( jsonStrings );
+		logger.info( "GOT " + ( responses != null ? responses.size() : "[null]" ) + " RESPONSES AND " + ( jsonStrings != null ? jsonStrings.size() : "[null]" ) + " JSONSTRINGS" );
+
+		product.setTimelineJSONStringList( jsonStrings );
 	}
 }

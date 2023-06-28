@@ -16,6 +16,7 @@ package com.tolstoy.censorship.twitter.checker.app.jboto.timeline;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.time.Instant;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -27,6 +28,7 @@ import org.openqa.selenium.interactions.Actions;
 
 import com.tolstoy.basic.app.utils.Utils;
 import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
+import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunTimeline;
 import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageIndividualTweet;
 import com.tolstoy.censorship.twitter.checker.api.webdriver.IWebDriverUtils;
 import com.tolstoy.censorship.twitter.checker.api.webdriver.IWebDriverUtils;
@@ -46,8 +48,24 @@ public class EndTimeline implements IBasicCommand {
 	public EndTimeline() {
 	}
 
-	public void run( IProduct product, IEnvironment env, Object extra, int index ) throws Exception {
-		SearchRunTimelineData searchRunTimelineData = (SearchRunTimelineData) product;
+	public void run( IProduct prod, IEnvironment env, Object extra, int index ) throws Exception {
+		SearchRunTimelineData product = (SearchRunTimelineData) prod;
 		OurEnvironment ourEnv = (OurEnvironment) env;
+
+		final ISearchRunTimeline searchRunTimeline = ourEnv.getSearchRunFactory().makeSearchRunTimeline( 0,
+																											product.getUser(),
+																											product.getStartTime(),
+																											Instant.now(),
+																											product.getTimeline(),
+																											product.getIndividualPages() );
+
+		searchRunTimeline.setAttribute( "handle_to_check", product.getHandleToCheck() );
+		searchRunTimeline.setAttribute( "loggedin", ( product.isUsingLogin() || product.isSkipLogin() ) ? "true" : "false" );
+
+		//logger.info( searchRunTimeline );
+		//logger.info( "VALUENEXT" );
+		//logger.info( Utils.getDefaultObjectMapper().writeValueAsString( searchRunTimeline ) );
+
+		product.setSearchRun( searchRunTimeline );
 	}
 }

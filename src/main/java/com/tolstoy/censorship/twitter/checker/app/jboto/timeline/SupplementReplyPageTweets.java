@@ -57,12 +57,12 @@ public class SupplementReplyPageTweets implements IBasicCommand {
 	public SupplementReplyPageTweets() {
 	}
 
-	public void run( IProduct product, IEnvironment env, Object extra, int index ) throws Exception {
-		SearchRunTimelineData searchRunTimelineData = (SearchRunTimelineData) product;
+	public void run( IProduct prod, IEnvironment env, Object extra, int index ) throws Exception {
+		SearchRunTimelineData product = (SearchRunTimelineData) prod;
 		OurEnvironment ourEnv = (OurEnvironment) env;
 		ITweet tweet = (ITweet) extra;
 
-		final ITweetCollection tweetCollection = searchRunTimelineData.getIndividualPageJIC( tweet.getID() ).getTweetCollection();
+		final ITweetCollection tweetCollection = product.getIndividualPageJIC( tweet.getID() ).getTweetCollection();
 
 		final JavascriptExecutor javascriptExecutor = (JavascriptExecutor) ourEnv.getWebDriver();
 
@@ -70,11 +70,15 @@ public class SupplementReplyPageTweets implements IBasicCommand {
 
 		logger.info( "calling SuedeDenim json_parser script" );
 
-		final JavascriptParams jsParams = new JavascriptParams( searchRunTimelineData.getIndividualPageURL( tweet.getID() ), TargetPageType.TIMELINE, ourEnv.getDebugLevel() );
+		final JavascriptParams jsParams = new JavascriptParams( product.getIndividualPageURL( tweet.getID() ), TargetPageType.TIMELINE, ourEnv.getDebugLevel() );
 
 		final String suedeDenimJSONParserScript = ourEnv.getBrowserScriptFactory().getScript( "json_parser" ).getScript();
 
-		final List<? extends Object> rawInterchangeData = (List<? extends Object>) javascriptExecutor.executeAsyncScript( suedeDenimJSONParserScript, jsParams.getMap(), searchRunTimelineData.getIndividualPageJSONStringList( tweet.getID() ) );
+		final List<? extends Object> rawInterchangeData = (List<? extends Object>) javascriptExecutor.executeAsyncScript( suedeDenimJSONParserScript, jsParams.getMap(), product.getIndividualPageJSONStringList( tweet.getID() ) );
+		if ( rawInterchangeData == null ) {
+			logger.info( "rawInterchangeData IS NULL, cannot supplement tweets" );
+			return;
+		}
 
 		final JavascriptInterchangeContainer interchangeContainer = new JavascriptInterchangeContainer( rawInterchangeData, ourEnv.getTweetFactory(), ourEnv.getBundle() );
 
@@ -82,7 +86,7 @@ public class SupplementReplyPageTweets implements IBasicCommand {
 
 		final List<String> tweetSupplementMessages = tweetCollection.supplementFrom( interchangeContainer.getTweetCollection() );
 
-		final ITweetUserCollection users = ourEnv.getTweetFactory().makeTweetUserCollection( tweetCollection.getTweetUsers(), searchRunTimelineData.getStartTime(), new HashMap<String,String>( 1 ) );
+		final ITweetUserCollection users = ourEnv.getTweetFactory().makeTweetUserCollection( tweetCollection.getTweetUsers(), product.getStartTime(), new HashMap<String,String>( 1 ) );
 
 		users.supplementFrom( interchangeContainer.getTweetUserCollection() );
 
