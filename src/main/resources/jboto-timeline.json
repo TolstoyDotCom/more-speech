@@ -1,9 +1,9 @@
 { "type": "container", "id": "main", "classname": "--none--", "finally": "common:CloseEverything", "commands": [
 	{ "type": "command", "classname": "timeline:BeginTimeline" },
 	{ "type": "command", "classname": "common:ChooseWebdriverFactory" },
-	{ "type": "command", "classname": "common:CreateBrowserDataRecorder" },
-	{ "type": "command", "classname": "common:CreateWebdriver" },
+	{ "type": "command", "classname": "common:CreateWebdriverFromFirefoxProfile" },
 	{ "type": "command", "classname": "common:CreateWebdriverUtils" },
+	{ "type": "command", "classname": "common:CreateBrowserDataRecorder" },
 	{ "type": "if", "classname": "common:TestCreateLoginToSite", "commands": [
 		{ "type": "command", "classname": "common:CreateLoginToSite"}
 	]},

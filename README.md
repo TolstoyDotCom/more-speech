@@ -173,6 +173,8 @@ Two files from the [dkpro-core](https://github.com/dkpro/dkpro-core) project hav
 
 The [cue.language](https://github.com/vcl-xx/cue.language) project is used from [this fork](https://github.com/codycoggins/cue.language) . That project is licensed under The Apache Software License, Version 2.0.
 
+The [HAR export trigger](https://github.com/firefox-devtools/har-export-trigger) project is licensed under the Mozilla Public License, v. 2.0.
+ 
 What Twitter Does
 ------
 If you tweet a reply to someone and then look at the tweet you replied to, you'll see your tweet right at the top of the list.

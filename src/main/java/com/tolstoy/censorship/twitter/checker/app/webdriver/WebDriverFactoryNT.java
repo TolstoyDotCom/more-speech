@@ -66,6 +66,7 @@ import com.tolstoy.censorship.twitter.checker.api.browserproxy.IBrowserProxy;
 import com.tolstoy.censorship.twitter.checker.api.browserproxy.IBrowserProxyLogEntry;
 import com.tolstoy.censorship.twitter.checker.api.installation.IAppDirectories;
 import com.tolstoy.censorship.twitter.checker.api.installation.IBrowserScriptFactory;
+import com.tolstoy.censorship.twitter.checker.api.installation.IBrowserExtensionFactory;
 import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
 import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotFactory;
 import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPage;
@@ -90,6 +91,7 @@ class WebDriverFactoryNT implements IWebDriverFactory {
 	private final ITweetFactory tweetFactory;
 	private final IAppDirectories appDirectories;
 	private final IBrowserScriptFactory browserScriptFactory;
+	private final IBrowserExtensionFactory browserExtensionFactory;
 	private final IPreferences prefs;
 	private final IResourceBundleWithFormatting bundle;
 	private final DebugLevel debugLevel;
@@ -108,6 +110,7 @@ class WebDriverFactoryNT implements IWebDriverFactory {
 								final ITweetFactory tweetFactory,
 								final IAppDirectories appDirectories,
 								final IBrowserScriptFactory browserScriptFactory,
+								final IBrowserExtensionFactory browserExtensionFactory,
 								final IPreferences prefs,
 								final IResourceBundleWithFormatting bundle,
 								final DebugLevel debugLevel ) throws Exception {
@@ -115,6 +118,7 @@ class WebDriverFactoryNT implements IWebDriverFactory {
 		this.tweetFactory = tweetFactory;
 		this.appDirectories = appDirectories;
 		this.browserScriptFactory = browserScriptFactory;
+		this.browserExtensionFactory = browserExtensionFactory;
 		this.prefs = prefs;
 		this.bundle = bundle;
 		this.debugLevel = debugLevel;

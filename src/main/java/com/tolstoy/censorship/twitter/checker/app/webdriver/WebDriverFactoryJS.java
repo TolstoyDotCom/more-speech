@@ -30,6 +30,7 @@ import com.tolstoy.basic.api.utils.IResourceBundleWithFormatting;
 import com.tolstoy.basic.app.utils.Utils;
 import com.tolstoy.censorship.twitter.checker.api.installation.IAppDirectories;
 import com.tolstoy.censorship.twitter.checker.api.installation.IBrowserScriptFactory;
+import com.tolstoy.censorship.twitter.checker.api.installation.IBrowserExtensionFactory;
 import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
 import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotFactory;
 import com.tolstoy.censorship.twitter.checker.api.webdriver.IWebDriverFactory;
@@ -44,9 +45,10 @@ public class WebDriverFactoryJS extends WebDriverFactory implements IWebDriverFa
 								final ITweetFactory tweetFactory,
 								final IAppDirectories appDirectories,
 								final IBrowserScriptFactory browserScriptFactory,
+								final IBrowserExtensionFactory browserExtensionFactory,
 								final IPreferences prefs,
 								final IResourceBundleWithFormatting bundle ) throws Exception {
-		super( snapshotFactory, tweetFactory, appDirectories, browserScriptFactory, prefs, bundle );
+		super( snapshotFactory, tweetFactory, appDirectories, browserScriptFactory, browserExtensionFactory, prefs, bundle );
 
 		attributesScript = IOUtils.toString( getClass().getResource( "/attributes.js" ), StandardCharsets.UTF_8 );
 		tweetScript = IOUtils.toString( getClass().getResource( "/tweet.js" ), StandardCharsets.UTF_8 );

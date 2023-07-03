@@ -53,6 +53,7 @@ import com.tolstoy.censorship.twitter.checker.api.installation.IAppDirectories;
 import com.tolstoy.censorship.twitter.checker.api.browserproxy.IBrowserProxy;
 import com.tolstoy.censorship.twitter.checker.api.browserproxy.IBrowserProxyLogEntry;
 import com.tolstoy.censorship.twitter.checker.api.installation.IBrowserScriptFactory;
+import com.tolstoy.censorship.twitter.checker.api.installation.IBrowserExtensionFactory;
 import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
 import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotFactory;
 import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageIndividualTweet;
@@ -79,6 +80,7 @@ public class WebDriverFactory implements IWebDriverFactory {
 	private final ISnapshotFactory snapshotFactory;
 	private final IAppDirectories appDirectories;
 	private final IBrowserScriptFactory browserScriptFactory;
+	private final IBrowserExtensionFactory browserExtensionFactory;
 	private final IPreferences prefs;
 	private final IResourceBundleWithFormatting bundle;
 
@@ -86,12 +88,14 @@ public class WebDriverFactory implements IWebDriverFactory {
 								final ITweetFactory tweetFactory,
 								final IAppDirectories appDirectories,
 								final IBrowserScriptFactory browserScriptFactory,
+								final IBrowserExtensionFactory browserExtensionFactory,
 								final IPreferences prefs,
 								final IResourceBundleWithFormatting bundle ) throws Exception {
 		this.tweetFactory = tweetFactory;
 		this.snapshotFactory = snapshotFactory;
 		this.appDirectories = appDirectories;
 		this.browserScriptFactory = browserScriptFactory;
+		this.browserExtensionFactory = browserExtensionFactory;
 		this.prefs = prefs;
 		this.bundle = bundle;
 	}
@@ -337,7 +341,9 @@ public class WebDriverFactory implements IWebDriverFactory {
 
 			final LoggingPreferences loggingPreferences = new LoggingPreferences();
 			loggingPreferences.enable( LogType.BROWSER, Level.INFO );
-			capabilities.setCapability( CapabilityType.LOGGING_PREFS, loggingPreferences );
+			//	LOGGING_PREFS has been removed, try plain text even though it might not work with Firefox
+			//capabilities.setCapability( CapabilityType.LOGGING_PREFS, loggingPreferences );
+			capabilities.setCapability( "goog:loggingPrefs", loggingPreferences );
 
 			if ( proxy != null ) {
 				Proxy seleniumProxy = proxy.getSeleniumProxy();
