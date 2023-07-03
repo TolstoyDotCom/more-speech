@@ -20,6 +20,7 @@ import org.dizitart.jbus.JBus;
 import com.tolstoy.basic.api.utils.IResourceBundleWithFormatting;
 import com.tolstoy.censorship.twitter.checker.api.browserproxy.IBrowserProxy;
 import com.tolstoy.censorship.twitter.checker.api.browserproxy.IBrowserProxyFactory;
+import com.tolstoy.censorship.twitter.checker.api.browserproxy.BrowserDataRecorderType;
 import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
 import com.tolstoy.censorship.twitter.checker.app.helpers.SearchRunRepliesBuilder;
 import com.tolstoy.censorship.twitter.checker.api.installation.IBrowserScriptFactory;
@@ -43,8 +44,27 @@ public class BrowserProxyFactory implements IBrowserProxyFactory {
 	}
 
 	@Override
-	public IBrowserProxy makeBrowserProxy() throws Exception {
+	public IBrowserProxy makeBrowserDataRecorder() throws Exception {
 		return new BrowserProxyHAR( prefs, bundle, jbus, browserScriptFactory );
+		//return new BrowserProxyBMP( prefs, bundle, jbus );
 		//return new BrowserProxyBUP( prefs, bundle, jbus );
+		//return new BrowserProxyXHR( prefs, bundle, jbus, browserScriptFactory );
+	}
+
+	@Override
+	public IBrowserProxy makeBrowserDataRecorder( BrowserDataRecorderType preferredType ) throws Exception {
+		switch ( preferredType ) {
+			case BMP_PROXY:
+				throw new IllegalArgumentException( "BrowserProxyBMP no longer supported" );
+
+			case BUP_PROXY:
+				return new BrowserProxyBUP( prefs, bundle, jbus );
+
+			case HAR_EXPORT_EXTENSION:
+				return new BrowserProxyHAR( prefs, bundle, jbus, browserScriptFactory );
+
+			default:
+				return new BrowserProxyXHR( prefs, bundle, jbus, browserScriptFactory );
+		}
 	}
 }

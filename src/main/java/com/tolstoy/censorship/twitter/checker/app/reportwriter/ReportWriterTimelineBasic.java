@@ -28,6 +28,7 @@ import java.util.Locale;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang.time.FastDateFormat;
 import org.jtwig.JtwigModel;
 import org.jtwig.JtwigTemplate;
@@ -186,6 +187,45 @@ public class ReportWriterTimelineBasic {
 			.with( "link", String.format( prefs.getValue( "targetsite.pattern.individual" ), tweet.getUser().getHandle(), tweet.getID() ) )
 			.with( "dateStr", Utils.formatTimestampString( tweet.getAttribute( "time" ), "date unknown" ) )
 			.with( "text", Utils.removeNewlines( Utils.trimDefault( Utils.replaceAllEmojis( ObjectUtils.firstNonNull( tweet.getAttribute( "tweettext" ), "" ) ) ) ) );
+
+		Map<String,String> attributes = tweet.getUser().getAttributes();
+
+		if ( Utils.isStringTrue( attributes.get( "blueSubscriber" ) ) ) {
+			model.with( "blueSubscriber", true );
+		}
+
+		List<String> notes = new ArrayList<String>();
+		List<String> warningMessages = new ArrayList<String>();
+
+		//	@todo: determine if canDM is noteworthy, it could just be a user setting
+		//if ( !Utils.isEmpty( attributes.get( "canDM" ) ) && !Utils.isStringTrue( attributes.get( "canDM" ) ) ) {
+		//	notes.add( "canDM is " + attributes.get( "canDM" ) );
+		//}
+
+		//	@todo: determine if canMediaTag is noteworthy, it could just be a user setting
+		//if ( !Utils.isEmpty( attributes.get( "canMediaTag" ) ) && !Utils.isStringTrue( attributes.get( "canMediaTag" ) ) ) {
+		//	notes.add( "canMediaTag is " + attributes.get( "canMediaTag" ) );
+		//}
+
+		if ( !Utils.isEmpty( attributes.get( "hasGraduatedAccess" ) ) && !Utils.isStringTrue( attributes.get( "hasGraduatedAccess" ) ) ) {
+			warningMessages.add( "hasGraduatedAccess is " + attributes.get( "hasGraduatedAccess" ) );
+		}
+
+		if ( !Utils.isEmpty( attributes.get( "requireSomeConsent" ) ) ) {
+			warningMessages.add( "requireSomeConsent is " + attributes.get( "requireSomeConsent" ) );
+		}
+
+		if ( !Utils.isEmpty( attributes.get( "superFollowEligible" ) ) ) {
+			warningMessages.add( "superFollowEligible is " + attributes.get( "superFollowEligible" ) );
+		}
+
+		if ( !Utils.isEmpty( attributes.get( "withheldInCountries" ) ) ) {
+			warningMessages.add( "withheldInCountries is " + attributes.get( "withheldInCountries" ) );
+		}
+
+		if ( warningMessages.size() > 0 ) {
+			model.with( "warningMessages", StringUtils.join( warningMessages, ", " ) );
+		}
 
 		return tweetReplyTemplate.render( model );
 	}

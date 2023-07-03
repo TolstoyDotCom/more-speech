@@ -25,7 +25,7 @@ public interface IBrowserProxy {
 
 	Proxy getSeleniumProxy();
 
-	void beginRecording( WebDriver driver, String name );
+	void beginRecording( WebDriver driver, String name ) throws Exception;
 	List<IBrowserProxyLogEntry> endRecording( WebDriver driver ) throws Exception;
 
 	void addBrowserProxyResponseListener( final IBrowserProxyResponseListener l );

@@ -28,8 +28,8 @@ import com.tolstoy.basic.api.statusmessage.StatusMessage;
 import com.tolstoy.basic.api.statusmessage.StatusMessageSeverity;
 import com.tolstoy.basic.app.utils.Utils;
 import com.tolstoy.censorship.twitter.checker.api.browserproxy.IBrowserProxy;
+import com.tolstoy.censorship.twitter.checker.api.browserproxy.BrowserDataRecorderType;
 import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
-import com.tolstoy.censorship.twitter.checker.api.webdriver.IWebDriverUtils;
 import com.tolstoy.censorship.twitter.checker.api.webdriver.IWebDriverUtils;
 import com.tolstoy.jboto.api.framework.IFrameworkFactory;
 import com.tolstoy.jboto.api.framework.IFramework;
@@ -47,18 +47,27 @@ public class CreateBrowserDataRecorder implements IBasicCommand {
 	public CreateBrowserDataRecorder() {
 	}
 
-	public void run( IProduct product, IEnvironment env, Object extra, int index ) throws Exception {
-		SearchRunBaseData searchRunBaseData = (SearchRunBaseData) product;
+	public void run( IProduct prod, IEnvironment env, Object extra, int index ) throws Exception {
+		SearchRunBaseData product = (SearchRunBaseData) prod;
 		OurEnvironment ourEnv = (OurEnvironment) env;
 
 		try {
-			ourEnv.setBrowserProxy( ourEnv.getBrowserProxyFactory().makeBrowserProxy() );
+			BrowserDataRecorderType type;
 
-			ourEnv.getBrowserProxy().start();
+			if ( ourEnv.getInstalledExtensions().getByKey( "har_export_trigger" ) != null ) {
+				type = BrowserDataRecorderType.HAR_EXPORT_EXTENSION;
+			}
+			else {
+				type = BrowserDataRecorderType.XHR_OVERRIDE;
+			}
+
+			ourEnv.setBrowserDataRecorder( ourEnv.getBrowserDataRecorderFactory().makeBrowserDataRecorder( type ) );
+
+			ourEnv.getBrowserDataRecorder().start();
 		}
 		catch ( final Exception e ) {
-			ourEnv.logWarn( logger, "cannot create ourEnv.getBrowserProxy()", e );
-			ourEnv.getStatusMessageReceiver().addMessage( new StatusMessage( "cannot create ourEnv.getBrowserProxy()", StatusMessageSeverity.ERROR ) );
+			ourEnv.logWarn( logger, "cannot create ourEnv.getBrowserDataRecorder()", e );
+			ourEnv.getStatusMessageReceiver().addMessage( new StatusMessage( "cannot create ourEnv.getBrowserDataRecorder()", StatusMessageSeverity.ERROR ) );
 			throw e;
 		}
 	}

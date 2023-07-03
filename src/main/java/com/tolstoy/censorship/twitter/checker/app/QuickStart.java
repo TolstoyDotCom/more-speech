@@ -64,10 +64,11 @@ import com.tolstoy.censorship.twitter.checker.app.helpers.IOverridePreferences;
 import com.tolstoy.censorship.twitter.checker.app.helpers.OverridePreferencesFromEmbedPathsLinux;
 import com.tolstoy.censorship.twitter.checker.app.helpers.OverridePreferencesFromEmbedPathsWindows;
 import com.tolstoy.censorship.twitter.checker.app.helpers.OverridePreferencesFromSystemProperties;
-import com.tolstoy.censorship.twitter.checker.app.helpers.SearchRunProcessorInsertNewToStorage;
 import com.tolstoy.censorship.twitter.checker.app.helpers.SearchRunProcessorUploadDataJson;
 import com.tolstoy.censorship.twitter.checker.app.helpers.SearchRunProcessorWriteReport;
 import com.tolstoy.censorship.twitter.checker.app.installation.BrowserScriptFactory;
+import com.tolstoy.censorship.twitter.checker.api.installation.IBrowserExtensionFactory;
+import com.tolstoy.censorship.twitter.checker.app.installation.BrowserExtensionFactory;
 import com.tolstoy.censorship.twitter.checker.app.preferences.PreferencesFactory;
 import com.tolstoy.censorship.twitter.checker.app.searchrun.SearchRunFactory;
 import com.tolstoy.censorship.twitter.checker.app.snapshot.SnapshotFactory;
@@ -109,6 +110,7 @@ public final class QuickStart implements IStatusMessageReceiver {
 	private final IAnalysisReportFactory analysisReportFactory;
 	private final IAppDirectories appDirectories;
 	private final IBrowserScriptFactory browserScriptFactory;
+	private final IBrowserExtensionFactory browserExtensionFactory;
 	private final IBrowserProxyFactory browserProxyFactory;
 	private final IBrowserProxy browserProxy;
 	private final IArchiveDirectory archiveDirectory;
@@ -127,6 +129,7 @@ public final class QuickStart implements IStatusMessageReceiver {
 												this.defaultAppPrefs.get( "reports.dir_name" ) );
 
 		this.browserScriptFactory = new BrowserScriptFactory( this.appDirectories.getSubdirectory( "stockscripts" ) );
+		this.browserExtensionFactory = new BrowserExtensionFactory();
 
 		this.archiveDirectory = new ArchiveDirectory( this.appDirectories.getReportsDirectory(), "json-", "", "", ".json" );
 
@@ -149,7 +152,7 @@ public final class QuickStart implements IStatusMessageReceiver {
 
 		this.browserProxyFactory = new BrowserProxyFactory( this.prefs, this.bundle, new JBus(), browserScriptFactory );
 
-		this.browserProxy = browserProxyFactory.makeBrowserProxy();
+		this.browserProxy = browserProxyFactory.makeBrowserDataRecorder();
 
 		this.browserProxy.start();
 
@@ -157,9 +160,10 @@ public final class QuickStart implements IStatusMessageReceiver {
 																	this.tweetFactory,
 																	this.appDirectories,
 																	this.browserScriptFactory,
+																	this.browserExtensionFactory,
 																	this.prefs,
 																	this.bundle,
-																	DebugLevel.VERBOSE );
+																	DebugLevel.TERSE );
 
 		final TargetPageType pageType = TargetPageType.getMatching( this.prefs.getValue( "prefs.quickstart_page_type" ) );
 		final String url = TargetPageType.TIMELINE == pageType ? this.prefs.getValue( "prefs.quickstart_timeline_url" ) : this.prefs.getValue( "prefs.quickstart_replypage_url" );

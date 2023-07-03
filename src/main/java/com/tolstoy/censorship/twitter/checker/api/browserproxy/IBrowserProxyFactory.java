@@ -13,8 +13,9 @@
  */
 package com.tolstoy.censorship.twitter.checker.api.browserproxy;
 
-//	@TODO: "proxy" is too specific, rename all uses to BrowserDataCollector
+//	@TODO: "proxy" is too specific, rename all uses to BrowserDataRecorder
 
 public interface IBrowserProxyFactory {
-	IBrowserProxy makeBrowserProxy() throws Exception;
+	IBrowserProxy makeBrowserDataRecorder() throws Exception;
+	IBrowserProxy makeBrowserDataRecorder( BrowserDataRecorderType preferredType ) throws Exception;
 }

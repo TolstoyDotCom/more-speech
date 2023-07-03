@@ -96,6 +96,28 @@ final class BrowserProxyLogEntry implements IBrowserProxyLogEntry {
 		this.map.put( "response_statustext", "" + response.get( "statusText" ) );
 	}
 
+	public BrowserProxyLogEntry( String contentText, String url, String request, String response ) {
+		this.headers = new ArrayList<String>( 20 );
+
+		this.map = new HashMap<String,String>( 10 );
+
+		this.map.put( "url", url );
+
+		this.map.put( "content", contentText );
+		this.map.put( "content_comment", "" );
+		this.map.put( "content_compression", "" );
+		this.map.put( "content_encoding", "" );
+		this.map.put( "content_mimetype", "" );
+		this.map.put( "content_size", "" );
+
+		this.map.put( "response_additional", "" );
+		this.map.put( "response_bodysize", "" );
+		this.map.put( "response_comment", "" );
+		this.map.put( "response_redirecturl", "" );
+		this.map.put( "response_status", "response_status " );
+		this.map.put( "response_statustext", "" );
+	}
+
 	@Override
 	public String getURL() {
 		return MapUtils.getString( map, "url", "" );

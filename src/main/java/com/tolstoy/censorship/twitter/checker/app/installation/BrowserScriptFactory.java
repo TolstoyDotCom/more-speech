@@ -59,15 +59,22 @@ public class BrowserScriptFactory implements IBrowserScriptFactory {
 			throw new RuntimeException( "har_retriever.footer.js does not exist in " + harRetrieverFooterFile );
 		}
 
+		final File ajaxCollectorFile = new File( stockscriptsDir, "ajax_collector.js" );
+		if ( !ajaxCollectorFile.exists() ) {
+			throw new RuntimeException( "ajax_collector.js does not exist in " + ajaxCollectorFile );
+		}
+
 		final String jQueryContents = FileUtils.readFileToString( jqueryFile, Charset.defaultCharset() );
 		final String suedeDenimContents = FileUtils.readFileToString( suededenimFile, Charset.defaultCharset() );
 		final String tweetRetrieverFooterContents = FileUtils.readFileToString( tweetRetrieverFooterFile, Charset.defaultCharset() );
 		final String jsonParserFooterContents = FileUtils.readFileToString( jsonParserFooterFile, Charset.defaultCharset() );
 		final String harRetrieverFooterContents = FileUtils.readFileToString( harRetrieverFooterFile, Charset.defaultCharset() );
+		final String ajaxCollectorContents = FileUtils.readFileToString( ajaxCollectorFile, Charset.defaultCharset() );
 
 		map.put( "tweet_retriever", new BrowserScript( "tweet_retriever", jQueryContents + "\n\n" + suedeDenimContents + "\n\n" + tweetRetrieverFooterContents ) );
 		map.put( "json_parser", new BrowserScript( "json_parser", jQueryContents + "\n\n" + suedeDenimContents + "\n\n" + jsonParserFooterContents ) );
 		map.put( "har_retriever", new BrowserScript( "har_retriever", jQueryContents + "\n\n" + suedeDenimContents + "\n\n" + harRetrieverFooterContents ) );
+		map.put( "ajax_collector", new BrowserScript( "ajax_collector", ajaxCollectorContents ) );
 	}
 
 	public IBrowserScript getScript( String name ) throws Exception {

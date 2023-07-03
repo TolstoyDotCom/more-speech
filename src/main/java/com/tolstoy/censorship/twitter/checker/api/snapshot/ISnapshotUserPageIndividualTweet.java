@@ -23,6 +23,7 @@ public interface ISnapshotUserPageIndividualTweet extends ISnapshotUserPage {
 	int getNumRetweets();
 	int getNumLikes();
 	int getNumReplies();
+	int getViewsCount();
 
 	void setIndividualTweet( final ITweet individualTweet );
 
@@ -31,4 +32,5 @@ public interface ISnapshotUserPageIndividualTweet extends ISnapshotUserPage {
 	void setNumRetweets( final int numRetweets );
 	void setNumLikes( final int numLikes );
 	void setNumReplies( final int numReplies );
+	void setViewsCount( final int viewsCount );
 }

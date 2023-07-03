@@ -44,6 +44,9 @@ class SnapshotUserPageIndividualTweet extends SnapshotUserPage implements ISnaps
 	@JsonProperty
 	private int numReplies;
 
+	@JsonProperty
+	private int viewsCount;
+
 	SnapshotUserPageIndividualTweet() {
 		super( "", Instant.now() );
 	}
@@ -78,6 +81,11 @@ class SnapshotUserPageIndividualTweet extends SnapshotUserPage implements ISnaps
 	}
 
 	@Override
+	public int getViewsCount() {
+		return viewsCount;
+	}
+
+	@Override
 	public void setIndividualTweet( final ITweet individualTweet ) {
 		this.individualTweet = individualTweet;
 	}
@@ -100,5 +108,10 @@ class SnapshotUserPageIndividualTweet extends SnapshotUserPage implements ISnaps
 	@Override
 	public void setNumReplies( final int numReplies ) {
 		this.numReplies = numReplies;
+	}
+
+	@Override
+	public void setViewsCount( final int viewsCount ) {
+		this.viewsCount = viewsCount;
 	}
 }
