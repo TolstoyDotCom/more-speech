@@ -156,7 +156,7 @@ final public class SearchRunTimelineBuilderUNUSED /*implements IBrowserProxyResp
 		}
 
 		try {
-			browserProxy = browserProxyFactory.makeBrowserProxy();
+			browserProxy = browserProxyFactory.makeBrowserDataRecorder();
 
 			browserProxy.start();
 		}

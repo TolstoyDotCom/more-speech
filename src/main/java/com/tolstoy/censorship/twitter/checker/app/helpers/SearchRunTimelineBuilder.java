@@ -41,10 +41,16 @@ import com.tolstoy.basic.api.utils.IResourceBundleWithFormatting;
 import com.tolstoy.basic.api.utils.IArchiveDirectory;
 import com.tolstoy.basic.app.utils.KeyedLists;
 import com.tolstoy.basic.app.utils.Utils;
+import com.tolstoy.censorship.twitter.checker.api.analyzer.IAnalysisReportFactory;
+import com.tolstoy.censorship.twitter.checker.api.installation.IAppDirectories;
 import com.tolstoy.censorship.twitter.checker.api.browserproxy.IBrowserProxyFactory;
 import com.tolstoy.censorship.twitter.checker.api.browserproxy.IBrowserProxy;
 import com.tolstoy.censorship.twitter.checker.api.browserproxy.IBrowserProxyResponseEvent;
 import com.tolstoy.censorship.twitter.checker.api.browserproxy.IBrowserProxyResponseListener;
+import com.tolstoy.censorship.twitter.checker.api.installation.IBrowserScriptFactory;
+import com.tolstoy.censorship.twitter.checker.api.installation.IBrowserExtension;
+import com.tolstoy.censorship.twitter.checker.api.installation.IBrowserExtensionList;
+import com.tolstoy.censorship.twitter.checker.api.installation.IBrowserExtensionFactory;
 import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
 import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferencesFactory;
 import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunFactory;
@@ -60,7 +66,6 @@ import com.tolstoy.censorship.twitter.checker.api.webdriver.InfiniteScrollingAct
 import com.tolstoy.censorship.twitter.checker.api.webdriver.WebDriverFactoryType;
 import com.tolstoy.censorship.twitter.checker.app.jboto.timeline.SearchRunTimelineData;
 import com.tolstoy.censorship.twitter.checker.app.jboto.OurEnvironment;
-import com.tolstoy.censorship.twitter.checker.api.installation.IBrowserScriptFactory;
 import com.tolstoy.jboto.api.framework.IFrameworkFactory;
 import com.tolstoy.jboto.api.framework.IFramework;
 import com.tolstoy.jboto.app.framework.FrameworkFactory;
@@ -96,8 +101,11 @@ final public class SearchRunTimelineBuilder /*implements IBrowserProxyResponseLi
 	private final IStatusMessageReceiver statusMessageReceiver;
 	private final IBrowserProxyFactory browserProxyFactory;
 	private final IArchiveDirectory archiveDirectory;
+	private final IAppDirectories appDirectories;
+	private final IAnalysisReportFactory analysisReportFactory;
 	/*private final KeyedLists<IBrowserProxyResponseEvent> proxyEvents;*/
 	private final IBrowserScriptFactory browserScriptFactory;
+	private final IBrowserExtensionFactory browserExtensionFactory;
 	private final String handleToCheck;
 
 	public SearchRunTimelineBuilder( final IResourceBundleWithFormatting bundle,
@@ -111,7 +119,10 @@ final public class SearchRunTimelineBuilder /*implements IBrowserProxyResponseLi
 										final IBrowserProxyFactory browserProxyFactory,
 										final IArchiveDirectory archiveDirectory,
 										final IStatusMessageReceiver statusMessageReceiver,
+										final IAppDirectories appDirectories,
+										final IAnalysisReportFactory analysisReportFactory,
 										final IBrowserScriptFactory browserScriptFactory,
+										final IBrowserExtensionFactory browserExtensionFactory,
 										final String handleToCheck ) throws Exception {
 		this.bundle = bundle;
 		this.storage = storage;
@@ -122,9 +133,12 @@ final public class SearchRunTimelineBuilder /*implements IBrowserProxyResponseLi
 		this.snapshotFactory = snapshotFactory;
 		this.tweetFactory = tweetFactory;
 		this.statusMessageReceiver = statusMessageReceiver;
+		this.appDirectories = appDirectories;
+		this.analysisReportFactory = analysisReportFactory;
 		this.browserProxyFactory = browserProxyFactory;
 		this.archiveDirectory = archiveDirectory;
 		this.browserScriptFactory = browserScriptFactory;
+		this.browserExtensionFactory = browserExtensionFactory;
 		this.handleToCheck = Utils.trimDefault( handleToCheck ).toLowerCase();
 
 		if ( webDriverFactoryFactory == null ) {
@@ -132,26 +146,21 @@ final public class SearchRunTimelineBuilder /*implements IBrowserProxyResponseLi
 		}
 	}
 
-	public ISearchRunTimeline buildSearchRunTimeline( final int numberOfTimelinePagesToScroll,
-														final int numberOfIndividualPagesToScroll,
+	public ISearchRunTimeline buildSearchRunTimeline( final int numberOfTimesToScrollOnTimeline,
+														final int numberOfTimesToScrollOnIndividualPages,
 														final int numberOfReplyPagesToCheck,
 														final int numberOfTimelineTweetsToSkip ) throws Exception {
-		IWebDriverFactory webDriverFactory = null;
-		WebDriver webDriver = null;
-		IBrowserProxy browserProxy = null;
-		IWebDriverUtils webDriverUtils = null;
-		LoginToSite loginToSite = null;
-		String loginName = null;
-		String loginPassword = null;
-		boolean bSkipLogin = false, bUsingLogin = false;
-
 		try {
-			SearchRunTimelineData searchRunTimelineData = new SearchRunTimelineData( prefs,
-																				handleToCheck,
-																				numberOfTimelinePagesToScroll,
-																				numberOfIndividualPagesToScroll,
-																				numberOfReplyPagesToCheck,
-																				numberOfTimelineTweetsToSkip );
+			SearchRunTimelineData product = new SearchRunTimelineData( prefs,
+																		handleToCheck,
+																		numberOfTimesToScrollOnTimeline,
+																		numberOfTimesToScrollOnIndividualPages,
+																		numberOfReplyPagesToCheck,
+																		numberOfTimelineTweetsToSkip );
+
+			//	@todo: make this a setting
+			final IBrowserExtensionList extensionsToInstall = browserExtensionFactory.makeBrowserExtensionList();
+			extensionsToInstall.add( this.browserExtensionFactory.makeBrowserExtension( "har_export_trigger", "/har_export_trigger-0.6.1.xpi" ) );
 
 			OurEnvironment env = new OurEnvironment( bundle,
 														storage,
@@ -164,8 +173,12 @@ final public class SearchRunTimelineBuilder /*implements IBrowserProxyResponseLi
 														browserProxyFactory,
 														archiveDirectory,
 														statusMessageReceiver,
+														appDirectories,
+														analysisReportFactory,
 														browserScriptFactory,
-														DebugLevel.VERBOSE );
+														browserExtensionFactory,
+														extensionsToInstall,
+														DebugLevel.TERSE );
 
 			String testJSON = IOUtils.toString( getClass().getResource( "/jboto-timeline.json" ), StandardCharsets.UTF_8 );
 
@@ -175,21 +188,21 @@ final public class SearchRunTimelineBuilder /*implements IBrowserProxyResponseLi
 
 			logger.info( "\n" + framework.toDebugString( "" ) );
 
-			logger.info( "searchRunTimelineData BEFORE: " + searchRunTimelineData );
+			logger.info( "product BEFORE: " + product );
 
-			framework.run( searchRunTimelineData, env, null, 0 );
+			framework.run( product, env, null, 0 );
 
-			logger.info( "searchRunTimelineData AFTER: " + searchRunTimelineData );
+			logger.info( "product AFTER: " + product );
 
 			final ISearchRunTimeline ret = searchRunFactory.makeSearchRunTimeline( 0,
-																					searchRunTimelineData.getUser(),
-																					searchRunTimelineData.getStartTime(),
+																					product.getUser(),
+																					product.getStartTime(),
 																					Instant.now(),
-																					searchRunTimelineData.getTimeline(),
-																					searchRunTimelineData.getIndividualPages() );
+																					product.getTimeline(),
+																					product.getIndividualPages() );
 
 			ret.setAttribute( "handle_to_check", handleToCheck );
-			ret.setAttribute( "loggedin", ( searchRunTimelineData.isUsingLogin() || searchRunTimelineData.isSkipLogin() ) ? "true" : "false" );
+			ret.setAttribute( "loggedin", ( product.isUsingLogin() || product.isSkipLogin() ) ? "true" : "false" );
 
 			return ret;
 		}

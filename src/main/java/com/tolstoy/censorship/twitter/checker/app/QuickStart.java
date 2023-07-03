@@ -76,7 +76,6 @@ import com.tolstoy.censorship.twitter.checker.app.webdriver.WebDriverFactoryFact
 import com.tolstoy.basic.api.statusmessage.IStatusMessageReceiver;
 import com.tolstoy.basic.api.statusmessage.StatusMessage;
 import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPage;
-import com.tolstoy.censorship.twitter.checker.app.helpers.SearchRunRepliesBuilder;
 import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunReplies;
 import com.tolstoy.basic.api.utils.IArchiveDirectory;
 import com.tolstoy.basic.app.utils.Utils;

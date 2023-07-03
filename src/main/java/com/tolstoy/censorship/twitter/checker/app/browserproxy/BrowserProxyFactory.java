@@ -22,11 +22,10 @@ import com.tolstoy.censorship.twitter.checker.api.browserproxy.IBrowserProxy;
 import com.tolstoy.censorship.twitter.checker.api.browserproxy.IBrowserProxyFactory;
 import com.tolstoy.censorship.twitter.checker.api.browserproxy.BrowserDataRecorderType;
 import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
-import com.tolstoy.censorship.twitter.checker.app.helpers.SearchRunRepliesBuilder;
 import com.tolstoy.censorship.twitter.checker.api.installation.IBrowserScriptFactory;
 
 public class BrowserProxyFactory implements IBrowserProxyFactory {
-	private static final Logger logger = LogManager.getLogger( SearchRunRepliesBuilder.class );
+	private static final Logger logger = LogManager.getLogger( BrowserProxyFactory.class );
 
 	private final IPreferences prefs;
 	private final IResourceBundleWithFormatting bundle;

@@ -47,7 +47,7 @@ import com.tolstoy.censorship.twitter.checker.api.webdriver.IWebDriverUtils;
 import com.tolstoy.censorship.twitter.checker.api.webdriver.InfiniteScrollingActivatorType;
 
 /**
- * Contains methods used by SearchRunRepliesBuilder, SearchRunRepliesFromItineraryBuilder, etc.
+ * Contains methods used by SearchRunRepliesBuilderSelfContained, SearchRunRepliesFromItineraryBuilder, etc.
  */
 public class SearchRunRepliesBuilderHelper {
 	private static final Logger logger = LogManager.getLogger( SearchRunRepliesBuilderHelper.class );
