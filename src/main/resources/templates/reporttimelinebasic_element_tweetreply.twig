@@ -17,5 +17,7 @@ the License.
 	<div class="tweetmeta">
 		<span class="tweetorders">[original: #{{ original_order }}, ranking: #{{ ranking_order }}, date: #{{ date_order }}]</span>
 		<span class="tweetfrom">From @{{ handle}} <a href="{{ link }}" rel="nofollow">on</a> {{ dateStr }}</span>
+		{% if ( blueSubscriber ) %} <span class="blue_subscriber">BLUE</span> {% endif %}
+		{% if ( warningMessages ) %} <span class="user_warning_messages"> #{{ warningMessages }} </span> {% endif %}
 	</div>
 </div>

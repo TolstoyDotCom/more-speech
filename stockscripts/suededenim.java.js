@@ -84,12 +84,12 @@
 
 com.tolstoy.basic.app.utils.DebugLevel = function( debugLevel ) {
 	var levels = {
+		'0': 0,
+		'1': 1,
+		'2': 2,
 		NONE: 0,
 		TERSE: 1,
-		VERBOSE: 2,
-		0: 0,
-		1: 1,
-		2: 2
+		VERBOSE: 2
 	};
 
 	var level = levels.hasOwnProperty( debugLevel ) ? levels[ debugLevel ] : 1;
@@ -100,6 +100,10 @@ com.tolstoy.basic.app.utils.DebugLevel = function( debugLevel ) {
 
 	this.isDebug = function() {
 		return level > 0;
+	};
+
+	this.isVerbose = function() {
+		return level > 1;
 	};
 };
 
@@ -114,12 +118,13 @@ com.tolstoy.basic.app.utils.ConsoleLogger = function( $, debugLevel ) {
 	};
 
 	this.info = function( output ) {
-		if ( !output ) {
+		if ( !output || !debugLevel || !debugLevel.isDebug() ) {
 			return;
 		}
 
 		if ( window.console && window.console.info ) {
 			var ary = output.split( newlineRegex );
+			ary = ary || [];
 			for ( var i = 0; i < ary.length; i++ ) {
 				console.info( ary[ i ] );
 			}
@@ -173,6 +178,8 @@ com.tolstoy.basic.app.utils.NumericPhrase = function( text ) {
 	this.numbers = [];
 	this.words = [];
 
+	this.components = this.components || [];
+
 	for ( var i = 0; i < this.components.length; i++ ) {
 		var item = this.components[ i ];
 		item = item.trim();
@@ -191,19 +198,19 @@ com.tolstoy.basic.app.utils.NumericPhrase = function( text ) {
 	}
 
 	this.countWords = function() {
-		return this.words.length;
+		return this.words ? this.words.length : 0;
 	};
 
 	this.countNumbers = function() {
-		return this.numbers.length;
+		return this.numbers ? this.numbers.length : 0;
 	};
 
 	this.getWord = function( which ) {
-		return this.words[ which ];
+		return this.words ? this.words[ which ] : null;
 	};
 
 	this.getNumber = function( which ) {
-		return this.numbers[ which ];
+		return this.numbers ? this.numbers[ which ] : null;
 	};
 
 	this.containsWord = function( word ) {
@@ -213,9 +220,11 @@ com.tolstoy.basic.app.utils.NumericPhrase = function( text ) {
 
 		var wordLC = word.toLowerCase();
 
-		for ( var i = 0; i < this.words.length; i++ ) {
-			if ( this.words[ i ].indexOf( wordLC ) > -1 ) {
-				return true;
+		if ( this.words ) {
+			for ( var i = 0; i < this.words.length; i++ ) {
+				if ( this.words[ i ].indexOf( wordLC ) > -1 ) {
+					return true;
+				}
 			}
 		}
 
@@ -241,6 +250,7 @@ com.tolstoy.basic.app.utils.Utils = function( $ ) {
 	};
 
 	this.getNestedJSON = function( json, keys ) {
+		keys = keys || [];
 		for ( var i = 0; i < keys.length; i++ ) {
 			var key = keys[ i ];
 			if ( typeof json[ key ] === 'undefined' ) {
@@ -729,6 +739,14 @@ com.tolstoy.basic.app.tweet.TweetUser = function( $, input, utils, logger ) {
 		{ targetKey: 'numTotalTweets', sourceKey: 'numTotalTweets', defaultValue: '0' },
 		{ targetKey: 'numFollowers', sourceKey: 'numFollowers', defaultValue: '0' },
 		{ targetKey: 'numFollowing', sourceKey: 'numFollowing', defaultValue: '0' },
+		{ targetKey: 'canDM', sourceKey: 'canDM', defaultValue: '' },
+		{ targetKey: 'canMediaTag', sourceKey: 'canMediaTag', defaultValue: '' },
+		{ targetKey: 'advertiserAccountType', sourceKey: 'advertiserAccountType', defaultValue: '' },
+		{ targetKey: 'withheldInCountries', sourceKey: 'withheldInCountries', defaultValue: '' },
+		{ targetKey: 'blueSubscriber', sourceKey: 'blueSubscriber', defaultValue: '' },
+		{ targetKey: 'requireSomeConsent', sourceKey: 'requireSomeConsent', defaultValue: '' },
+		{ targetKey: 'hasGraduatedAccess', sourceKey: 'hasGraduatedAccess', defaultValue: '' },
+		{ targetKey: 'superFollowEligible', sourceKey: 'superFollowEligible', defaultValue: '' },
 		{
 			targetKey: 'errors',
 			defaultValue: '',
@@ -859,6 +877,7 @@ com.tolstoy.basic.app.tweet.Tweet = function( $, input, utils, logger ) {
 		{ targetKey: 'username', sourceKey: 'username', defaultValue: '' },
 		{ targetKey: 'verifiedText', sourceKey: 'verifiedText', defaultValue: '' },
 		{ targetKey: 'videothumburl', sourceKey: 'videothumburl', defaultValue: '' },
+		{ targetKey: 'viewscount', sourceKey: 'viewscount', defaultValue: '0' },
 		{ targetKey: 'youblock', sourceKey: 'youblock', defaultValue: '' },
 		{ targetKey: 'youfollow', sourceKey: 'youfollow', defaultValue: '' },
 		{
@@ -922,7 +941,7 @@ com.tolstoy.basic.app.tweet.Tweet = function( $, input, utils, logger ) {
 				moi.setAttribute( descriptor.targetKey, otherValue );
 			}
 		});
-	}
+	};
 
 	this.export = function() {
 		var ret = {};
@@ -950,6 +969,7 @@ com.tolstoy.basic.app.tweet.Tweet = function( $, input, utils, logger ) {
 		ary.push( 'favs=' + this.getAttribute( 'favoritecount' ) );
 		ary.push( 'repls=' + this.getAttribute( 'replycount' ) );
 		ary.push( 'rts=' + this.getAttribute( 'retweetcount' ) );
+		ary.push( 'views=' + this.getAttribute( 'viewscount' ) );
 
 		if ( this.getAttribute( 'permalinkpath' ) ) {
 			if ( this.getAttribute( 'permalinkpath' ).indexOf( '/' ) > -1 ) {
@@ -1080,7 +1100,7 @@ com.tolstoy.basic.app.tweet.TweetFactory = function( $, utils, logger ) {
 
 	this.makeTweetLink = function( input ) {
 		var link = new com.tolstoy.basic.app.tweet.TweetLink( $, input, utils, logger );
-		if ( !link.isValid() && logger.getDebugLevel().isDebug() ) {
+		if ( !link.isValid() && logger.getDebugLevel() && logger.getDebugLevel().isDebug() ) {
 			logger.info( 'TweetFactory::makeTweetLink error: ' + link.getError() );
 		}
 
@@ -1164,7 +1184,7 @@ com.tolstoy.basic.app.scroller.StepScroller = function( $, pageType, url, height
 	heightMultiplier = heightMultiplier || 1;
 	numTimesToScroll = numTimesToScroll || 20;
 
-	var count = 0;
+	var count = 0, lastScrollTop = 0;
 	var status = scrollerStasuses.READY;
 
 	this.validate = function() {
@@ -1193,6 +1213,7 @@ com.tolstoy.basic.app.scroller.StepScroller = function( $, pageType, url, height
 
 	this.reset = function() {
 		count = 0;
+		lastScrollTop = 0;
 		status = scrollerStasuses.READY;
 	};
 
@@ -1211,20 +1232,46 @@ com.tolstoy.basic.app.scroller.StepScroller = function( $, pageType, url, height
 
 		window.scrollBy( { top: scrollDistance, left: 0, behavior: 'smooth' } );
 
-		//var total = document.documentElement.clientHeight + document.documentElement.scrollTop;
-		//var height = document.body.offsetHeight;
+		//var total2 = document.documentElement.clientHeight + document.documentElement.scrollTop;
+		//var height2 = document.body.offsetHeight;
 
 		var total = window.innerHeight + window.pageYOffset;
 		var height = document.body.scrollHeight;
 
-		if ( total >= height ) {
-			logger.info( 'StepScroller returning because offsetHeight ' + total + ' > ' + height );
+		var amountMoved = Math.abs( document.documentElement.scrollTop - lastScrollTop );
+
+		/*
+		logger.info( 'StepScroller: '
+						+ ' count=' + count
+						+ ' amountMoved=' + amountMoved
+						+ ' total=' + total
+						+ ', height=' + height
+						+ ' total2=' + total2
+						+ ', height2=' + height2
+						+ ', document.documentElement.clientHeight=' + document.documentElement.clientHeight
+						+ ', document.documentElement.scrollTop=' + document.documentElement.scrollTop
+						+ ', window.pageYOffset=' + window.pageYOffset
+						+ ', window.innerHeight=' + window.innerHeight );
+		*/
+
+		lastScrollTop = document.documentElement.scrollTop;
+
+		if ( count > 3 && amountMoved < 10 ) {
+			logger.info( 'StepScroller returning because it is not moving. lastScrollTop=' + lastScrollTop + ', current scrollTop=' + document.documentElement.scrollTop );
 			status = scrollerStasuses.FINISHED;
 			return;
 		}
 
+/*
+		if ( total >= height ) {
+			logger.info( 'StepScroller returning because offsetHeight ' + total + ' >= ' + height );
+			status = scrollerStasuses.FINISHED;
+			return;
+		}
+*/
+
 		if ( count >= numTimesToScroll ) {
-			logger.info( 'StepScroller returning because count ' + count + ' > ' + numTimesToScroll );
+			logger.info( 'StepScroller returning because count ' + count + ' >= ' + numTimesToScroll );
 			status = scrollerStasuses.EXCEEDEDLIMIT;
 			return;
 		}
@@ -1264,7 +1311,7 @@ com.tolstoy.basic.app.tweetparser.html.helper.AuthorAvatar = function( $, $elem,
 		return src;
 	};
 
-	var $img = $( 'div > div > div > div > div > div > div > div > div > div > div > div > div > a > div > div > div > div > img', $elem );
+	var $img = $( 'div > div > div > div > div > div > div > div > div > div > div > a > div > div > div > div > img', $elem );
 
 	if ( $img.length < 1 ) {
 		valid = false;
@@ -1295,8 +1342,9 @@ com.tolstoy.basic.app.tweetparser.html.helper.AuthorNames = function( $, $elem, 
 		return handle;
 	};
 
-	displayName = $( 'div > div > div > div > div > div > div > div > div > div > div > div > div > a > div > div > span > span', $elem ).text();
-	handle = $( 'div > div > div > div > div > div > div > div > div > div > div > div > div > div > a > div > span', $elem ).text();
+
+	displayName = $( 'div > div > div > div > div > div > div > div > div > div > div > a > div > div > span > span', $elem ).text();
+	handle = $( 'div > div > div > div > div > div > div > div > div > div > div > div > a > div > span', $elem ).text();
 
 	displayName = displayName ? displayName.trim() : '';
 	handle = handle ? handle.trim() : '';
@@ -1307,6 +1355,29 @@ com.tolstoy.basic.app.tweetparser.html.helper.AuthorNames = function( $, $elem, 
 	if ( !displayName ) {
 		displayName = handle;
 	}
+};
+
+com.tolstoy.basic.app.tweetparser.html.helper.AuthorVerified = function( $, $elem, tweetID, tweetFactory, utils, logger ) {//DONE
+	var valid = false, src = '';
+
+	this.isValid = function() {
+		return valid;
+	};
+
+	this.getValue = function() {
+		return valid ? 'VERIFIED' : null;
+	};
+
+	var $svg = $( 'div > div > div > div > div > div > div > div > div > div > div > a > div > div > span > svg', $elem );
+
+	if ( $svg.length < 1 ) {
+		valid = false;
+		return;
+	}
+
+	src = ' ' + $svg.attr( 'aria-label' ) + ' ' + $svg.data( 'testid' );
+
+	valid = src.toLowerCase().indexOf( 'verified' ) > -1 ? true : false;
 };
 
 com.tolstoy.basic.app.tweetparser.html.helper.Date1 = function( $, $elem, tweetID, tweetFactory, utils, logger ) {//DONE
@@ -1346,7 +1417,7 @@ com.tolstoy.basic.app.tweetparser.html.helper.Date2 = function( $, $elem, tweetI
 			if ( dateString && link.isHelpLink() && ariaHidden != 'true' ) {
 				valid = true;
 				var dateAry = dateString.split( '·' );
-				if ( dateAry.length == 2 ) {
+				if ( dateAry && dateAry.length == 2 ) {
 					dateString = dateAry[ 1 ] + ' ' + dateAry[ 0 ];
 					return false;
 				}
@@ -1480,7 +1551,7 @@ com.tolstoy.basic.app.tweetparser.html.helper.Interaction1 = function( $, $elem,
 	});
 
 	if ( this.isValid ) {
-		logger.info( 'Interaction1 for ' + tweetID + ', replies=' + this.getReplyCount() + ', RT=' + this.getRetweetCount() + ', like=' + this.getLikesCount() );
+		//logger.info( 'Interaction1 for ' + tweetID + ', replies=' + this.getReplyCount() + ', RT=' + this.getRetweetCount() + ', like=' + this.getLikesCount() );
 	}
 	else {
 		logger.info( 'Interaction1 for ' + tweetID + ': NOT VALID' );
@@ -1540,7 +1611,7 @@ com.tolstoy.basic.app.tweetparser.html.helper.Interaction2 = function( $, $elem,
 	});
 
 	if ( this.isValid ) {
-		logger.info( 'Interaction2 for ' + tweetID + ', replies=' + this.getReplyCount() + ', RT=' + this.getRetweetCount() + ', like=' + this.getLikesCount() );
+		//logger.info( 'Interaction2 for ' + tweetID + ', replies=' + this.getReplyCount() + ', RT=' + this.getRetweetCount() + ', like=' + this.getLikesCount() );
 	}
 	else {
 		logger.info( 'Interaction2 for ' + tweetID + ': NOT VALID' );
@@ -1597,10 +1668,47 @@ com.tolstoy.basic.app.tweetparser.html.helper.Interaction3 = function( $, $elem,
 	});
 
 	if ( this.isValid ) {
-		logger.info( 'Interaction3 for ' + tweetID + ', replies=' + this.getReplyCount() + ', RT=' + this.getRetweetCount() + ', like=' + this.getLikesCount() );
+		//logger.info( 'Interaction3 for ' + tweetID + ', replies=' + this.getReplyCount() + ', RT=' + this.getRetweetCount() + ', like=' + this.getLikesCount() );
 	}
 	else {
 		logger.info( 'Interaction3 for ' + tweetID + ': NOT VALID' );
+	}
+};
+
+com.tolstoy.basic.app.tweetparser.html.helper.ViewsCount = function( $, $elem, tweetID, tweetFactory, utils, logger ) {
+	var valid = false, viewsCount = '';
+
+	this.isValid = function() {
+		return valid;
+	};
+
+	this.getViewsCount = function() {
+		return viewsCount;
+	};
+
+	$( 'a', $elem ).each( function() {
+		var $t = $(this);
+		var numString = $t.attr( 'aria-label' );
+		var href = $t.attr( 'href' );
+		if ( !numString || !href || href.indexOf( 'analytics' ) < 0 ) {
+			return;
+		}
+
+		var phrase = utils.makeNumericPhrase( numString );
+		viewsCount = phrase.getNumber( 0 );
+		if ( viewsCount === null ) {
+			return;
+		}
+
+		valid = true;
+		return false;
+	});
+
+	if ( this.isValid ) {
+		//logger.info( 'ViewsCount for ' + tweetID + ', count=' + this.getViewsCount() );
+	}
+	else {
+		logger.info( 'ViewsCount for ' + tweetID + ': NOT VALID' );
 	}
 };
 
@@ -1717,6 +1825,9 @@ com.tolstoy.basic.app.tweetparser.html.ParsedTweetFactory = function( $, tweetFa
 		helpers.Interaction3,
 		helpers.Interaction2
 	];
+	var viewsCountHelpers = [
+		helpers.ViewsCount
+	];
 	var photoHelpers = [
 		helpers.Photo1
 	];
@@ -1725,6 +1836,9 @@ com.tolstoy.basic.app.tweetparser.html.ParsedTweetFactory = function( $, tweetFa
 	];
 	var authorNameHelpers = [
 		helpers.AuthorNames
+	];
+	var authorVerifiedHelpers = [
+		helpers.AuthorVerified
 	];
 
 	this.makeTweet = function( $article ) {
@@ -1753,6 +1867,13 @@ com.tolstoy.basic.app.tweetparser.html.ParsedTweetFactory = function( $, tweetFa
 		},
 		function() {
 			tweet.addError( 'cannot find interactions' );
+		});
+
+		this.runImplementations( viewsCountHelpers, [ $, $article, tweetID, tweetFactory, utils, logger ], function( impl ) {
+			tweet.setAttribute( 'viewscount', impl.getViewsCount() );
+		},
+		function() {
+			tweet.addError( 'cannot find viewscount' );
 		});
 
 		this.runImplementations( tweettextHelpers, [ $, $article, tweetID, tweetFactory, utils, logger ], function( impl ) {
@@ -1802,6 +1923,12 @@ com.tolstoy.basic.app.tweetparser.html.ParsedTweetFactory = function( $, tweetFa
 			user.addError( 'cannot find screenname' );
 		});
 
+		this.runImplementations( authorVerifiedHelpers, [ $, $article, tweetID, tweetFactory, utils, logger ], function( impl ) {
+			user.setAttribute( 'verifiedText', impl.getValue() );
+		},
+		function() {
+		});
+
 		if ( !user.getAttribute( 'handle' ) ) {
 			logger.info( 'BAD HTML, no handle:' + $article.html() );
 		}
@@ -1820,6 +1947,7 @@ com.tolstoy.basic.app.tweetparser.html.ParsedTweetFactory = function( $, tweetFa
 	this.runImplementations = function( implementations, args, successCallback, failureCallback ) {
 		var implementation;
 
+		implementations = implementations || [];
 		for ( var i = 0; i < implementations.length; i++ ) {
 			implementation = this.constructObject( implementations[ i ], args );
 
@@ -1848,7 +1976,7 @@ com.tolstoy.basic.app.tweetparser.json.helper.InstructionAddEntriesHelper = func
 	var moi = this;
 
 	this.makeInstructionTimelineCursor = function( entry, errorCallback ) {
-	}
+	};
 
 	this.makeInstructionTimelineItem = function( entry, ret, errorCallback ) {
 		var result, result2;
@@ -1889,7 +2017,7 @@ com.tolstoy.basic.app.tweetparser.json.helper.InstructionAddEntriesHelper = func
 				}
 			});
 		}
-	}
+	};
 
 	this.makeInstructionTimelineModule = function( entry, ret, errorCallback ) {
 		var items = utils.getNestedJSON( entry, [ 'content', 'items' ] );
@@ -1897,7 +2025,7 @@ com.tolstoy.basic.app.tweetparser.json.helper.InstructionAddEntriesHelper = func
 			return;
 		}
 
-		var displayType = utils.getNestedJSON( entry, [ 'content', 'displayType' ] )
+		var displayType = utils.getNestedJSON( entry, [ 'content', 'displayType' ] );
 		$.each( items, function( index, item ) {
 			var tweetID = utils.getNestedJSON( item, [ 'item', 'itemContent', 'tweet_results', 'result', 'rest_id' ] );
 			var supposedQuality = utils.getNestedJSON( item, [ 'item', 'clientEventInfo', 'details', 'conversationDetails', 'conversationSection' ] );
@@ -1928,7 +2056,7 @@ com.tolstoy.basic.app.tweetparser.json.helper.InstructionAddEntriesHelper = func
 		});
 
 		console.log( "timelineItems=", ret.timelineItems );
-	}
+	};
 
 	this.makeInstructionAddEntries = function( json, ret, errorCallback ) {
 		var ret = {
@@ -1989,6 +2117,7 @@ com.tolstoy.basic.app.tweetparser.json.helper.TweetHelper = function( $, tweetFa
 		{ targetKey: 'favoritecount', sourceKey: 'favoritecount', defaultValue: '0' },
 		{ targetKey: 'replycount', sourceKey: 'replycount', defaultValue: '0' },
 		{ targetKey: 'retweetcount', sourceKey: 'retweetcount', defaultValue: '0' },
+		{ targetKey: 'viewscount', sourceKey: 'viewscount', defaultValue: '0' },
 
 		{ targetKey: 'conversationid', sourceKey: 'conversation_id_str', defaultValue: '' },
 
@@ -2139,7 +2268,22 @@ com.tolstoy.basic.app.tweetparser.json.helper.UserHelper = function( $, tweetFac
 		{ targetKey: 'verifiedStatus', sourceKey: 'verified', defaultValue: '' },
 		{ targetKey: 'numTotalTweets', sourceKey: 'statuses_count', defaultValue: '' },
 		{ targetKey: 'numFollowers', sourceKey: 'followers_count', defaultValue: '' },
-		{ targetKey: 'numFollowing', sourceKey: 'friends_count', defaultValue: '' }
+		{ targetKey: 'numFollowing', sourceKey: 'friends_count', defaultValue: '' },
+		{ targetKey: 'canDM', sourceKey: 'can_dm', defaultValue: '' },
+		{ targetKey: 'canMediaTag', sourceKey: 'can_media_tag', defaultValue: '' },
+		{ targetKey: 'advertiserAccountType', sourceKey: 'advertiser_account_type', defaultValue: '' },
+		{ targetKey: 'blueSubscriber', sourceKey: 'ext_is_blue_verified', defaultValue: '' },
+		{ targetKey: 'blueSubscriber', sourceKey: 'is_blue_verified', defaultValue: '' },
+		{ targetKey: 'requireSomeConsent', sourceKey: 'require_some_consent', defaultValue: '' },
+		{ targetKey: 'hasGraduatedAccess', sourceKey: 'has_graduated_access', defaultValue: '' },
+		{ targetKey: 'superFollowEligible', sourceKey: 'super_follow_eligible', defaultValue: '' },
+		{
+			targetKey: 'withheldInCountries',
+			defaultValue: '',
+			importer: function( target, source ) {
+				target.withheldInCountries = source.withheld_in_countries ? source.withheld_in_countries.join( ' ;;; ' ) : '';
+			}
+		}
 	];
 
 	this.makeUser = function( json, errorCallback ) {
@@ -2330,22 +2474,24 @@ com.tolstoy.basic.app.tweetparser.json.JSONParserGlobalTimeline = function( inpu
 
 	this.getRemaining = function() {
 		return input;
-	}
+	};
 
 	this.getRawTweets = function() {
 		return tweets;
-	}
+	};
 
 	this.getRawUsers = function() {
 		return users;
-	}
+	};
 
 	this.getRawInstructions = function() {
 		return instructions;
-	}
+	};
+
+	var k;
 
 	if ( input.globalObjects.tweets ) {
-		for ( var k in input.globalObjects.tweets ) {
+		for ( k in input.globalObjects.tweets ) {
 			tweets.push( input.globalObjects.tweets[ k ] );
 		}
 
@@ -2353,7 +2499,7 @@ com.tolstoy.basic.app.tweetparser.json.JSONParserGlobalTimeline = function( inpu
 	}
 
 	if ( input.globalObjects.users ) {
-		for ( var k in input.globalObjects.users ) {
+		for ( k in input.globalObjects.users ) {
 			users.push( input.globalObjects.users[ k ] );
 		}
 
@@ -2361,7 +2507,7 @@ com.tolstoy.basic.app.tweetparser.json.JSONParserGlobalTimeline = function( inpu
 	}
 
 	if ( input.timeline.tweets ) {
-		for ( var k in input.timeline.tweets ) {
+		for ( k in input.timeline.tweets ) {
 			tweets.push( input.timeline.tweets[ k ] );
 		}
 
@@ -2369,7 +2515,7 @@ com.tolstoy.basic.app.tweetparser.json.JSONParserGlobalTimeline = function( inpu
 	}
 
 	if ( input.timeline.users ) {
-		for ( var k in input.timeline.users ) {
+		for ( k in input.timeline.users ) {
 			users.push( input.timeline.users[ k ] );
 		}
 
@@ -2377,7 +2523,7 @@ com.tolstoy.basic.app.tweetparser.json.JSONParserGlobalTimeline = function( inpu
 	}
 
 	if ( input.timeline.instructions ) {
-		for ( var k in input.timeline.instructions ) {
+		for ( k in input.timeline.instructions ) {
 			instructions.push( input.timeline.instructions[ k ] );
 		}
 
@@ -2401,7 +2547,7 @@ com.tolstoy.basic.app.tweetparser.json.JSONParserGlobalTimeline = function( inpu
 	}
 
 	valid = true;
-}
+};
 
 com.tolstoy.basic.app.tweetparser.json.JSONParserIncompleteUser = function( input, $, tweetFactory, utils, logger ) {
 	var valid = false, tweets = [], users = [], instructions = [];
@@ -2416,19 +2562,19 @@ com.tolstoy.basic.app.tweetparser.json.JSONParserIncompleteUser = function( inpu
 
 	this.getRemaining = function() {
 		return input;
-	}
+	};
 
 	this.getRawTweets = function() {
 		return tweets;
-	}
+	};
 
 	this.getRawUsers = function() {
 		return users;
-	}
+	};
 
 	this.getRawInstructions = function() {
 		return instructions;
-	}
+	};
 
 	var user = input.data.user.result;
 	utils.swapUserID( user );
@@ -2438,7 +2584,7 @@ com.tolstoy.basic.app.tweetparser.json.JSONParserIncompleteUser = function( inpu
 	delete input.data.user.result;
 
 	valid = true;
-}
+};
 
 com.tolstoy.basic.app.tweetparser.json.JSONParserIncompleteUserList = function( input, $, tweetFactory, utils, logger ) {
 	var valid = false, tweets = [], users = [], instructions = [];
@@ -2453,19 +2599,19 @@ com.tolstoy.basic.app.tweetparser.json.JSONParserIncompleteUserList = function( 
 
 	this.getRemaining = function() {
 		return input;
-	}
+	};
 
 	this.getRawTweets = function() {
 		return tweets;
-	}
+	};
 
 	this.getRawUsers = function() {
 		return users;
-	}
+	};
 
 	this.getRawInstructions = function() {
 		return instructions;
-	}
+	};
 
 	for ( var k in input.data.users ) {
 		var user = input.data.users[ k ].result ? input.data.users[ k ].result : null;
@@ -2481,7 +2627,7 @@ com.tolstoy.basic.app.tweetparser.json.JSONParserIncompleteUserList = function( 
 	}
 
 	valid = true;
-}
+};
 
 com.tolstoy.basic.app.tweetparser.json.JSONParserUserList = function( input, $, tweetFactory, utils, logger ) {
 	var valid = false, tweets = [], users = [], instructions = [];
@@ -2496,19 +2642,19 @@ com.tolstoy.basic.app.tweetparser.json.JSONParserUserList = function( input, $, 
 
 	this.getRemaining = function() {
 		return input;
-	}
+	};
 
 	this.getRawTweets = function() {
 		return tweets;
-	}
+	};
 
 	this.getRawUsers = function() {
 		return users;
-	}
+	};
 
 	this.getRawInstructions = function() {
 		return instructions;
-	}
+	};
 
 	for ( var k in input ) {
 		if ( input[ k ].user ) {
@@ -2519,7 +2665,7 @@ com.tolstoy.basic.app.tweetparser.json.JSONParserUserList = function( input, $, 
 	}
 
 	valid = true;
-}
+};
 
 com.tolstoy.basic.app.tweetparser.json.JSONParserThreadedConversation = function( input, $, tweetFactory, utils, logger ) {
 	var valid = false, tweets = [], users = [], instructions = [];
@@ -2534,19 +2680,19 @@ com.tolstoy.basic.app.tweetparser.json.JSONParserThreadedConversation = function
 
 	this.getRemaining = function() {
 		return input;
-	}
+	};
 
 	this.getRawTweets = function() {
 		return tweets;
-	}
+	};
 
 	this.getRawUsers = function() {
 		return users;
-	}
+	};
 
 	this.getRawInstructions = function() {
 		return instructions;
-	}
+	};
 
 	var ary = utils.getNestedJSON( input, [ 'data', 'threaded_conversation_with_injections_v2', 'instructions' ] );
 	if ( ary ) {
@@ -2558,7 +2704,7 @@ com.tolstoy.basic.app.tweetparser.json.JSONParserThreadedConversation = function
 	}
 
 	valid = true;
-}
+};
 
 com.tolstoy.basic.app.tweetparser.json.JSONParserTimelineV2 = function( input, $, tweetFactory, utils, logger ) {
 	var valid = false, tweets = [], users = [], instructions = [];
@@ -2573,19 +2719,19 @@ com.tolstoy.basic.app.tweetparser.json.JSONParserTimelineV2 = function( input, $
 
 	this.getRemaining = function() {
 		return input;
-	}
+	};
 
 	this.getRawTweets = function() {
 		return tweets;
-	}
+	};
 
 	this.getRawUsers = function() {
 		return users;
-	}
+	};
 
 	this.getRawInstructions = function() {
 		return instructions;
-	}
+	};
 
 	var base = input.data.user.result.timeline_v2.timeline;
 	if ( base.instructions ) {
@@ -2597,7 +2743,7 @@ com.tolstoy.basic.app.tweetparser.json.JSONParserTimelineV2 = function( input, $
 	}
 
 	valid = true;
-}
+};
 
 com.tolstoy.basic.app.tweetparser.json.JSONParserIgnored = function( input, $, tweetFactory, utils, logger ) {
 	var valid = false, tweets = [], users = [], instructions = [];
@@ -2612,20 +2758,20 @@ com.tolstoy.basic.app.tweetparser.json.JSONParserIgnored = function( input, $, t
 
 	this.getRemaining = function() {
 		return input;
-	}
+	};
 
 	this.getRawTweets = function() {
 		return tweets;
-	}
+	};
 
 	this.getRawUsers = function() {
 		return users;
-	}
+	};
 
 	this.getRawInstructions = function() {
 		return instructions;
-	}
-}
+	};
+};
 
 com.tolstoy.basic.app.retriever.StateStatus = {
 	READY: 'ready',
@@ -2943,6 +3089,7 @@ com.tolstoy.basic.app.retriever.StateFindCensoredTweets = function( $, tweetSele
 	};
 
 	this.assignPreviousNext = function( tweets ) {
+		tweets = tweets || [];
 		var len = tweets.length;
 		if ( !len ) {
 			return tweets;
@@ -3044,7 +3191,16 @@ com.tolstoy.basic.app.retriever.StateClickShowHiddenReplies2 = function( $, afte
 
 		var $button = null;
 
-		$( 'article > div > div > div > div > div > div > div > div > div[role="button"]' ).each( function() {
+		var selectors = [
+			'article > div > div > div > div > div > div > div > div > div[role="button"]',
+			'article > div > div > div > div > div > div > div > div[role="button"]',
+			'article > div > div > div > div > div > div > div[role="button"]',
+		];
+
+		for ( k in selectors ) {
+			var selector = selectors[ k ];
+
+			$( selector ).each( function() {
 			var $t = $(this);
 			var $gpar = $t.parent().parent();
 
@@ -3059,8 +3215,14 @@ com.tolstoy.basic.app.retriever.StateClickShowHiddenReplies2 = function( $, afte
 
 			if ( !message_num_kids && btn_num_kids == 1 && message_text && btn_text && message_text.length > btn_text.length ) {
 				$button = $t;
+					return false;
 			}
 		});
+
+			if ( $button ) {
+				break;
+			}
+		}
 
 		if ( $button ) {
 			logger.info( 'StateClickShowHiddenReplies2: clicking ' + $button.html() );
@@ -3117,6 +3279,7 @@ com.tolstoy.basic.app.retriever.StateFindCensoredTweets2 = function( $, tweetSel
 	};
 
 	this.assignPreviousNext = function( tweets ) {
+		tweets = tweets || [];
 		var len = tweets.length;
 		if ( !len ) {
 			return tweets;
@@ -3592,6 +3755,7 @@ com.tolstoy.basic.app.jsonparser.Starter = function( jsParams, jsonStrings, data
 				errors: []
 			};
 
+			jsonStrings = jsonStrings || [];
 			for ( i = 0; i < jsonStrings.length; i++ ) {
 				try {
 					var json = JSON.parse( jsonStrings[ i ] );
@@ -3613,57 +3777,59 @@ com.tolstoy.basic.app.jsonparser.Starter = function( jsParams, jsonStrings, data
 				}
 			}
 
-			if ( combined.tweets ) {
-				logger.info( 'jsonparser.Starter tweets:' );
-				for ( i = 0; i < combined.tweets.length; i++ ) {
-					logger.info( '  ' + combined.tweets[ i ].toDebugString( '  ' ) );
+			if ( debugLevel.isVerbose() ) {
+				if ( combined.tweets ) {
+					logger.info( 'jsonparser.Starter tweets:' );
+					for ( i = 0; i < combined.tweets.length; i++ ) {
+						logger.info( '  ' + combined.tweets[ i ].toDebugString( '  ' ) );
+					}
 				}
-			}
-			else {
-				logger.info( 'jsonparser.Starter NO TWEETS' );
-			}
+				else {
+					logger.info( 'jsonparser.Starter NO TWEETS' );
+				}
 
-			if ( combined.users ) {
-				logger.info( 'jsonparser.Starter users:' );
-				for ( i = 0; i < combined.users.length; i++ ) {
-					logger.info( '  ' + combined.users[ i ].toDebugString( '  ' ) );
+				if ( combined.users ) {
+					logger.info( 'jsonparser.Starter users:' );
+					for ( i = 0; i < combined.users.length; i++ ) {
+						logger.info( '  ' + combined.users[ i ].toDebugString( '  ' ) );
+					}
 				}
-			}
-			else {
-				logger.info( 'jsonparser.Starter NO USERS' );
-			}
+				else {
+					logger.info( 'jsonparser.Starter NO USERS' );
+				}
 
-			if ( combined.instructions ) {
-				logger.info( 'jsonparser.Starter instructions:' );
-				for ( i = 0; i < combined.instructions.length; i++ ) {
-					logger.info( '  ' + combined.instructions[ i ] );
+				if ( combined.instructions ) {
+					logger.info( 'jsonparser.Starter instructions:' );
+					for ( i = 0; i < combined.instructions.length; i++ ) {
+						logger.info( '  ', combined.instructions[ i ] );
+					}
 				}
-			}
-			else {
-				logger.info( 'jsonparser.Starter NO INSTRUCTIONS' );
+				else {
+					logger.info( 'jsonparser.Starter NO INSTRUCTIONS' );
+				}
 			}
 
 			if ( combined.errors ) {
 				logger.info( 'jsonparser.Starter errors:' );
 				for ( i = 0; i < combined.errors.length; i++ ) {
-					logger.info( '  ' + combined.errors[ i ] );
+					logger.info( '  ', combined.errors[ i ] );
 				}
 			}
 			else {
 				logger.info( 'jsonparser.Starter NO ERRORS' );
 			}
 
-			logger.info( 'jsonparser.Starter instructions:', combined.instructions );
-			logger.info( 'jsonparser.Starter errors:', combined.errors );
-
 			var interchangeHelper = new com.tolstoy.basic.app.jsonparser.InterchangeHelper( combined, utils, logger );
 			var results = interchangeHelper.getResults();
 
-			logger.info( 'jsonparser.Starter BEGIN RESULTS' );
-			for ( i = 0; i < results.length; i++ ) {
-				logger.info( '  record:\n' + utils.prettyPrint( results[ i ], '    ' ) );
+			if ( debugLevel.isVerbose() ) {
+				logger.info( 'jsonparser.Starter BEGIN RESULTS' );
+				results = results || [];
+				for ( i = 0; i < results.length; i++ ) {
+					logger.info( '  record:\n' + utils.prettyPrint( results[ i ], '    ' ) );
+				}
+				logger.info( 'jsonparser.Starter END RESULTS' );
 			}
-			logger.info( 'jsonparser.Starter END RESULTS' );
 
 			dataCallback( results );
 		}

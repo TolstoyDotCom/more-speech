@@ -21,6 +21,7 @@ import com.tolstoy.basic.api.tweet.ITweetFactory;
 import com.tolstoy.basic.api.utils.IResourceBundleWithFormatting;
 import com.tolstoy.censorship.twitter.checker.api.installation.IAppDirectories;
 import com.tolstoy.censorship.twitter.checker.api.installation.IBrowserScriptFactory;
+import com.tolstoy.censorship.twitter.checker.api.installation.IBrowserExtensionFactory;
 import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
 import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotFactory;
 import com.tolstoy.censorship.twitter.checker.api.webdriver.IWebDriverFactory;
@@ -34,6 +35,7 @@ public class WebDriverFactoryFactory implements IWebDriverFactoryFactory {
 	private final ITweetFactory tweetFactory;
 	private final IAppDirectories appDirectories;
 	private final IBrowserScriptFactory browserScriptFactory;
+	private final IBrowserExtensionFactory browserExtensionFactory;
 	private final IPreferences prefs;
 	private final IResourceBundleWithFormatting bundle;
 	private final DebugLevel debugLevel;
@@ -42,6 +44,7 @@ public class WebDriverFactoryFactory implements IWebDriverFactoryFactory {
 								final ITweetFactory tweetFactory,
 								final IAppDirectories appDirectories,
 								final IBrowserScriptFactory browserScriptFactory,
+								final IBrowserExtensionFactory browserExtensionFactory,
 								final IPreferences prefs,
 								final IResourceBundleWithFormatting bundle,
 								final DebugLevel debugLevel ) {
@@ -49,6 +52,7 @@ public class WebDriverFactoryFactory implements IWebDriverFactoryFactory {
 		this.tweetFactory = tweetFactory;
 		this.appDirectories = appDirectories;
 		this.browserScriptFactory = browserScriptFactory;
+		this.browserExtensionFactory = browserExtensionFactory;
 		this.prefs = prefs;
 		this.bundle = bundle;
 		this.debugLevel = debugLevel;
@@ -57,13 +61,13 @@ public class WebDriverFactoryFactory implements IWebDriverFactoryFactory {
 	@Override
 	public IWebDriverFactory makeWebDriverFactory( final WebDriverFactoryType type ) throws Exception {
 		if ( WebDriverFactoryType.ORIGINAL.equals( type ) ) {
-			return new WebDriverFactory( snapshotFactory, tweetFactory, appDirectories, browserScriptFactory, prefs, bundle );
+			return new WebDriverFactory( snapshotFactory, tweetFactory, appDirectories, browserScriptFactory, browserExtensionFactory, prefs, bundle );
 		}
 		else if ( WebDriverFactoryType.ORIGINAL_WITH_JAVASCRIPT.equals( type ) ) {
-			return new WebDriverFactoryJS( snapshotFactory, tweetFactory, appDirectories, browserScriptFactory, prefs, bundle );
+			return new WebDriverFactoryJS( snapshotFactory, tweetFactory, appDirectories, browserScriptFactory, browserExtensionFactory, prefs, bundle );
 		}
 		else if ( WebDriverFactoryType.NEWTWITTER_WITH_JAVASCRIPT.equals( type ) ) {
-			return new WebDriverFactoryNT( snapshotFactory, tweetFactory, appDirectories, browserScriptFactory, prefs, bundle, debugLevel );
+			return new WebDriverFactoryNT( snapshotFactory, tweetFactory, appDirectories, browserScriptFactory, browserExtensionFactory, prefs, bundle, debugLevel );
 		}
 		else {
 			throw new IllegalArgumentException( "unknown WebDriverFactoryType: " + type );
