@@ -63,10 +63,11 @@ import com.tolstoy.censorship.twitter.checker.app.gui.RunItineraryEventListener;
 import com.tolstoy.censorship.twitter.checker.app.gui.WindowClosingEvent;
 import com.tolstoy.censorship.twitter.checker.app.gui.WindowClosingEventListener;
 import com.tolstoy.censorship.twitter.checker.api.installation.IAppDirectories;
-import com.tolstoy.censorship.twitter.checker.app.installation.BrowserScriptFactory;
+import com.tolstoy.censorship.twitter.checker.api.installation.IBrowserScriptFactory;
+import com.tolstoy.censorship.twitter.checker.api.installation.IBrowserExtensionFactory;
 import com.tolstoy.censorship.twitter.checker.app.helpers.SearchRunProcessorWriteReport;
-import com.tolstoy.censorship.twitter.checker.app.helpers.SearchRunRepliesBuilder;
-import com.tolstoy.censorship.twitter.checker.app.helpers.SearchRunRepliesFromItineraryBuilder;
+import com.tolstoy.censorship.twitter.checker.app.helpers.SearchRunRepliesBuilderSelfContained;
+import com.tolstoy.censorship.twitter.checker.app.helpers.SearchRunRepliesBuilderJBoto;
 import com.tolstoy.censorship.twitter.checker.app.helpers.SearchRunTimelineBuilder;
 import com.tolstoy.censorship.twitter.checker.app.storage.StorageTable;
 
@@ -84,6 +85,8 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 	private final IAnalysisReportFactory analysisReportFactory;
 	private final IBrowserProxyFactory browserProxyFactory;
 	private final IAppDirectories appDirectories;
+	private final IBrowserScriptFactory browserScriptFactory;
+	private final IBrowserExtensionFactory browserExtensionFactory;
 	private final List<ISearchRunProcessor> searchRunProcessors;
 	private List<ElementDescriptor> guiElements;
 	private MainGUI gui;
@@ -150,7 +153,7 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 			try {
 				IArchiveDirectory archiveDirectory = new ArchiveDirectory( appDirectories.getReportsDirectory(), "json-", "", "", ".json" );
 
-				final SearchRunRepliesBuilder builder = new SearchRunRepliesBuilder( bundle,
+				final SearchRunRepliesBuilderSelfContained builder = new SearchRunRepliesBuilderSelfContained( bundle,
 																						storage,
 																						prefsFactory,
 																						prefs,
@@ -163,12 +166,12 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 																						this,
 																						prefs.getValue( "prefs.handle_to_check" ) );
 
-				final int numberOfTimelinePagesToScroll = Utils.parseIntDefault( prefs.getValue( "prefs.num_timeline_pages_to_scroll" ), 1 );
-				final int numberOfIndividualPagesToScroll = Utils.parseIntDefault( prefs.getValue( "prefs.num_individual_pages_to_scroll" ), 3 );
+				final int numberOfTimesToScrollOnTimeline = Utils.parseIntDefault( prefs.getValue( "prefs.num_timeline_pages_to_scroll" ), 1 );
+				final int numberOfTimesToScrollOnIndividualPages = Utils.parseIntDefault( prefs.getValue( "prefs.num_individual_pages_to_scroll" ), 3 );
 				final int numberOfReplyPagesToCheck = Utils.parseIntDefault( prefs.getValue( "prefs.num_reply_pages_to_check" ), 5 );
 
-				final ISearchRunReplies searchRunReplies = builder.buildSearchRunReplies( numberOfTimelinePagesToScroll,
-																							numberOfIndividualPagesToScroll,
+				final ISearchRunReplies searchRunReplies = builder.buildSearchRunReplies( numberOfTimesToScrollOnTimeline,
+																							numberOfTimesToScrollOnIndividualPages,
 																							numberOfReplyPagesToCheck );
 
 				//logger.info( searchRunReplies );
@@ -202,16 +205,19 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 																						browserProxyFactory,
 																						archiveDirectory,
 																						this,
-																						new BrowserScriptFactory( appDirectories.getSubdirectory( "stockscripts" ) ),
+																						appDirectories,
+																						analysisReportFactory,
+																						browserScriptFactory,
+																						browserExtensionFactory,
 																						prefs.getValue( "prefs.handle_to_check" ) );
 
-				final int numberOfTimelinePagesToScroll = Utils.parseIntDefault( prefs.getValue( "prefs.num_timeline_pages_to_scroll" ), 1 );
-				final int numberOfIndividualPagesToScroll = Utils.parseIntDefault( prefs.getValue( "prefs.num_individual_pages_to_scroll" ), 3 );
+				final int numberOfTimesToScrollOnTimeline = Utils.parseIntDefault( prefs.getValue( "prefs.num_timeline_pages_to_scroll" ), 1 );
+				final int numberOfTimesToScrollOnIndividualPages = Utils.parseIntDefault( prefs.getValue( "prefs.num_individual_pages_to_scroll" ), 3 );
 				final int numberOfReplyPagesToCheck = Utils.parseIntDefault( prefs.getValue( "prefs.num_reply_pages_to_check" ), 5 );
 				final int numberOfTimelineTweetsToSkip = Utils.parseIntDefault( prefs.getValue( "prefs.num_timeline_tweets_to_skip" ), 0 );
 
-				final ISearchRunTimeline searchRunTimeline = builder.buildSearchRunTimeline( numberOfTimelinePagesToScroll,
-																								numberOfIndividualPagesToScroll,
+				final ISearchRunTimeline searchRunTimeline = builder.buildSearchRunTimeline( numberOfTimesToScrollOnTimeline,
+																								numberOfTimesToScrollOnIndividualPages,
 																								numberOfReplyPagesToCheck,
 																								numberOfTimelineTweetsToSkip );
 
@@ -241,25 +247,29 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 			try {
 				IArchiveDirectory archiveDirectory = new ArchiveDirectory( appDirectories.getReportsDirectory(), "json-", "", "", ".json" );
 
-				final SearchRunRepliesFromItineraryBuilder builder = new SearchRunRepliesFromItineraryBuilder( bundle,
-																												storage,
-																												prefsFactory,
-																												prefs,
-																												webDriverFactoryFactory,
-																												searchRunFactory,
-																												snapshotFactory,
-																												tweetFactory,
-																												browserProxyFactory,
-																												archiveDirectory,
-																												this,
-																												itinerary );
+				final SearchRunRepliesBuilderJBoto builder = new SearchRunRepliesBuilderJBoto( bundle,
+																						storage,
+																						prefsFactory,
+																						prefs,
+																						webDriverFactoryFactory,
+																						searchRunFactory,
+																						snapshotFactory,
+																						tweetFactory,
+																						browserProxyFactory,
+																						archiveDirectory,
+																						this,
+																						appDirectories,
+																						analysisReportFactory,
+																						browserScriptFactory,
+																						browserExtensionFactory,
+																						itinerary );
 
-				final int numberOfTimelinePagesToScroll = Utils.parseIntDefault( prefs.getValue( "prefs.num_timeline_pages_to_scroll" ), 1 );
-				final int numberOfIndividualPagesToScroll = Utils.parseIntDefault( prefs.getValue( "prefs.num_individual_pages_to_scroll" ), 3 );
+				final int numberOfTimesToScrollOnTimeline = Utils.parseIntDefault( prefs.getValue( "prefs.num_timeline_pages_to_scroll" ), 1 );
+				final int numberOfTimesToScrollOnIndividualPages = Utils.parseIntDefault( prefs.getValue( "prefs.num_individual_pages_to_scroll" ), 3 );
 				final int numberOfReplyPagesToCheck = Utils.parseIntDefault( prefs.getValue( "prefs.num_reply_pages_to_check" ), 5 );
 
-				final ISearchRunReplies searchRunReplies = builder.buildSearchRunReplies( numberOfTimelinePagesToScroll,
-																							numberOfIndividualPagesToScroll,
+				final ISearchRunReplies searchRunReplies = builder.buildSearchRunReplies( numberOfTimesToScrollOnTimeline,
+																							numberOfTimesToScrollOnIndividualPages,
 																							numberOfReplyPagesToCheck );
 
 				//logger.info( searchRunReplies );
@@ -286,7 +296,7 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 					final ISearchRun searchRun = (ISearchRun) storable;
 
 					final SearchRunProcessorWriteReport writeReport = new SearchRunProcessorWriteReport( bundle, prefs, appDirectories,
-																											analysisReportFactory, DebugLevel.VERBOSE );
+																											analysisReportFactory, DebugLevel.TERSE );
 
 					writeReport.process( searchRun, this );
 				}
@@ -318,6 +328,8 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 					final IAnalysisReportFactory analysisReportFactory,
 					final IBrowserProxyFactory browserProxyFactory,
 					final IAppDirectories appDirectories,
+					final IBrowserScriptFactory browserScriptFactory,
+					final IBrowserExtensionFactory browserExtensionFactory,
 					final List<ISearchRunProcessor> searchRunProcessors ) throws Exception {
 		this.bundle = bundle;
 		this.storage = storage;
@@ -330,6 +342,8 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 		this.analysisReportFactory = analysisReportFactory;
 		this.browserProxyFactory = browserProxyFactory;
 		this.appDirectories = appDirectories;
+		this.browserScriptFactory = browserScriptFactory;
+		this.browserExtensionFactory = browserExtensionFactory;
 		this.searchRunProcessors = searchRunProcessors;
 	}
 

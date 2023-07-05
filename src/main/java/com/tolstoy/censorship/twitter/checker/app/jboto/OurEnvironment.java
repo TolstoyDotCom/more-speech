@@ -37,12 +37,17 @@ import com.tolstoy.basic.api.utils.IResourceBundleWithFormatting;
 import com.tolstoy.basic.api.utils.IArchiveDirectory;
 import com.tolstoy.basic.app.utils.KeyedLists;
 import com.tolstoy.basic.app.utils.Utils;
+import com.tolstoy.censorship.twitter.checker.api.analyzer.IAnalysisReportFactory;
+import com.tolstoy.censorship.twitter.checker.api.installation.IAppDirectories;
 import com.tolstoy.censorship.twitter.checker.api.browserproxy.IBrowserProxyFactory;
 import com.tolstoy.censorship.twitter.checker.api.browserproxy.IBrowserProxy;
 import com.tolstoy.censorship.twitter.checker.api.browserproxy.IBrowserProxyResponseEvent;
 import com.tolstoy.censorship.twitter.checker.api.browserproxy.IBrowserProxyResponseListener;
 import com.tolstoy.censorship.twitter.checker.api.browserproxy.IBrowserProxyLogEntry;
 import com.tolstoy.censorship.twitter.checker.api.installation.IBrowserScriptFactory;
+import com.tolstoy.censorship.twitter.checker.api.installation.IBrowserExtension;
+import com.tolstoy.censorship.twitter.checker.api.installation.IBrowserExtensionList;
+import com.tolstoy.censorship.twitter.checker.api.installation.IBrowserExtensionFactory;
 import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
 import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferencesFactory;
 import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunFactory;
@@ -60,7 +65,7 @@ import com.tolstoy.censorship.twitter.checker.api.webdriver.WebDriverFactoryType
 public class OurEnvironment implements IEnvironment {
 	private static final Logger logger = LogManager.getLogger( OurEnvironment.class );
 
-	private static final Duration TIMEOUT = Duration.ofSeconds( 10000 );
+	private static final Duration TIMEOUT = Duration.ofMinutes( 30 );
 	private static final int WEBDRIVER_CLOSE_DELAY_MILLIS = 5000;
 
 	private final IResourceBundleWithFormatting bundle;
@@ -75,9 +80,14 @@ public class OurEnvironment implements IEnvironment {
 	private final IBrowserProxyFactory browserProxyFactory;
 	private final IArchiveDirectory archiveDirectory;
 	private final IBrowserScriptFactory browserScriptFactory;
+	private final IAnalysisReportFactory analysisReportFactory;
+	private final IAppDirectories appDirectories;
+	private final IBrowserExtensionFactory browserExtensionFactory;
+	private final IBrowserExtensionList extensionsToInstall;
 	/*private final KeyedLists<IBrowserProxyResponseEvent> proxyEvents;*/
 	private IWebDriverUtils webDriverUtils;
 	private IWebDriverFactory webDriverFactory;
+	private IBrowserExtensionList installedExtensions;
 	private WebDriver webDriver;
 	private IBrowserProxy browserProxy;
 	private DebugLevel debugLevel;
@@ -93,7 +103,11 @@ public class OurEnvironment implements IEnvironment {
 							final IBrowserProxyFactory browserProxyFactory,
 							final IArchiveDirectory archiveDirectory,
 							final IStatusMessageReceiver statusMessageReceiver,
+							final IAppDirectories appDirectories,
+							final IAnalysisReportFactory analysisReportFactory,
 							final IBrowserScriptFactory browserScriptFactory,
+							final IBrowserExtensionFactory browserExtensionFactory,
+							final IBrowserExtensionList extensionsToInstall,
 							final DebugLevel debugLevel ) throws Exception {
 		this.bundle = bundle;
 		this.storage = storage;
@@ -106,7 +120,11 @@ public class OurEnvironment implements IEnvironment {
 		this.statusMessageReceiver = statusMessageReceiver;
 		this.browserProxyFactory = browserProxyFactory;
 		this.archiveDirectory = archiveDirectory;
+		this.appDirectories = appDirectories;
+		this.analysisReportFactory = analysisReportFactory;
 		this.browserScriptFactory = browserScriptFactory;
+		this.browserExtensionFactory = browserExtensionFactory;
+		this.extensionsToInstall = extensionsToInstall;
 		this.debugLevel = debugLevel;
 
 		if ( webDriverFactoryFactory == null ) {
@@ -118,12 +136,37 @@ public class OurEnvironment implements IEnvironment {
 		return TIMEOUT;
 	}
 
+	public IAnalysisReportFactory getAnalysisReportFactory() {
+		return analysisReportFactory;
+	}
+
+	public IAppDirectories getAppDirectories() {
+		return appDirectories;
+	}
+
 	public DebugLevel getDebugLevel() {
 		return debugLevel;
 	}
 
 	public void setDebugLevel( DebugLevel val ) {
 		debugLevel = val;
+	}
+
+	public IBrowserExtensionList getExtensionsToInstall() {
+		return extensionsToInstall;
+	}
+
+	//	@todo: provide a wrapper for WebDriver, move this method into it
+	public IBrowserExtensionList getInstalledExtensions() {
+		return installedExtensions;
+	}
+
+	public void setInstalledExtensions( IBrowserExtensionList list ) {
+		installedExtensions = list;
+	}
+
+	public IBrowserExtensionFactory getBrowserExtensionFactory() {
+		return browserExtensionFactory;
 	}
 
 	public int getWebdriverCloseDelay() {
@@ -162,15 +205,15 @@ public class OurEnvironment implements IEnvironment {
 		return browserScriptFactory;
 	}
 
-	public IBrowserProxyFactory getBrowserProxyFactory() {
+	public IBrowserProxyFactory getBrowserDataRecorderFactory() {
 		return browserProxyFactory;
 	}
 
-	public IBrowserProxy getBrowserProxy() {
+	public IBrowserProxy getBrowserDataRecorder() {
 		return browserProxy;
 	}
 
-	public void setBrowserProxy( IBrowserProxy browserProxy ) {
+	public void setBrowserDataRecorder( IBrowserProxy browserProxy ) {
 		this.browserProxy = browserProxy;
 	}
 
@@ -227,23 +270,32 @@ public class OurEnvironment implements IEnvironment {
 */
 
 			if ( responseContent == null || responseContent.length() < 1 ) {
-				logger.info( "WebDriverFactoryNT.saveJSONStrings: NO RESPONSE FOR " + responseURL );
+				logger.info( "NO RESPONSE FOR " + responseURL );
 				continue;
 			}
 
 			responseContent = responseContent.trim();
 			if ( !( responseContent.startsWith( "[" ) || responseContent.startsWith( "{" ) ) ) {
-				logger.info( "WebDriverFactoryNT.saveJSONStrings: NOT JSON FOR " + responseURL );
+				logger.info( "NOT JSON FOR " + responseURL );
 				continue;
 			}
 
 			jsonStrings.add( responseContent );
 
 			String archiveFilename = archiveDirectory.put( responseContent );
-			logger.info( "WebDriverFactoryNT.saveJSONStrings: ARCHIVE SAVED " + responseURL + " TO " + archiveFilename );
+			//logger.info( "ARCHIVE SAVED " + responseURL + " TO " + archiveFilename );
 		}
 
 		return jsonStrings;
+	}
+
+	public List<String> saveJSONStringsDirect( final List<String> responses, final IArchiveDirectory archiveDirectory ) throws Exception {
+		for ( String responseContent : responses ) {
+			String archiveFilename = archiveDirectory.put( responseContent );
+			//logger.info( "ARCHIVE SAVED " + responseURL + " TO " + archiveFilename );
+		}
+
+		return responses;
 	}
 
 	public void logInfo( final Logger logger, final String s ) {

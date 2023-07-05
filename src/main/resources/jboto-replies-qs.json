@@ -1,0 +1,31 @@
+{ "type": "container", "id": "main", "classname": "--none--", "finally": "common:CloseEverything", "commands": [
+	{ "type": "command", "classname": "replies:BeginReplies" },
+	{ "type": "command", "classname": "common:ChooseWebdriverFactory" },
+	{ "type": "command", "classname": "common:CreateBrowserDataRecorder" },
+	{ "type": "command", "classname": "common:CreateWebdriverFromFirefoxProfile" },
+	{ "type": "command", "classname": "common:CreateWebdriverUtils" },
+	{ "type": "if", "classname": "common:TestCreateLoginToSite", "commands": [
+		{ "type": "command", "classname": "common:CreateLoginToSite"}
+	]},
+
+	{ "type": "command", "classname": "replies:CreateTimelineSnapshot" },
+
+	{ "type": "foreach", "classname": "replies:GetTimelineTweetsList", "commands": [
+		{ "type": "if", "classname": "replies:HasEnoughReplies", "commands": [
+			{ "type": "break", "classname": "--none--"}
+		]},
+		{ "type": "if", "classname": "replies:ReplyShouldBeProcessed", "commands": [
+			{ "type": "command", "classname": "replies:SetReplyPageURL" },
+			{ "type": "command", "classname": "replies:LoadReplyPageURL" },
+			{ "type": "command", "classname": "replies:BeginReplyPageBrowserDataRecorder" },
+			{ "type": "command", "classname": "replies:RetrieveReplyPageTweets" },
+			{ "type": "command", "classname": "replies:EndReplyPageBrowserDataRecorder" },
+			{ "type": "command", "classname": "replies:SupplementReplyPageTweets" },
+			{ "type": "command", "classname": "replies:CreateReplyPageSnapshot" },
+			{ "type": "command", "classname": "replies:CreateReplyThread" },
+		]},
+	]},
+	{ "type": "command", "classname": "replies:EndReplies" },
+	{ "type": "command", "classname": "replies:InsertSearchRunToStorage" },
+	{ "type": "command", "classname": "replies:WriteReport" },
+]}

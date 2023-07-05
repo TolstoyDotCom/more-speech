@@ -71,8 +71,8 @@ import com.tolstoy.censorship.twitter.checker.api.webdriver.WebDriverFactoryType
  * tweet listing. There may be cases where even that doesn't work, or the
  * logic used to select the actual replied-to tweet doesn't work.
  */
-final public class SearchRunRepliesBuilder {
-	private static final Logger logger = LogManager.getLogger( SearchRunRepliesBuilder.class );
+final public class SearchRunRepliesBuilderSelfContained {
+	private static final Logger logger = LogManager.getLogger( SearchRunRepliesBuilderSelfContained.class );
 	private static final int WEBDRIVER_CLOSE_DELAY_MILLIS = 5000;
 
 	private final IResourceBundleWithFormatting bundle;
@@ -88,7 +88,7 @@ final public class SearchRunRepliesBuilder {
 	private final IStatusMessageReceiver statusMessageReceiver;
 	private final String handleToCheck;
 
-	public SearchRunRepliesBuilder( final IResourceBundleWithFormatting bundle,
+	public SearchRunRepliesBuilderSelfContained( final IResourceBundleWithFormatting bundle,
 						final IStorage storage,
 						final IPreferencesFactory prefsFactory,
 						final IPreferences prefs,
@@ -151,7 +151,7 @@ final public class SearchRunRepliesBuilder {
 		}
 
 		try {
-			browserProxy = browserProxyFactory.makeBrowserProxy();
+			browserProxy = browserProxyFactory.makeBrowserDataRecorder();
 
 			browserProxy.start();
 		}
