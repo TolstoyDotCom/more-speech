@@ -59,6 +59,8 @@ import com.tolstoy.censorship.twitter.checker.api.webdriver.IWebDriverUtils;
 import com.tolstoy.censorship.twitter.checker.api.webdriver.WebDriverFactoryType;
 import com.tolstoy.censorship.twitter.checker.app.jboto.replies.RepliesProduct;
 import com.tolstoy.censorship.twitter.checker.app.jboto.OurEnvironment;
+import com.tolstoy.censorship.twitter.checker.api.webdriver.IPageParametersSet;
+import com.tolstoy.censorship.twitter.checker.api.webdriver.IPageParameters;
 import com.tolstoy.jboto.api.framework.IFrameworkFactory;
 import com.tolstoy.jboto.api.framework.IFramework;
 import com.tolstoy.jboto.app.framework.FrameworkFactory;
@@ -141,16 +143,12 @@ final public class SearchRunRepliesBuilderJBoto {
 		}
 	}
 
-	public ISearchRunReplies buildSearchRunReplies( final int numberOfTimelinePagesToCheck,
-													final int numberOfReplyPagesToCheck,
-													final int maxReplies ) throws Exception {
+	public ISearchRunReplies buildSearchRunReplies( final IPageParametersSet pageParametersSet ) throws Exception {
 		try {
 			RepliesProduct product = new RepliesProduct( prefs,
 															handleToCheck,
 															itinerary,
-															numberOfTimelinePagesToCheck,
-															numberOfReplyPagesToCheck,
-															maxReplies );
+															pageParametersSet );
 
 			//	@todo: make this a setting
 			final IBrowserExtensionList extensionsToInstall = browserExtensionFactory.makeBrowserExtensionList();

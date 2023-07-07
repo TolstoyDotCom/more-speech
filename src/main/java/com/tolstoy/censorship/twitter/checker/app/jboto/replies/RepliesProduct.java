@@ -35,6 +35,8 @@ import com.tolstoy.basic.api.tweet.ITweetUser;
 import com.tolstoy.basic.app.utils.Utils;
 import com.tolstoy.jboto.api.IProduct;
 import com.tolstoy.censorship.twitter.checker.app.jboto.common.SearchRunBaseData;
+import com.tolstoy.censorship.twitter.checker.api.webdriver.IPageParametersSet;
+import com.tolstoy.censorship.twitter.checker.api.webdriver.IPageParameters;
 
 public class RepliesProduct extends SearchRunBaseData {
 	private static final Logger logger = LogManager.getLogger( RepliesProduct.class );
@@ -54,10 +56,8 @@ public class RepliesProduct extends SearchRunBaseData {
 	public RepliesProduct( final IPreferences prefs,
 								final String handleToCheck,
 								final ISearchRunRepliesItinerary itinerary,
-								final int numberOfTimesToScrollOnTimeline,
-								final int numberOfTimesToScrollOnIndividualPages,
-								final int numberOfReplyPagesToCheck ) {
-		super( prefs, handleToCheck, 0, numberOfTimesToScrollOnIndividualPages, numberOfReplyPagesToCheck, 0 );
+								final IPageParametersSet pageParametersSet ) {
+		super( prefs, handleToCheck, pageParametersSet );
 
 		this.replyThreads = new HashMap<Long,IReplyThread>();
 		this.itinerary = itinerary;

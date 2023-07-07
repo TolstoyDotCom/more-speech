@@ -66,6 +66,8 @@ import com.tolstoy.censorship.twitter.checker.api.webdriver.InfiniteScrollingAct
 import com.tolstoy.censorship.twitter.checker.api.webdriver.WebDriverFactoryType;
 import com.tolstoy.censorship.twitter.checker.app.jboto.timeline.SearchRunTimelineData;
 import com.tolstoy.censorship.twitter.checker.app.jboto.OurEnvironment;
+import com.tolstoy.censorship.twitter.checker.api.webdriver.IPageParametersSet;
+import com.tolstoy.censorship.twitter.checker.api.webdriver.IPageParameters;
 import com.tolstoy.jboto.api.framework.IFrameworkFactory;
 import com.tolstoy.jboto.api.framework.IFramework;
 import com.tolstoy.jboto.app.framework.FrameworkFactory;
@@ -146,17 +148,9 @@ final public class SearchRunTimelineBuilder /*implements IBrowserProxyResponseLi
 		}
 	}
 
-	public ISearchRunTimeline buildSearchRunTimeline( final int numberOfTimesToScrollOnTimeline,
-														final int numberOfTimesToScrollOnIndividualPages,
-														final int numberOfReplyPagesToCheck,
-														final int numberOfTimelineTweetsToSkip ) throws Exception {
+	public ISearchRunTimeline buildSearchRunTimeline( final IPageParametersSet pageParametersSet ) throws Exception {
 		try {
-			SearchRunTimelineData product = new SearchRunTimelineData( prefs,
-																		handleToCheck,
-																		numberOfTimesToScrollOnTimeline,
-																		numberOfTimesToScrollOnIndividualPages,
-																		numberOfReplyPagesToCheck,
-																		numberOfTimelineTweetsToSkip );
+			SearchRunTimelineData product = new SearchRunTimelineData( prefs, handleToCheck, pageParametersSet );
 
 			//	@todo: make this a setting
 			final IBrowserExtensionList extensionsToInstall = browserExtensionFactory.makeBrowserExtensionList();

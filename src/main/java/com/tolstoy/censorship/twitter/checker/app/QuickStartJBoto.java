@@ -99,6 +99,10 @@ import org.openqa.selenium.Point;
 import com.tolstoy.censorship.twitter.checker.app.jboto.replies.RepliesProduct;
 import com.tolstoy.censorship.twitter.checker.app.jboto.timeline.SearchRunTimelineData;
 import com.tolstoy.censorship.twitter.checker.app.jboto.OurEnvironment;
+import com.tolstoy.censorship.twitter.checker.api.webdriver.IPageParametersFactory;
+import com.tolstoy.censorship.twitter.checker.app.webdriver.PageParametersFactory;
+import com.tolstoy.censorship.twitter.checker.api.webdriver.IPageParametersSet;
+import com.tolstoy.censorship.twitter.checker.api.webdriver.IPageParameters;
 import com.tolstoy.jboto.api.framework.IFrameworkFactory;
 import com.tolstoy.jboto.api.framework.IFramework;
 import com.tolstoy.jboto.app.framework.FrameworkFactory;
@@ -133,9 +137,10 @@ public final class QuickStartJBoto implements IStatusMessageReceiver {
 	private final IBrowserProxyFactory browserProxyFactory;
 	private final IArchiveDirectory archiveDirectory;
 	private final IBrowserExtensionFactory browserExtensionFactory;
+	private final IPageParametersFactory pageParametersFactory;
 	private final OurEnvironment env;
 	private final String databaseConnectionString, handleToCheck;
-	private final int numberOfTimesToScrollOnTimeline, numberOfTimesToScrollOnIndividualPages, numberOfReplyPagesToCheck, numberOfTimelineTweetsToSkip;
+	private final IPageParametersSet pageParametersSet;
 
 	@SuppressWarnings("unused")
 	private QuickStartJBoto() throws Exception {
@@ -169,8 +174,11 @@ public final class QuickStartJBoto implements IStatusMessageReceiver {
 		this.snapshotFactory = new SnapshotFactory();
 		this.searchRunFactory = new SearchRunFactory( this.tweetFactory );
 		this.analysisReportFactory = new AnalysisReportFactory( this.tweetFactory, this.appDirectories, this.prefs, this.bundle );
+		this.pageParametersFactory = new PageParametersFactory();
 
 		this.browserProxyFactory = new BrowserProxyFactory( this.prefs, this.bundle, new JBus(), this.browserScriptFactory );
+
+		this.pageParametersSet = buildPageParametersSet( prefs );
 
 		//	@todo: make this a setting
 		this.browserExtensionFactory = new BrowserExtensionFactory();
@@ -186,10 +194,6 @@ public final class QuickStartJBoto implements IStatusMessageReceiver {
 																	this.bundle,
 																	DebugLevel.TERSE );
 
-		this.numberOfTimesToScrollOnTimeline = Utils.parseIntDefault( this.prefs.getValue( "prefs.num_timeline_pages_to_scroll" ), 1 );
-		this.numberOfTimesToScrollOnIndividualPages = Utils.parseIntDefault( this.prefs.getValue( "prefs.num_individual_pages_to_scroll" ), 3 );
-		this.numberOfReplyPagesToCheck = Utils.parseIntDefault( this.prefs.getValue( "prefs.num_reply_pages_to_check" ), 5 );
-		this.numberOfTimelineTweetsToSkip = Utils.parseIntDefault( this.prefs.getValue( "prefs.num_timeline_tweets_to_skip" ), 0 );
 		this.handleToCheck = this.prefs.getValue( "prefs.handle_to_check" );
 
 		this.env = new OurEnvironment( this.bundle,
@@ -220,9 +224,7 @@ public final class QuickStartJBoto implements IStatusMessageReceiver {
 		RepliesProduct product = new RepliesProduct( prefs,
 														handleToCheck,
 														itinerary,
-														numberOfTimesToScrollOnTimeline,
-														numberOfTimesToScrollOnIndividualPages,
-														numberOfReplyPagesToCheck );
+														pageParametersSet );
 
 		String testJSON = IOUtils.toString( getClass().getResource( "/jboto-replies-qs.json" ), StandardCharsets.UTF_8 );
 
@@ -242,12 +244,7 @@ public final class QuickStartJBoto implements IStatusMessageReceiver {
 	}
 
 	private void doTimeline() throws Exception {
-		SearchRunTimelineData product = new SearchRunTimelineData( prefs,
-																	handleToCheck,
-																	numberOfTimesToScrollOnTimeline,
-																	numberOfTimesToScrollOnIndividualPages,
-																	numberOfReplyPagesToCheck,
-																	numberOfTimelineTweetsToSkip );
+		SearchRunTimelineData product = new SearchRunTimelineData( prefs, handleToCheck, pageParametersSet );
 
 		String testJSON = IOUtils.toString( getClass().getResource( "/jboto-timeline-qs.json" ), StandardCharsets.UTF_8 );
 
@@ -303,6 +300,25 @@ public final class QuickStartJBoto implements IStatusMessageReceiver {
 		}
 
 		return (ISearchRunRepliesItinerary) itinerary;
+	}
+
+	private IPageParametersSet buildPageParametersSet( IPreferences prefs ) throws Exception {
+		IPageParameters timeline = pageParametersFactory.makePageParametersBuilder().
+			setItemsToSkip( Utils.parseIntDefault( prefs.getValue( "prefs.timeline_num_items_to_skip" ), 0 ) ).
+			setItemsToProcess( Utils.parseIntDefault( prefs.getValue( "prefs.timeline_num_items_to_process" ), 0 ) ).
+			setPagesToScroll( Utils.parseIntDefault( prefs.getValue( "prefs.timeline_num_pages_to_scroll" ), 0 ) ).
+			build();
+
+		IPageParameters individualPage = pageParametersFactory.makePageParametersBuilder().
+			setItemsToSkip( 0 ).
+			setItemsToProcess( 1000 ).
+			setPagesToScroll( Utils.parseIntDefault( prefs.getValue( "prefs.individual_pages_num_pages_to_scroll" ), 0 ) ).
+			build();
+
+		return pageParametersFactory.makePageParametersSetBuilder().
+			setTimeline( timeline ).
+			setIndividualPage( individualPage ).
+			build();
 	}
 
 	@Override

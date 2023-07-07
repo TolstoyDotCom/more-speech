@@ -57,8 +57,8 @@ public class ReplyShouldBeProcessed implements IIfCommand {
 		OurEnvironment ourEnv = (OurEnvironment) env;
 		ITweet tweet = (ITweet) extra;
 
-		if ( index < product.getNumberOfTimelineTweetsToSkip() ) {
-			logger.info( "skipped tweet #" + index + " because that's < " + product.getNumberOfTimelineTweetsToSkip() );
+		if ( index < product.getPageParametersSet().getTimeline().getItemsToSkip() ) {
+			logger.info( "skipped tweet #" + index + " because that's < " + product.getPageParametersSet().getTimeline().getItemsToSkip() );
 			return false;
 		}
 

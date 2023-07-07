@@ -74,7 +74,7 @@ public class RetrieveReplyPageTweets implements IBasicCommand {
 		logger.info( "makeTweetCollectionFromURL: calling SuedeDenim tweet_retriever script" );
 
 		final JavascriptParams jsParams = new JavascriptParams( product.getIndividualPageURL( tweet.getID() ), TargetPageType.REPLYPAGE, ourEnv.getDebugLevel() );
-		jsParams.setValue( "scrollerNumTimesToScroll", "" + ( 5 * product.getNumberOfTimesToScrollOnIndividualPages() ) );
+		jsParams.setValue( "scrollerNumTimesToScroll", "" + ( 5 * product.getPageParametersSet().getIndividualPage().getPagesToScroll() ) );
 		jsParams.setValue( "scrollerHeightMultiplier", "0.25" );
 
 		final String suedeDenimRetrieverScript = ourEnv.getBrowserScriptFactory().getScript( "tweet_retriever" ).getScript();
@@ -92,7 +92,7 @@ public class RetrieveReplyPageTweets implements IBasicCommand {
 
 		final ITweetCollection tweetCollection = interchangeContainer.getTweetCollection();
 		tweetCollection.setAttribute( "url", product.getIndividualPageURL( tweet.getID() ) );
-		tweetCollection.setAttribute( "numberOfPagesToCheck", "" + product.getNumberOfTimesToScrollOnIndividualPages() );
-		tweetCollection.setAttribute( "maxTweets", "" + product.getNumberOfTimesToScrollOnIndividualPages() );
+		tweetCollection.setAttribute( "numberOfPagesToCheck", "" + product.getPageParametersSet().getIndividualPage().getPagesToScroll() );
+		tweetCollection.setAttribute( "maxTweets", "" + product.getPageParametersSet().getIndividualPage().getPagesToScroll() );
 	}
 }

@@ -48,6 +48,8 @@ import com.tolstoy.censorship.twitter.checker.api.webdriver.IWebDriverFactoryFac
 import com.tolstoy.censorship.twitter.checker.api.webdriver.IWebDriverUtils;
 import com.tolstoy.censorship.twitter.checker.api.webdriver.InfiniteScrollingActivatorType;
 import com.tolstoy.censorship.twitter.checker.api.webdriver.WebDriverFactoryType;
+import com.tolstoy.censorship.twitter.checker.api.webdriver.IPageParametersSet;
+import com.tolstoy.censorship.twitter.checker.api.webdriver.IPageParameters;
 
 /**
  * Utility that uses WebDriver to build an ISearchRunReplies object.
@@ -118,7 +120,7 @@ final public class SearchRunRepliesBuilderSelfContained {
 		}
 	}
 
-	public ISearchRunReplies buildSearchRunReplies( final int numberOfTimelinePagesToCheck, final int numberOfReplyPagesToCheck, final int maxReplies ) throws Exception {
+	public ISearchRunReplies buildSearchRunReplies( final IPageParametersSet pageParametersSet ) throws Exception {
 		IWebDriverFactory webDriverFactory = null;
 		WebDriver webDriver = null;
 		IBrowserProxy browserProxy = null;
@@ -185,9 +187,7 @@ final public class SearchRunRepliesBuilderSelfContained {
 																			webDriver,
 																			browserProxy,
 																			webDriverUtils,
-																			numberOfTimelinePagesToCheck,
-																			numberOfReplyPagesToCheck,
-																			maxReplies );
+																			pageParametersSet );
 
 			ret.setAttribute( "handle_to_check", handleToCheck );
 			ret.setAttribute( "loggedin", ( bUsingLogin || bSkipLogin ) ? "true" : "false" );
@@ -218,9 +218,7 @@ final public class SearchRunRepliesBuilderSelfContained {
 																final WebDriver webDriver,
 																final IBrowserProxy browserProxy,
 																final IWebDriverUtils webDriverUtils,
-																final int numberOfTimelinePagesToCheck,
-																final int numberOfReplyPagesToCheck,
-																final int maxReplies ) throws Exception {
+																final IPageParametersSet pageParametersSet ) throws Exception {
 		final Instant startTime = Instant.now();
 
 		final String url = String.format( prefs.getValue( "targetsite.pattern.timeline" ), handleToCheck );
@@ -230,16 +228,16 @@ final public class SearchRunRepliesBuilderSelfContained {
 		webDriver.get( url );
 
 		final SearchRunRepliesBuilderHelper helper = new SearchRunRepliesBuilderHelper( bundle,
-																					storage,
-																					prefsFactory,
-																					prefs,
-																					webDriverFactory,
-																					searchRunFactory,
-																					snapshotFactory,
-																					tweetFactory,
-																					browserProxy,
-																					archiveDirectory,
-																					statusMessageReceiver );
+																						storage,
+																						prefsFactory,
+																						prefs,
+																						webDriverFactory,
+																						searchRunFactory,
+																						snapshotFactory,
+																						tweetFactory,
+																						browserProxy,
+																						archiveDirectory,
+																						statusMessageReceiver );
 
 		final IInfiniteScrollingActivator scroller = webDriverFactory.makeInfiniteScrollingActivator( webDriver,
 																										webDriverUtils,
@@ -251,8 +249,8 @@ final public class SearchRunRepliesBuilderSelfContained {
 																											browserProxy,
 																											archiveDirectory,
 																											url,
-																											numberOfTimelinePagesToCheck,
-																											10 * maxReplies );
+																											pageParametersSet.getTimeline().getPagesToScroll(),
+																											pageParametersSet.getTimeline().getItemsToProcess() );
 
 		final ITweetUser user = timeline.getUser();
 		if ( user == null || Utils.isEmpty( user.getHandle() ) ) {
@@ -267,8 +265,7 @@ final public class SearchRunRepliesBuilderSelfContained {
 		}
 		else {
 			logInfo( bundle.getString( "srb_loaded_timeline", tweetCollection.getTweets().size() ) );
-			replies = helper.getReplyPages( webDriver, webDriverUtils, tweetCollection.getTweets(),
-										user, numberOfReplyPagesToCheck, maxReplies );
+			replies = helper.getReplyPages( webDriver, webDriverUtils, tweetCollection.getTweets(), user, pageParametersSet );
 		}
 
 		final ISearchRunReplies ret = searchRunFactory.makeSearchRunReplies( 0, user, startTime, Instant.now(), timeline, replies );

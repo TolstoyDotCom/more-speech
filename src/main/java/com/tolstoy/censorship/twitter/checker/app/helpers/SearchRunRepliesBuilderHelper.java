@@ -45,6 +45,8 @@ import com.tolstoy.censorship.twitter.checker.api.webdriver.IInfiniteScrollingAc
 import com.tolstoy.censorship.twitter.checker.api.webdriver.IWebDriverFactory;
 import com.tolstoy.censorship.twitter.checker.api.webdriver.IWebDriverUtils;
 import com.tolstoy.censorship.twitter.checker.api.webdriver.InfiniteScrollingActivatorType;
+import com.tolstoy.censorship.twitter.checker.api.webdriver.IPageParametersSet;
+import com.tolstoy.censorship.twitter.checker.api.webdriver.IPageParameters;
 
 /**
  * Contains methods used by SearchRunRepliesBuilderSelfContained, SearchRunRepliesFromItineraryBuilder, etc.
@@ -88,10 +90,12 @@ public class SearchRunRepliesBuilderHelper {
 		this.statusMessageReceiver = statusMessageReceiver;
 	}
 
-	Map<Long,IReplyThread> getReplyPages( final WebDriver webDriver, final IWebDriverUtils webDriverUtils,
-																		final List<ITweet> tweets, final ITweetUser user,
-																		final int numberOfReplyPagesToCheck, final int maxReplies )
-																		throws Exception {
+	Map<Long,IReplyThread> getReplyPages( final WebDriver webDriver,
+											final IWebDriverUtils webDriverUtils,
+											final List<ITweet> tweets,
+											final ITweetUser user,
+											final IPageParametersSet pageParametersSet )
+											throws Exception {
 		final Map<Long,IReplyThread> replies = new HashMap<Long,IReplyThread>();
 
 		final String handle = user.getHandle();
@@ -99,13 +103,13 @@ public class SearchRunRepliesBuilderHelper {
 		for ( final ITweet tweet : tweets ) {
 				//	if it's a reply and not a self-reply
 			if ( tweet.getRepliedToTweetID() != 0 && !handle.equals( Utils.trimDefault( tweet.getRepliedToHandle() ).toLowerCase() ) ) {
-				final IReplyThread thread = getReplyThread( webDriver, webDriverUtils, tweet, user, numberOfReplyPagesToCheck );
+				final IReplyThread thread = getReplyThread( webDriver, webDriverUtils, tweet, user, pageParametersSet );
 
 				if ( thread != null ) {
 					replies.put( tweet.getID(), thread );
 				}
 
-				if ( replies.size() >= maxReplies ) {
+				if ( replies.size() >= pageParametersSet.getTimeline().getItemsToProcess() ) {
 					break;
 				}
 			}
@@ -115,7 +119,7 @@ public class SearchRunRepliesBuilderHelper {
 	}
 
 	IReplyThread getReplyThread( final WebDriver webDriver, final IWebDriverUtils webDriverUtils, final ITweet sourceTweet,
-											final ITweetUser user, final int numberOfReplyPagesToCheck )
+											final ITweetUser user, final IPageParametersSet pageParametersSet )
 											throws Exception {
 		if ( sourceTweet.getRepliedToTweetID() == 0 ) {
 			return null;
@@ -123,7 +127,7 @@ public class SearchRunRepliesBuilderHelper {
 
 		try {
 			final ISnapshotUserPageIndividualTweet replyPage = getReplyPage( webDriver, webDriverUtils, sourceTweet.getRepliedToTweetID(),
-																		sourceTweet.getRepliedToHandle(), user, numberOfReplyPagesToCheck );
+																		sourceTweet.getRepliedToHandle(), user, pageParametersSet );
 
 			final IReplyThread defaultReplyThread = snapshotFactory.makeReplyThread( ReplyThreadType.DIRECT,
 																				sourceTweet,
@@ -135,7 +139,7 @@ public class SearchRunRepliesBuilderHelper {
 				//		we found the user's reply, or
 				//		we didn't get all the tweets.
 				//	in the second case it might be further down or it might not be; the user
-				//	will have to increase numberOfReplyPagesToCheck to find out.
+				//	will have to increase pageParametersSet.getTimeline().getItemsToProcess() to find out.
 			if ( replyPage.getTweetCollection().getTweetByID( sourceTweet.getID() ) != null || !replyPage.getComplete() ) {
 				return defaultReplyThread;
 			}
@@ -148,7 +152,7 @@ public class SearchRunRepliesBuilderHelper {
 			logInfo( bundle.getString( "srb_tweetnotfound_so_userreplypage", sourceTweet.getID(), sourceTweet.getRepliedToTweetID() ) );
 
 			try {
-				return getConversationReplyThread( webDriver, webDriverUtils, sourceTweet, user, numberOfReplyPagesToCheck );
+				return getConversationReplyThread( webDriver, webDriverUtils, sourceTweet, user, pageParametersSet );
 			}
 			catch ( final Exception e ) {
 			}
@@ -164,7 +168,8 @@ public class SearchRunRepliesBuilderHelper {
 	}
 
 	ISnapshotUserPageIndividualTweet getReplyPage( final WebDriver webDriver, final IWebDriverUtils webDriverUtils,
-																final long tweetID, final String userInURL, final ITweetUser user, final int numberOfReplyPagesToCheck )
+																final long tweetID, final String userInURL, final ITweetUser user,
+																final IPageParametersSet pageParametersSet )
 																throws Exception {
 		ISnapshotUserPageIndividualTweet replyPage;
 		IInfiniteScrollingActivator scroller;
@@ -193,7 +198,7 @@ public class SearchRunRepliesBuilderHelper {
 																						browserProxy,
 																						archiveDirectory,
 																						url,
-																						numberOfReplyPagesToCheck,
+																						pageParametersSet.getTimeline().getItemsToProcess(),
 																						0 );
 			logInfo( bundle.getString( "srb_loaded_replypage", replyPage.getTweetCollection().getTweets().size(), url ) );
 		}
@@ -206,7 +211,7 @@ public class SearchRunRepliesBuilderHelper {
 	}
 
 	IReplyThread getConversationReplyThread( final WebDriver webDriver, final IWebDriverUtils webDriverUtils,
-														final ITweet sourceTweet, final ITweetUser user, final int numberOfReplyPagesToCheck )
+														final ITweet sourceTweet, final ITweetUser user, final IPageParametersSet pageParametersSet )
 														throws Exception {
 		ITweetCollection userReplyTweetCollection;
 		IInfiniteScrollingActivator scroller;
@@ -230,7 +235,8 @@ public class SearchRunRepliesBuilderHelper {
 
 		try {
 			userReplyTweetCollection = webDriverFactory.makeTweetCollectionFromURL( webDriver, webDriverUtils, scroller, archiveDirectory,
-																					url, TargetPageType.REPLYPAGE, numberOfReplyPagesToCheck, 0 );
+																					url, TargetPageType.REPLYPAGE,
+																					pageParametersSet.getTimeline().getItemsToProcess(), 0 );
 
 			logInfo( bundle.getString( "srb_loaded_usertweetpage", userReplyTweetCollection.getTweets().size(), url ) );
 
@@ -257,7 +263,8 @@ public class SearchRunRepliesBuilderHelper {
 			logger.info( bundle.getString( "srb_userreply_switched", sourceTweet.getSummary(), actualTweet.getSummary() ) );
 
 			final ISnapshotUserPageIndividualTweet replyPage = getReplyPage( webDriver, webDriverUtils, actualTweet.getID(),
-																		actualTweet.getUser().getHandle(), user, numberOfReplyPagesToCheck );
+																		actualTweet.getUser().getHandle(), user,
+																		pageParametersSet );
 
 			return snapshotFactory.makeReplyThread( ReplyThreadType.INDIRECT,
 													sourceTweet,

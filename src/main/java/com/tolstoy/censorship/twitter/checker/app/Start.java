@@ -67,6 +67,8 @@ import com.tolstoy.censorship.twitter.checker.app.preferences.PreferencesFactory
 import com.tolstoy.censorship.twitter.checker.app.searchrun.SearchRunFactory;
 import com.tolstoy.censorship.twitter.checker.app.snapshot.SnapshotFactory;
 import com.tolstoy.censorship.twitter.checker.app.webdriver.WebDriverFactoryFactory;
+import com.tolstoy.censorship.twitter.checker.api.webdriver.IPageParametersFactory;
+import com.tolstoy.censorship.twitter.checker.app.webdriver.PageParametersFactory;
 
 public final class Start {
 	private static final Logger logger = LogManager.getLogger( Start.class );
@@ -93,6 +95,7 @@ public final class Start {
 		IAppDirectories appDirectories = null;
 		IBrowserScriptFactory browserScriptFactory = null;
 		IBrowserExtensionFactory browserExtensionFactory = null;
+		IPageParametersFactory pageParametersFactory = null;
 		IBrowserProxyFactory browserProxyFactory = null;
 		IBrowserProxy browserProxy = null;
 		String databaseConnectionString = null;
@@ -176,6 +179,7 @@ public final class Start {
 			snapshotFactory = new SnapshotFactory();
 			searchRunFactory = new SearchRunFactory( tweetFactory );
 			analysisReportFactory = new AnalysisReportFactory( tweetFactory, appDirectories, prefs, bundle );
+			pageParametersFactory = new PageParametersFactory();
 		}
 		catch ( final Exception e ) {
 			handleError( false, bundle.getString( "exc_tweetsnapshotfactory_init" ), e );
@@ -229,6 +233,7 @@ public final class Start {
 												appDirectories,
 												browserScriptFactory,
 												browserExtensionFactory,
+												pageParametersFactory,
 												searchRunProcessors );
 				app.run();
 			}

@@ -58,7 +58,7 @@ public class HasEnoughReplies implements IIfCommand {
 		ITweet tweet = (ITweet) extra;
 
 		int numIndividualPages = product.getIndividualPages().keySet().size();
-		int max = product.getNumberOfReplyPagesToCheck();
+		int max = product.getPageParametersSet().getTimeline().getItemsToProcess();
 		boolean ret = numIndividualPages >= max;
 
 		logger.info( "numIndividualPages=" + numIndividualPages + ", max=" + max + ", returning " + ret );

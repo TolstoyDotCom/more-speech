@@ -3034,6 +3034,18 @@ com.tolstoy.basic.app.retriever.StateClickShowHiddenReplies = function( $, after
 			}
 		});
 
+		if ( !$button ) {
+			$( 'div > div > div > div[role="button"] > div > div > span' ).each( function() {
+				var $t = $(this);
+				if ( $.trim( $t.text() ) ) {
+					var $levelsUp = $t.parent().parent().parent();
+					if ( $levelsUp.length ) {
+						$button = $levelsUp;
+					}
+				}
+			});
+		}
+
 		if ( $button ) {
 			logger.info( 'StateClickShowHiddenReplies: clicking ' + $button.html() );
 

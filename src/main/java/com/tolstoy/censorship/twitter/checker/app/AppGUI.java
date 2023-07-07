@@ -70,6 +70,11 @@ import com.tolstoy.censorship.twitter.checker.app.helpers.SearchRunRepliesBuilde
 import com.tolstoy.censorship.twitter.checker.app.helpers.SearchRunRepliesBuilderJBoto;
 import com.tolstoy.censorship.twitter.checker.app.helpers.SearchRunTimelineBuilder;
 import com.tolstoy.censorship.twitter.checker.app.storage.StorageTable;
+import com.tolstoy.censorship.twitter.checker.api.webdriver.IPageParametersFactory;
+import com.tolstoy.censorship.twitter.checker.api.webdriver.IPageParametersSetBuilder;
+import com.tolstoy.censorship.twitter.checker.api.webdriver.IPageParametersSet;
+import com.tolstoy.censorship.twitter.checker.api.webdriver.IPageParametersBuilder;
+import com.tolstoy.censorship.twitter.checker.api.webdriver.IPageParameters;
 
 public class AppGUI implements RunEventListener, PreferencesEventListener, RunItineraryEventListener, WindowClosingEventListener {
 	private static final Logger logger = LogManager.getLogger( AppGUI.class );
@@ -87,6 +92,7 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 	private final IAppDirectories appDirectories;
 	private final IBrowserScriptFactory browserScriptFactory;
 	private final IBrowserExtensionFactory browserExtensionFactory;
+	private final IPageParametersFactory pageParametersFactory;
 	private final List<ISearchRunProcessor> searchRunProcessors;
 	private List<ElementDescriptor> guiElements;
 	private MainGUI gui;
@@ -166,13 +172,9 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 																						this,
 																						prefs.getValue( "prefs.handle_to_check" ) );
 
-				final int numberOfTimesToScrollOnTimeline = Utils.parseIntDefault( prefs.getValue( "prefs.num_timeline_pages_to_scroll" ), 1 );
-				final int numberOfTimesToScrollOnIndividualPages = Utils.parseIntDefault( prefs.getValue( "prefs.num_individual_pages_to_scroll" ), 3 );
-				final int numberOfReplyPagesToCheck = Utils.parseIntDefault( prefs.getValue( "prefs.num_reply_pages_to_check" ), 5 );
+				IPageParametersSet pageParametersSet = buildPageParametersSet( prefs );
 
-				final ISearchRunReplies searchRunReplies = builder.buildSearchRunReplies( numberOfTimesToScrollOnTimeline,
-																							numberOfTimesToScrollOnIndividualPages,
-																							numberOfReplyPagesToCheck );
+				final ISearchRunReplies searchRunReplies = builder.buildSearchRunReplies( pageParametersSet );
 
 				//logger.info( searchRunReplies );
 				logger.info( "VALUENEXT" );
@@ -211,15 +213,9 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 																						browserExtensionFactory,
 																						prefs.getValue( "prefs.handle_to_check" ) );
 
-				final int numberOfTimesToScrollOnTimeline = Utils.parseIntDefault( prefs.getValue( "prefs.num_timeline_pages_to_scroll" ), 1 );
-				final int numberOfTimesToScrollOnIndividualPages = Utils.parseIntDefault( prefs.getValue( "prefs.num_individual_pages_to_scroll" ), 3 );
-				final int numberOfReplyPagesToCheck = Utils.parseIntDefault( prefs.getValue( "prefs.num_reply_pages_to_check" ), 5 );
-				final int numberOfTimelineTweetsToSkip = Utils.parseIntDefault( prefs.getValue( "prefs.num_timeline_tweets_to_skip" ), 0 );
+				IPageParametersSet pageParametersSet = buildPageParametersSet( prefs );
 
-				final ISearchRunTimeline searchRunTimeline = builder.buildSearchRunTimeline( numberOfTimesToScrollOnTimeline,
-																								numberOfTimesToScrollOnIndividualPages,
-																								numberOfReplyPagesToCheck,
-																								numberOfTimelineTweetsToSkip );
+				final ISearchRunTimeline searchRunTimeline = builder.buildSearchRunTimeline( pageParametersSet );
 
 				//logger.info( searchRunTimeline );
 				logger.info( "VALUENEXT" );
@@ -264,13 +260,9 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 																						browserExtensionFactory,
 																						itinerary );
 
-				final int numberOfTimesToScrollOnTimeline = Utils.parseIntDefault( prefs.getValue( "prefs.num_timeline_pages_to_scroll" ), 1 );
-				final int numberOfTimesToScrollOnIndividualPages = Utils.parseIntDefault( prefs.getValue( "prefs.num_individual_pages_to_scroll" ), 3 );
-				final int numberOfReplyPagesToCheck = Utils.parseIntDefault( prefs.getValue( "prefs.num_reply_pages_to_check" ), 5 );
+				IPageParametersSet pageParametersSet = buildPageParametersSet( prefs );
 
-				final ISearchRunReplies searchRunReplies = builder.buildSearchRunReplies( numberOfTimesToScrollOnTimeline,
-																							numberOfTimesToScrollOnIndividualPages,
-																							numberOfReplyPagesToCheck );
+				final ISearchRunReplies searchRunReplies = builder.buildSearchRunReplies( pageParametersSet );
 
 				//logger.info( searchRunReplies );
 				logger.info( "VALUENEXT" );
@@ -330,6 +322,7 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 					final IAppDirectories appDirectories,
 					final IBrowserScriptFactory browserScriptFactory,
 					final IBrowserExtensionFactory browserExtensionFactory,
+					final IPageParametersFactory pageParametersFactory,
 					final List<ISearchRunProcessor> searchRunProcessors ) throws Exception {
 		this.bundle = bundle;
 		this.storage = storage;
@@ -344,6 +337,7 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 		this.appDirectories = appDirectories;
 		this.browserScriptFactory = browserScriptFactory;
 		this.browserExtensionFactory = browserExtensionFactory;
+		this.pageParametersFactory = pageParametersFactory;
 		this.searchRunProcessors = searchRunProcessors;
 	}
 
@@ -460,6 +454,25 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 		System.exit( 0 );
 	}
 
+	private IPageParametersSet buildPageParametersSet( IPreferences prefs ) throws Exception {
+		IPageParameters timeline = pageParametersFactory.makePageParametersBuilder().
+			setItemsToSkip( Utils.parseIntDefault( prefs.getValue( "prefs.timeline_num_items_to_skip" ), 0 ) ).
+			setItemsToProcess( Utils.parseIntDefault( prefs.getValue( "prefs.timeline_num_items_to_process" ), 0 ) ).
+			setPagesToScroll( Utils.parseIntDefault( prefs.getValue( "prefs.timeline_num_pages_to_scroll" ), 0 ) ).
+			build();
+
+		IPageParameters individualPage = pageParametersFactory.makePageParametersBuilder().
+			setItemsToSkip( 0 ).
+			setItemsToProcess( 1000 ).
+			setPagesToScroll( Utils.parseIntDefault( prefs.getValue( "prefs.individual_pages_num_pages_to_scroll" ), 0 ) ).
+			build();
+
+		return pageParametersFactory.makePageParametersSetBuilder().
+			setTimeline( timeline ).
+			setIndividualPage( individualPage ).
+			build();
+	}
+
 	private void validatePreferences() {
 		if ( Utils.isEmpty( prefs.getValue( "prefs.testing_account_name_private" ) ) ||
 				Utils.isEmpty( prefs.getValue( "prefs.testing_account_password_private" ) ) ) {
@@ -507,18 +520,18 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 		guiElements.add( new ElementDescriptor( "password", "prefs.testing_account_password_private",
 													bundle.getString( "prefs_element_testing_account_password_name" ),
 													bundle.getString( "prefs_element_testing_account_password_help" ), 30 ) );
-		guiElements.add( new ElementDescriptor( "textfield", "prefs.num_reply_pages_to_check",
-													bundle.getString( "prefs_element_num_reply_pages_to_check_name" ),
-													bundle.getString( "prefs_element_num_reply_pages_to_check_help" ), 30 ) );
-		guiElements.add( new ElementDescriptor( "textfield", "prefs.num_timeline_pages_to_scroll",
-													bundle.getString( "prefs_element_num_timeline_pages_to_scroll_name" ),
-													bundle.getString( "prefs_element_num_timeline_pages_to_scroll_help" ), 30 ) );
-		guiElements.add( new ElementDescriptor( "textfield", "prefs.num_individual_pages_to_scroll",
-													bundle.getString( "prefs_element_num_individual_pages_to_scroll_name" ),
-													bundle.getString( "prefs_element_num_individual_pages_to_scroll_help" ), 30 ) );
-		guiElements.add( new ElementDescriptor( "textfield", "prefs.num_timeline_tweets_to_skip",
-													bundle.getString( "prefs_element_num_timeline_tweets_to_skip_name" ),
-													bundle.getString( "prefs_element_num_timeline_tweets_to_skip_help" ), 30 ) );
+		guiElements.add( new ElementDescriptor( "textfield", "prefs.timeline_num_items_to_process",
+													bundle.getString( "prefs_element_timeline_num_items_to_process_name" ),
+													bundle.getString( "prefs_element_timeline_num_items_to_process_help" ), 30 ) );
+		guiElements.add( new ElementDescriptor( "textfield", "prefs.timeline_num_pages_to_scroll",
+													bundle.getString( "prefs_element_timeline_num_pages_to_scroll_name" ),
+													bundle.getString( "prefs_element_timeline_num_pages_to_scroll_help" ), 30 ) );
+		guiElements.add( new ElementDescriptor( "textfield", "prefs.timeline_num_items_to_skip",
+													bundle.getString( "prefs_element_timeline_num_items_to_skip_name" ),
+													bundle.getString( "prefs_element_timeline_num_items_to_skip_help" ), 30 ) );
+		guiElements.add( new ElementDescriptor( "textfield", "prefs.individual_pages_num_pages_to_scroll",
+													bundle.getString( "prefs_element_individual_pages_num_pages_to_scroll_name" ),
+													bundle.getString( "prefs_element_individual_pages_num_pages_to_scroll_help" ), 30 ) );
 		guiElements.add( new ElementDescriptor( "checkbox", "prefs.upload_results",
 													bundle.getString( "prefs_element_upload_results_name" ),
 													bundle.getString( "prefs_element_upload_results_help" ), 30 ) );

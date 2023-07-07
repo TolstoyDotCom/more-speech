@@ -27,6 +27,8 @@ import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageTime
 import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
 import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageIndividualTweet;
 import com.tolstoy.censorship.twitter.checker.app.webdriver.ntjs.JavascriptInterchangeContainer;
+import com.tolstoy.censorship.twitter.checker.api.webdriver.IPageParametersSet;
+import com.tolstoy.censorship.twitter.checker.api.webdriver.IPageParameters;
 import com.tolstoy.basic.api.tweet.ITweetUser;
 import com.tolstoy.basic.app.utils.Utils;
 import com.tolstoy.jboto.api.IProduct;
@@ -36,20 +38,14 @@ public class SearchRunBaseData implements IProduct {
 
 	private final Instant startTime;
 	private final String handleToCheck, loginName, loginPassword;
-	private final int numberOfTimesToScrollOnTimeline, numberOfTimesToScrollOnIndividualPages, numberOfReplyPagesToCheck, numberOfTimelineTweetsToSkip;
+	private final IPageParametersSet pageParametersSet;
 	private final boolean bUsingLogin, bSkipLogin;
 
 	public SearchRunBaseData( final IPreferences prefs,
 								final String handleToCheck,
-								final int numberOfTimesToScrollOnTimeline,
-								final int numberOfTimesToScrollOnIndividualPages,
-								final int numberOfReplyPagesToCheck,
-								final int numberOfTimelineTweetsToSkip ) {
+								final IPageParametersSet pageParametersSet ) {
 		this.handleToCheck = Utils.trimDefault( handleToCheck ).toLowerCase();
-		this.numberOfTimesToScrollOnTimeline = numberOfTimesToScrollOnTimeline;
-		this.numberOfTimesToScrollOnIndividualPages = numberOfTimesToScrollOnIndividualPages;
-		this.numberOfReplyPagesToCheck = numberOfReplyPagesToCheck;
-		this.numberOfTimelineTweetsToSkip = numberOfTimelineTweetsToSkip;
+		this.pageParametersSet = pageParametersSet;
 
 		this.startTime = Instant.now();
 		this.loginName = prefs.getValue( "prefs.testing_account_name_private" );
@@ -81,20 +77,8 @@ public class SearchRunBaseData implements IProduct {
 		return loginPassword;
 	}
 
-	public int getNumberOfTimesToScrollOnTimeline() {
-		return numberOfTimesToScrollOnTimeline;
-	}
-
-	public int getNumberOfReplyPagesToCheck() {
-		return numberOfReplyPagesToCheck;
-	}
-
-	public int getNumberOfTimesToScrollOnIndividualPages() {
-		return numberOfTimesToScrollOnIndividualPages;
-	}
-
-	public int getNumberOfTimelineTweetsToSkip() {
-		return numberOfTimelineTweetsToSkip;
+	public IPageParametersSet getPageParametersSet() {
+		return pageParametersSet;
 	}
 
 	public boolean isUsingLogin() {
@@ -110,10 +94,7 @@ public class SearchRunBaseData implements IProduct {
 		.appendSuper( super.toString() )
 		.append( "startTime", startTime )
 		.append( "handleToCheck", handleToCheck )
-		.append( "numberOfTimesToScrollOnTimeline", numberOfTimesToScrollOnTimeline )
-		.append( "numberOfTimesToScrollOnIndividualPages", numberOfTimesToScrollOnIndividualPages )
-		.append( "numberOfReplyPagesToCheck", numberOfReplyPagesToCheck )
-		.append( "numberOfTimelineTweetsToSkip", numberOfTimelineTweetsToSkip )
+		.append( "pageParametersSet", pageParametersSet )
 		.toString();
 	}
 }

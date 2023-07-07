@@ -28,6 +28,8 @@ import com.tolstoy.censorship.twitter.checker.api.preferences.IPreferences;
 import com.tolstoy.censorship.twitter.checker.api.searchrun.ISearchRunTimeline;
 import com.tolstoy.censorship.twitter.checker.api.snapshot.ISnapshotUserPageIndividualTweet;
 import com.tolstoy.censorship.twitter.checker.app.webdriver.ntjs.JavascriptInterchangeContainer;
+import com.tolstoy.censorship.twitter.checker.api.webdriver.IPageParametersSet;
+import com.tolstoy.censorship.twitter.checker.api.webdriver.IPageParameters;
 import com.tolstoy.basic.api.tweet.ITweetUser;
 import com.tolstoy.basic.app.utils.Utils;
 import com.tolstoy.jboto.api.IProduct;
@@ -51,11 +53,8 @@ public class SearchRunTimelineData extends SearchRunBaseData {
 
 	public SearchRunTimelineData( final IPreferences prefs,
 								final String handleToCheck,
-								final int numberOfTimesToScrollOnTimeline,
-								final int numberOfTimesToScrollOnIndividualPages,
-								final int numberOfReplyPagesToCheck,
-								final int numberOfTimelineTweetsToSkip ) {
-		super( prefs, handleToCheck, numberOfTimesToScrollOnTimeline, numberOfTimesToScrollOnIndividualPages, numberOfReplyPagesToCheck, numberOfTimelineTweetsToSkip );
+								final IPageParametersSet pageParametersSet ) {
+		super( prefs, handleToCheck, pageParametersSet );
 
 		this.timelineURL = String.format( prefs.getValue( "targetsite.pattern.timeline" ), getHandleToCheck() );
 

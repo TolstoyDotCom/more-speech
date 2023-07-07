@@ -68,7 +68,7 @@ public class RetrieveTimelineTweets implements IBasicCommand {
 		logger.info( "makeTweetCollectionFromURL: calling SuedeDenim tweet_retriever script" );
 
 		final JavascriptParams jsParams = new JavascriptParams( product.getTimelineURL(), TargetPageType.TIMELINE, ourEnv.getDebugLevel() );
-		jsParams.setValue( "scrollerNumTimesToScroll", "" + ( 5 * product.getNumberOfTimesToScrollOnTimeline() ) );
+		jsParams.setValue( "scrollerNumTimesToScroll", "" + ( 5 * product.getPageParametersSet().getTimeline().getPagesToScroll() ) );
 		jsParams.setValue( "scrollerHeightMultiplier", "0.25" );
 
 		final String suedeDenimRetrieverScript = ourEnv.getBrowserScriptFactory().getScript( "tweet_retriever" ).getScript();
@@ -85,7 +85,7 @@ public class RetrieveTimelineTweets implements IBasicCommand {
 
 		final ITweetCollection tweetCollection = product.getTimelineJIC().getTweetCollection();
 		tweetCollection.setAttribute( "url", product.getTimelineURL() );
-		tweetCollection.setAttribute( "numberOfPagesToCheck", "" + product.getNumberOfReplyPagesToCheck() );
-		tweetCollection.setAttribute( "maxTweets", "" + product.getNumberOfTimesToScrollOnIndividualPages() );
+		tweetCollection.setAttribute( "numberOfPagesToCheck", "" + product.getPageParametersSet().getTimeline().getItemsToProcess() );
+		tweetCollection.setAttribute( "maxTweets", "" + product.getPageParametersSet().getIndividualPage().getPagesToScroll() );
 	}
 }
