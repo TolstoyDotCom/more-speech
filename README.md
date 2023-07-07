@@ -57,6 +57,7 @@ To run the 2.1 version:
 4. Open a console window in the top-level directory (where `pom.xml` is) and type this:
 
 `chmod +x run.sh`
+
 `./run.sh`
 
 (You only need the `chmod` line the first time)
