@@ -45,7 +45,7 @@ Features
 
 2.1 Notes (ignore the other instructions for now)
 ------
-This has only been tested with Firefox 105 and OpenJDK 17 on Ubuntu 18. JDK 17 is required. A windows version and a pre-built jar file will be released after more testing.
+This has only been tested with Firefox 113 and OpenJDK 17 on Ubuntu 18. JDK 17 is required. A windows version and a pre-built jar file will be released after more testing.
 
 The Installation sections below should be ignored for now.
 
@@ -56,15 +56,19 @@ To run the 2.1 version:
 3. In the new profile, install [this extenion](https://addons.mozilla.org/en-US/firefox/addon/har-export-trigger/). (The previous version of this application used a proxy to capture the AJAX messages from Twitter but the proxy [isn't working](https://github.com/lightbody/browsermob-proxy/issues/897). So, the new version gets the AJAX directly from the browser and the extension is used to accomplish that.)
 4. Open a console window in the top-level directory (where `pom.xml` is) and type this:
 
-`JDK_JAVA_OPTIONS="--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.time=ALL-UNNAMED" mvn clean compile exec:java -D{webdriver.http.factory}={jdk-http-client} -D"exec.mainClass"="com.tolstoy.censorship.twitter.checker.app.Start"`
+`chmod +x run.sh`
+`./run.sh`
 
-5. When the application opens, in the Preferences dialog fill out the handle, check the 'Skip the login page' checkbox, and fill out the 'Firefox profile name' (or path). Then, click the 'Check timeline' button and wait until it says it's created the report.
+(You only need the `chmod` line the first time)
+
+5. When the application opens, in the Preferences dialog fill out the handle, check the 'Skip the login page' checkbox, and fill out the 'Firefox profile name' (or path). For instance, if you named the profile "twtr_censorship", put that in 'Firefox profile name'.
+Then, click the 'Check timeline' button and wait until it says it's created the report.
 
 You could also first enter the required data into quickstart.prefs.json and then replace `Start` with `QuickStart` in the command above, but that hasn't been tested.
 
 suededenim.java.js in the stockscripts directory is from the [SuedeDenim](https://github.com/TolstoyDotCom/SuedeDenim) project. You should be able to replace that with newer versions of the script.
 
-There are currently at least two issues. The major issue is the app might time out if loading the tweets from a page takes more than 3 minutes; that's being looked into [here](https://github.com/SeleniumHQ/selenium/issues/11158). A minor bug/feature is that on individual tweet pages, sometimes second-level replies are shown. (That is, a reply to a reply). Those replies-to-replies are currently counted as if they were a reply itself, and that leads to the counts being off (such as an Available value of 108%). A later version will deal with that.
+There are currently at least two issues. The major issue is the app might time out if loading the tweets from a page takes more than 3 minutes; that should have been resolved by [this](https://github.com/SeleniumHQ/selenium/issues/11158) but that hasn't been thoroughly tested. A minor bug/feature is that on individual tweet pages, sometimes second-level replies are shown. (That is, a reply to a reply). Those replies-to-replies are currently counted as if they were a reply itself, and that leads to the counts being off (such as an Available value of 108%). A later version will deal with that.
 
 Examples
 ------
