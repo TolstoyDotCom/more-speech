@@ -54,7 +54,7 @@ public class CreateBrowserDataRecorder implements IBasicCommand {
 		try {
 			BrowserDataRecorderType type;
 
-			if ( ourEnv.getInstalledExtensions().getByKey( "har_export_trigger" ) != null ) {
+			if ( ourEnv.getInstalledExtensions() != null && ourEnv.getInstalledExtensions().getByKey( "har_export_trigger" ) != null ) {
 				type = BrowserDataRecorderType.HAR_EXPORT_EXTENSION;
 			}
 			else {
