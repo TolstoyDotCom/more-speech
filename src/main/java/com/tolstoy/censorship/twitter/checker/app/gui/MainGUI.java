@@ -52,7 +52,7 @@ public class MainGUI implements ActionListener, IStatusMessageReceiver {
 	private final IResourceBundleWithFormatting bundle;
 	private final java.util.List<ElementDescriptor> descriptors;
 	private JFrame frame;
-	private JButton btnPreferences, btnRewriteLastReport, btnRunItinerary, btnCheckReplies, btnCheckTimeline;
+	private JButton btnPreferences, btnRewriteLastReport, btnRunItinerary, btnCheckTimeline;
 	private JEditorPane editorPaneStatusMessage;
 
 	@Override
@@ -110,14 +110,12 @@ public class MainGUI implements ActionListener, IStatusMessageReceiver {
 		buttonPanel.add( btnRewriteLastReport );
 
 		btnRunItinerary = new JButton( bundle.getString( "main_check_itinerary_button" ) );
+		btnRunItinerary.setToolTipText( bundle.getString( "main_check_itinerary_button_help" ) );
 		btnRunItinerary.addActionListener( this );
 		buttonPanel.add( btnRunItinerary );
 
-		btnCheckReplies = new JButton( bundle.getString( "main_check_replies_button" ) );
-		btnCheckReplies.addActionListener( this );
-		buttonPanel.add( btnCheckReplies );
-
 		btnCheckTimeline = new JButton( bundle.getString( "main_check_timeline_button" ) );
+		btnCheckTimeline.setToolTipText( bundle.getString( "main_check_timeline_button_help" ) );
 		btnCheckTimeline.addActionListener( this );
 		buttonPanel.add( btnCheckTimeline );
 
@@ -147,7 +145,6 @@ public class MainGUI implements ActionListener, IStatusMessageReceiver {
 	}
 
 	public void enableRunFunction( final boolean state ) {
-		btnCheckReplies.setEnabled( state );
 		btnCheckTimeline.setEnabled( state );
 		btnRewriteLastReport.setEnabled( state );
 		btnRunItinerary.setEnabled( state );
@@ -166,9 +163,6 @@ public class MainGUI implements ActionListener, IStatusMessageReceiver {
 			if ( userdata != null ) {
 				firePreferencesEvent( new PreferencesEvent( this, userdata ) );
 			}
-		}
-		else if ( actionEvent.getSource() == btnCheckReplies ) {
-			fireRunEvent( new RunEvent( this, ACTION_REPLIES ) );
 		}
 		else if ( actionEvent.getSource() == btnCheckTimeline ) {
 			fireRunEvent( new RunEvent( this, ACTION_TIMELINE ) );

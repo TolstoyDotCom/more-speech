@@ -66,7 +66,6 @@ import com.tolstoy.censorship.twitter.checker.api.installation.IAppDirectories;
 import com.tolstoy.censorship.twitter.checker.api.installation.IBrowserScriptFactory;
 import com.tolstoy.censorship.twitter.checker.api.installation.IBrowserExtensionFactory;
 import com.tolstoy.censorship.twitter.checker.app.helpers.SearchRunProcessorWriteReport;
-import com.tolstoy.censorship.twitter.checker.app.helpers.SearchRunRepliesBuilderSelfContained;
 import com.tolstoy.censorship.twitter.checker.app.helpers.SearchRunRepliesBuilderJBoto;
 import com.tolstoy.censorship.twitter.checker.app.helpers.SearchRunTimelineBuilder;
 import com.tolstoy.censorship.twitter.checker.app.storage.StorageTable;
@@ -150,43 +149,6 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 
 			gui.enableRunFunction( true );
 			gui.enablePreferencesFunction( true );
-		}
-	}
-
-	class RepliesWorker extends WorkerProcessingBase<ISearchRunReplies> {
-		@Override
-		public ISearchRunReplies doInBackground() {
-			try {
-				IArchiveDirectory archiveDirectory = new ArchiveDirectory( appDirectories.getReportsDirectory(), "json-", "", "", ".json" );
-
-				final SearchRunRepliesBuilderSelfContained builder = new SearchRunRepliesBuilderSelfContained( bundle,
-																						storage,
-																						prefsFactory,
-																						prefs,
-																						webDriverFactoryFactory,
-																						searchRunFactory,
-																						snapshotFactory,
-																						tweetFactory,
-																						browserProxyFactory,
-																						archiveDirectory,
-																						this,
-																						prefs.getValue( "prefs.handle_to_check" ) );
-
-				IPageParametersSet pageParametersSet = buildPageParametersSet( prefs );
-
-				final ISearchRunReplies searchRunReplies = builder.buildSearchRunReplies( pageParametersSet );
-
-				//logger.info( searchRunReplies );
-				logger.info( "VALUENEXT" );
-				logger.info( Utils.getDefaultObjectMapper().writeValueAsString( searchRunReplies ) );
-				return searchRunReplies;
-			}
-			catch ( final Exception e ) {
-				Utils.logException( logger, bundle.getString( "exc_start", e.getMessage() ), e );
-				publish( new StatusMessage( bundle.getString( "exc_start", e.getMessage() ), StatusMessageSeverity.ERROR ) );
-
-				return null;
-			}
 		}
 	}
 
@@ -374,12 +336,7 @@ public class AppGUI implements RunEventListener, PreferencesEventListener, RunIt
 		gui.enableRunFunction( false );
 		gui.enablePreferencesFunction( false );
 
-		if ( MainGUI.ACTION_REPLIES.equals( runEvent.getActionName() ) ) {
-			final RepliesWorker repliesWorker = new RepliesWorker();
-
-			repliesWorker.execute();
-		}
-		else if ( MainGUI.ACTION_TIMELINE.equals( runEvent.getActionName() ) ) {
+		if ( MainGUI.ACTION_TIMELINE.equals( runEvent.getActionName() ) ) {
 			final TimelineWorker timelineWorker = new TimelineWorker();
 
 			timelineWorker.execute();
